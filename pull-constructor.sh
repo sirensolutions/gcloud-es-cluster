@@ -5,4 +5,4 @@
 #
 # NB this script is invoked from the *controller* node
 
-git clone https://github.com/sirensolutions/gcloud-es-cluster && ./gcloud-es-cluster/constructor.sh
+git clone https://github.com/sirensolutions/gcloud-es-cluster && /bin/bash ./gcloud-es-cluster/constructor.sh
