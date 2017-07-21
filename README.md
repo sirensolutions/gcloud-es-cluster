@@ -13,6 +13,7 @@ Then go to the metadata section and add some project-level ssh keys. These:
 The email address is parsed to automatically populate user accounts matching the private keys. The really scary bit is that changes are live-propagated to all instances, even running ones.
 
 Created a new f1-micro instance of ubuntu-1604-lts, called es-controller. This will be a persistent machine that enables us to perform further tasks programmatically. The advantage of doing it this way is that key-based access to the API is relatively painless, and also network proximity to the slaves. Using the micro instance ensures that we can leave it running at minimal cost. This server should not therefore be used for any heavy lifting - spin up a slave instance for that.
+Make sure that the disk is set to *not* be deleted on instance deletion. While we never intend to delet this instance, we can't rule out accidents...!
 
 Since es-controller will get an ephemeral IP address and will have to download code from the artifactory, it must be attached to zerotier.
 
