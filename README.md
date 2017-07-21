@@ -54,6 +54,6 @@ To call a script at instance creation (this is the *startup* script) we store it
 We want to keep this as simple as possible so that we can manage changes in another file (the *constructor*). We can also store the startup script in git, but it should not be
 absolutely necessary to pull the latest version down onto the controller node every time.
 
-- The *startup* script is `pull-constructor.sh`. This is invoked on the controller node but executed on the slave. Instructions are in comments in the script itself.
+- The *startup* script is `pull-constructor.sh`. This is invoked on the controller node but executed on the slave. Instructions are in comments in the script itself. It should *never* change, unless we rename the github repo.
 - The *constructor* script is `constructor.sh`. This contains volatile changes, and is `git pull`ed onto the slave node at runtime by the startup script.
 
