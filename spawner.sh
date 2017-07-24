@@ -4,7 +4,15 @@
 # a given configuration. It should have sensible (i.e. inexpensive!) defaults.
 
 if [[ $1 == "help" || $1 == "-h" || $1 == "--help" ]]; then
-	echo "Usage: $0 [NUM_SLAVES [SLAVE_TYPE]]"
+cat <<EOF
+Usage: $0 [NUM_SLAVES [SLAVE_TYPE]]
+
+It also reads the following envars for defaults:
+
+IMAGE [<project>/<family>]
+SLAVE_PREFIX [es-<timestamp]
+CONSTRUCTOR_ARGUMENTS []
+EOF
 fi
 
 if [[ $1 ]]; then
@@ -19,9 +27,17 @@ else
 	SLAVE_TYPE=f1-micro
 fi
 
-IMAGE_FAMILY=ubuntu-1604-lts
-IMAGE_PROJECT=ubuntu-os-cloud
-SLAVE_PREFIX=es-$(date +%s)
+if [[ $IMAGE ]]; then
+	IMAGE_FAMILY=${IMAGE#*/}
+	IMAGE_PROJECT=${IMAGE%/*}
+else
+	IMAGE_FAMILY=ubuntu-1604-lts
+	IMAGE_PROJECT=ubuntu-os-cloud
+fi
+
+if [[ ! $SLAVE_PREFIX ]]; then
+	SLAVE_PREFIX=es-$(date +%s)
+fi
 
 SLAVES=""
 for i in $(seq 1 $NUM_SLAVES); do

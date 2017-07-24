@@ -35,10 +35,13 @@ ARTIFACTORY_HOST=10.0.0.1:8080
 ##### END SETTINGS #####
 
 
-#####
-##### TODO: override defaults above by reading gcloud metadata
-##### since we can't prompt the user interactively...
-#####
+# Evaluate all the command line arguments.
+# These will normally be variable assignments overriding the above, but
+# they can in principle be anything. So be careful.
+
+echo Evaluating \"$*\" |& $SLOGGER
+eval $* |& $LOGGER
+
 
 
 ES_MAJOR_VERSION=${ES_VERSION%%.*}
