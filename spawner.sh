@@ -29,7 +29,7 @@ for i in $(seq 1 $NUM_SLAVES); do
 	SLAVES="$SLAVES es-node-$i"
 done
 
-gcloud compute instances create $SLAVES --image-family=$IMAGE_FAMILY--image-project=$IMAGE_PROJECT --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$SELF/pull-constructor.sh
+gcloud compute instances create $SLAVES --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$SELF/pull-constructor.sh || exit $?
 
 # Now pull the info for each and wait until they are all connectible
 
