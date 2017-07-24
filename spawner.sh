@@ -36,6 +36,8 @@ gcloud compute instances create $SLAVES --image-family=$IMAGE_FAMILY --image-pro
 
 for slave in $SLAVES; do
 	ip=$(gcloud compute instances describe $slave|grep networkIP|awk '{print $2}')
+	# Delete this IP from our known_hosts because we know it has been changed
+	ssh-keygen -f "$HOME/.ssh/known_hosts" -R $ip
 	while ! nc -w 5 $ip 22 </dev/null >/dev/null; do
 		sleep 5
 	done

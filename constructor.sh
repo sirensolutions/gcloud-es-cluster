@@ -100,9 +100,9 @@ apt-get -y install unzip supervisor |& $LOGGER
 if [[ -f $SRC_DIR/$ES_ZIPFILE ]]; then
   ES_ZIPFILE=$SRC_DIR/$ES_ZIPFILE
 else
-  if ! curl -f -o $TMP_DIR/$ES_ZIPFILE $ES_URL |& $LOGGER; then
+  if ! curl -s -f -o $TMP_DIR/$ES_ZIPFILE $ES_URL |& $LOGGER; then
     echo "Error downloading $ES_URL, trying alternative download location..." |& $LOGGER
-    if ! curl -f -o $TMP_DIR/$ES_ZIPFILE $ES_URL2 |& $LOGGER; then
+    if ! curl -s -f -o $TMP_DIR/$ES_ZIPFILE $ES_URL2 |& $LOGGER; then
       echo "Error downloading $ES_URL2" |& $LOGGER
       exit 3
     else
@@ -115,9 +115,9 @@ fi
 if [[ -f $SRC_DIR/$LOGSTASH_ZIPFILE ]]; then
   LOGSTASH_ZIPFILE=$SRC_DIR/$LOGSTASH_ZIPFILE
 else
-  if ! curl -f -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL |& $LOGGER; then
+  if ! curl -s -f -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL |& $LOGGER; then
     echo "Error downloading $LOGSTASH_URL, trying alternative download location..." |& $LOGGER
-    if ! curl -f -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL2 |& $LOGGER; then
+    if ! curl -s -f -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL2 |& $LOGGER; then
       echo "Error downloading $LOGSTASH_URL2" |& $LOGGER
       exit 3
     else
@@ -136,7 +136,7 @@ done
 
 if [[ $PLUGIN_URL ]]; then
   # We will also need to download a snapshot plugin from the artifactory
-  if ! curl -f -o $TMP_DIR/$PLUGIN_ZIPFILE $PLUGIN_URL |& $LOGGER; then
+  if ! curl -s -f -o $TMP_DIR/$PLUGIN_ZIPFILE $PLUGIN_URL |& $LOGGER; then
     echo "Error downloading $PLUGIN_URL" |& $LOGGER
     exit 3
   fi
