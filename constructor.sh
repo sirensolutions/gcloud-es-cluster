@@ -45,6 +45,9 @@ eval $* |& $LOGGER
 
 
 ES_MAJOR_VERSION=${ES_VERSION%%.*}
+if [[ $DEBUG ]]; then
+	echo ES_MAJOR_VERSION=$ES_MAJOR_VERSION |& $LOGGER
+fi
 
 if [[ ${ES_MAJOR_VERSION} == "2" ]]; then
   PLUGIN_TOOL=bin/plugin
@@ -56,6 +59,10 @@ else
   echo "Elasticsearch version ${ES_VERSION} not supported by this script. Aborting!" |& $LOGGER
   exit 1
 fi
+if [[ $DEBUG ]]; then
+	echo ES_MAJOR_VERSION=$ES_MAJOR_VERSION |& $LOGGER
+fi
+
 
 # Check that the user exists
 if ! grep -q "^${USER}:" /etc/passwd; then
@@ -69,6 +76,12 @@ SRC_DIR=$PWD
 TMP_DIR=$(mktemp -d)
 BASE=$BASE_PARENT/elastic
 
+if [[ $DEBUG ]]; then
+	echo SRC_DIR=$SRC_DIR
+	echo TMP_DIR=$TMP_DIR
+	echo BASE=$BASE
+fi
+	
 if [[ $PLUGIN_VERSION ]]; then
   if [[ $PLUGIN_NAME == "siren-join" ]]; then
     PLUGIN_ZIPFILE="siren-join-${PLUGIN_VERSION}.zip"
@@ -92,52 +105,53 @@ if ! mkdir -p $BASE; then
   echo "Could not create directory $BASE. Aborting"
   exit 1
 fi
+if [[ $DEBUG ]]; then
+	echo PLUGIN_NAME=$PLUGIN_NAME |& $LOGGER
+	echo PLUGIN_URL=$PLUGIN_URL |& $LOGGER
+	echo PLUGIN_VERSION=$PLUGIN_VERSION |& $LOGGER
+	echo PLUGIN_ZIPFILE=$PLUGIN_ZIPFILE |& $LOGGER
+	echo ES_BASE=$ES_BASE |& $LOGGER
+	echo ES_ZIPFILE=$ES_ZIPFILE |& $LOGGER
+	echo ES_URL=$ES_URL |& $LOGGER
+	echo ES_URL2=$ES_URL2 |& $LOGGER
+	echo LOGSTASH_BASE=$LOGSTASH_BASE |& $LOGGER
+	echo LOGSTASH_ZIPFILE=$LOGSTASH_ZIPFILE |& $LOGGER
+	echo LOGSTASH_URL=$LOGSTASH_URL |& $LOGGER
+	echo LOGSTASH_URL2=$LOGSTASH_URL2 |& $LOGGER
+fi
+
 
 
 ##### DOWNLOAD SOFTWARE #####
 
 apt-get -y install unzip supervisor |& $LOGGER
 
-# If the appropriate zipfiles exist in $SRC_DIR, don't download them again
-
-if [[ -f $SRC_DIR/$ES_ZIPFILE ]]; then
-  ES_ZIPFILE=$SRC_DIR/$ES_ZIPFILE
-else
-  if ! curl -s -f -o $TMP_DIR/$ES_ZIPFILE $ES_URL |& $LOGGER; then
-    echo "Error downloading $ES_URL, trying alternative download location..." |& $LOGGER
-    if ! curl -s -f -o $TMP_DIR/$ES_ZIPFILE $ES_URL2 |& $LOGGER; then
-      echo "Error downloading $ES_URL2" |& $LOGGER
-      exit 3
-    else
-      echo "Success" |& $LOGGER
-    fi
+if ! curl -s -f -o $TMP_DIR/$ES_ZIPFILE $ES_URL |& $LOGGER; then
+  echo "Error downloading $ES_URL, trying alternative download location..." |& $LOGGER
+  if ! curl -s -f -o $TMP_DIR/$ES_ZIPFILE $ES_URL2 |& $LOGGER; then
+    echo "Error downloading $ES_URL2" |& $LOGGER
+    exit 3
+  else
+    echo "Success" |& $LOGGER
   fi
-  ES_ZIPFILE=$TMP_DIR/$ES_ZIPFILE
 fi
+unzip $TMP_DIR/$ES_ZIPFILE |& $LOGGER
 
-if [[ -f $SRC_DIR/$LOGSTASH_ZIPFILE ]]; then
-  LOGSTASH_ZIPFILE=$SRC_DIR/$LOGSTASH_ZIPFILE
-else
-  if ! curl -s -f -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL |& $LOGGER; then
-    echo "Error downloading $LOGSTASH_URL, trying alternative download location..." |& $LOGGER
-    if ! curl -s -f -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL2 |& $LOGGER; then
-      echo "Error downloading $LOGSTASH_URL2" |& $LOGGER
-      exit 3
-    else
-      echo "Success" |& $LOGGER
-    fi
+
+if ! curl -s -f -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL |& $LOGGER; then
+  echo "Error downloading $LOGSTASH_URL, trying alternative download location..." |& $LOGGER
+  if ! curl -s -f -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL2 |& $LOGGER; then
+    echo "Error downloading $LOGSTASH_URL2" |& $LOGGER
+    exit 3
+  else
+    echo "Success" |& $LOGGER
   fi
-  LOGSTASH_ZIPFILE=$TMP_DIR/$LOGSTASH_ZIPFILE
 fi
+unzip $TMP_DIR/$LOGSTASH_ZIPFILE |& $LOGGER
 
-# After this, all our zipfiles are fully qualified paths
 
-cd $BASE
-for i in $ES_ZIPFILE $LOGSTASH_ZIPFILE ; do
-	unzip $i |& $LOGGER
-done
-
-if [[ $PLUGIN_URL ]]; then
+#### TODO: REMOVE THIS 'false' WHEN WE HAVE A WORKING PLUGIN DOWNLOAD
+if [[ $PLUGIN_URL && false]]; then
   # We will also need to download a snapshot plugin from the artifactory
   if ! curl -s -f -o $TMP_DIR/$PLUGIN_ZIPFILE $PLUGIN_URL |& $LOGGER; then
     echo "Error downloading $PLUGIN_URL" |& $LOGGER
@@ -147,6 +161,8 @@ if [[ $PLUGIN_URL ]]; then
 fi
 
 ##### END DOWNLOAD SOFTWARE #####
+
+
 
 
 ##### ELASTICSEARCH CONFIGURATION #####
@@ -204,4 +220,6 @@ supervisorctl update
 
 ##### END SUPERVISOR CONFIGURATION #####
 
-rm -rf $TMP_DIR
+if [[ ! $DEBUG ]]; then
+	rm -rf $TMP_DIR
+fi

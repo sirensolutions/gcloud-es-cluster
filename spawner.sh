@@ -9,9 +9,9 @@ Usage: $0 [NUM_SLAVES [SLAVE_TYPE]]
 
 It also reads the following envars for defaults:
 
-IMAGE [<project>/<family>]
-SLAVE_PREFIX [es-<timestamp]
-CONSTRUCTOR_ARGUMENTS []
+IMAGE [ubuntu-os-cloud/ubuntu-1604-lts]
+SLAVE_PREFIX [es-<timestamp>]
+CONSTRUCTOR_ARGS []
 EOF
 fi
 
@@ -41,7 +41,7 @@ fi
 
 SLAVES=""
 for i in $(seq 1 $NUM_SLAVES); do
-	SLAVES="$SLAVES $SLAVE_PREFIX-node-$i"
+	SLAVES="$SLAVES $SLAVE_PREFIX-node$i"
 done
 
 # Now create a one-shot puller script
@@ -50,7 +50,7 @@ PULLER=$(tempfile)
 cat <<EOF > $PULLER
 #!/bin/bash
 cd /tmp
-git clone https://github.com/sirensolutions/gcloud-es-cluster && /bin/bash ./gcloud-es-cluster/constructor.sh $CONSTRUCTOR_ARGUMENTS
+git clone https://github.com/sirensolutions/gcloud-es-cluster && /bin/bash ./gcloud-es-cluster/constructor.sh $CONSTRUCTOR_ARGS
 EOF
 
 gcloud compute instances create $SLAVES --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
