@@ -131,7 +131,7 @@ fi
 
 cd $BASE
 for i in $ES_ZIPFILE $LOGSTASH_ZIPFILE ; do
-	unzip $i >> $LOGFILE |& $LOGGER
+	unzip $i |& $LOGGER
 done
 
 if [[ $PLUGIN_URL ]]; then
