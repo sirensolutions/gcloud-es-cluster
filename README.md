@@ -1,7 +1,7 @@
 Google Cloud elasticsearch cluster
 ===================================
 
-Signed up for google compute cloud. This required a credit card number for antispam, but they promise (!) not to charge it until a) the free tier period runs out and b) we subsequently agree to take the paid tier.
+Sign up for google compute cloud. This requires a credit card number for antispam, even if it's not (yet) being charged.
 
 In the settings, set the default zone to be europe-west1-b. This uses Xeon v5 (sandy bridge) 2.5GHz machines by default.
 
@@ -10,16 +10,16 @@ Then go to the metadata section and add some project-level ssh keys. These:
 - MUST NOT contain any embedded newlines
 - MUST be of the format "ssh-XXX XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX user@domain.com"
 
-The email address is parsed to automatically populate user accounts matching the private keys. The really scary bit is that changes are live-propagated to all instances, even running ones.
+The email address is parsed to automatically populate user accounts matching the private keys. Changes are live-propagated to all instances, even running ones.
 
-Created a new f1-micro instance of ubuntu-1604-lts, called es-controller. This will be a persistent machine that enables us to perform further tasks programmatically. The advantage of doing it this way is that key-based access to the API is relatively painless, and also network proximity to the slaves. Using the micro instance ensures that we can leave it running at minimal cost. This server should not therefore be used for any heavy lifting - spin up a slave instance for that.
-Make sure that the disk is set to *not* be deleted on instance deletion. While we never intend to delet this instance, we can't rule out accidents...!
-
-Since es-controller will get an ephemeral IP address and will have to download code from the artifactory, it must be attached to zerotier.
+Create a new f1-micro instance of ubuntu-1604-lts, called es-controller. This will be a persistent machine that enables us to perform further tasks programmatically. The advantage of doing it this way is that key-based access to the API is relatively painless, and also network proximity to the slaves. Using the micro instance ensures that we can leave it running at minimal cost. This server should not therefore be used for any heavy lifting - spin up a slave instance for that.
+Make sure that the disk is set to *not* be deleted on instance deletion. While we never intend to delete this instance, we can't rule out accidents.
 
 In order for the API keys to be available inside the VM, we need to add it to the "allow full access" cloud API access scope. This must be done while the VM is shut down.
 
 Now turn on the VM and connect using your SSH key - the username will be the user part of the email address in the ssh key. *BE SURE TO FORWARD YOUR SSH AGENT*
+
+Since es-controller will get an ephemeral IP address and will have to download code from the artifactory, it *must* be attached to the VPN. Do this now (and configure any other necessary access controls).
 
 Run (as yourself!) `gcloud init --console-only`. Select the default account, and the default project. This may fail, but it doesn't seem to be a problem...
 
