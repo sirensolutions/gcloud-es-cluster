@@ -6,7 +6,7 @@
 SELF=$(basename $0)
 
 if [[ $1 == "help" || $1 == "-h" || $1 == "--help" ]]; then
-	echo "Usage: $0 [NUM_SLAVES [SLAVE_TYPE]]
+	echo "Usage: $0 [NUM_SLAVES [SLAVE_TYPE]]"
 fi
 
 if [[ $1 ]]; then
