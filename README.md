@@ -51,7 +51,7 @@ To delete, run `gcloud compute instances delete <instance>` - this requires a co
 Constructors
 ------------
 
-To call a script at instance creation (this is the *startup* script) we store it on the controller node and then reference it on the command line.
+To call a script at instance creation (known by Google as the *startup* script, even though it doesn't run on subsequent startups) we store it on the controller node and then reference it on the command line.
 We want to keep this as simple as possible so that we can pull changes via another file (the *constructor*). We can also store the startup script in git, but it should not be
 absolutely necessary to pull the latest version down onto the controller node every time.
 
