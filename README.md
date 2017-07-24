@@ -51,10 +51,10 @@ To delete, run `gcloud compute instances delete <instance>` - this requires a co
 Constructors
 ------------
 
-To call a script at instance creation (known by Google as the *startup* script, even though it doesn't run on subsequent startups) we store it on the controller node and then reference it on the command line.
-We want to keep this as simple as possible so that we can pull changes via another file (the *constructor*). We can also store the startup script in git, but it should not be
-absolutely necessary to pull the latest version down onto the controller node every time.
+To call a script at instance creation we store it on the controller node and then reference it when we create new slaves.
+This is known by Google as a "startup" script, which is a misnomer as it only gets run on the *initial* startup of the slave.
+In this project we will call it the "*puller*" script, as its sole function is to `git pull` the constructor from github and
+invoke it with the appropriate arguments. Most of the logic is then contained in the constructor.
 
-- The *startup* script is `pull-constructor.sh`. This is invoked on the controller node but executed on the slave. Instructions are in comments in the script itself. It should *never* change, unless we rename the github repo.
-- The *constructor* script is `constructor.sh`. This contains volatile changes, and is `git pull`ed onto the slave node at runtime by the startup script.
-
+- The spawner script is `spawner.sh`. This runs on the controller, creates a one-shot puller script and invokes gcloud to create the slaves.
+- The constructor script is `constructor.sh`. This is invoked on each slave node by the puller.
