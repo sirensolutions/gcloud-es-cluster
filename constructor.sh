@@ -44,6 +44,13 @@ eval $* |& $LOGGER
 
 
 
+if [[ $DEBUG ]]; then
+	CURL_ARGS="-f"
+else
+	CURL_ARGS="-s -f"
+fi
+	
+
 ES_MAJOR_VERSION=${ES_VERSION%%.*}
 if [[ $DEBUG ]]; then
 	echo ES_MAJOR_VERSION=$ES_MAJOR_VERSION |& $LOGGER
@@ -126,9 +133,9 @@ fi
 
 apt-get -y install unzip supervisor |& $LOGGER
 
-if ! curl -s -f -o $TMP_DIR/$ES_ZIPFILE $ES_URL |& $LOGGER; then
+if ! curl $CURL_ARGS -o $TMP_DIR/$ES_ZIPFILE $ES_URL |& $LOGGER; then
   echo "Error downloading $ES_URL, trying alternative download location..." |& $LOGGER
-  if ! curl -s -f -o $TMP_DIR/$ES_ZIPFILE $ES_URL2 |& $LOGGER; then
+  if ! curl $CURL_ARGS -o $TMP_DIR/$ES_ZIPFILE $ES_URL2 |& $LOGGER; then
     echo "Error downloading $ES_URL2" |& $LOGGER
     exit 3
   else
@@ -138,9 +145,9 @@ fi
 unzip $TMP_DIR/$ES_ZIPFILE |& $LOGGER
 
 
-if ! curl -s -f -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL |& $LOGGER; then
+if ! curl $CURL_ARGS -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL |& $LOGGER; then
   echo "Error downloading $LOGSTASH_URL, trying alternative download location..." |& $LOGGER
-  if ! curl -s -f -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL2 |& $LOGGER; then
+  if ! curl $CURL_ARGS -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL2 |& $LOGGER; then
     echo "Error downloading $LOGSTASH_URL2" |& $LOGGER
     exit 3
   else
@@ -151,9 +158,9 @@ unzip $TMP_DIR/$LOGSTASH_ZIPFILE |& $LOGGER
 
 
 #### TODO: REMOVE THIS 'false' WHEN WE HAVE A WORKING PLUGIN DOWNLOAD
-if [[ $PLUGIN_URL && false]]; then
+if [[ $PLUGIN_URL && false ]]; then
   # We will also need to download a snapshot plugin from the artifactory
-  if ! curl -s -f -o $TMP_DIR/$PLUGIN_ZIPFILE $PLUGIN_URL |& $LOGGER; then
+  if ! curl $CURL_ARGS -o $TMP_DIR/$PLUGIN_ZIPFILE $PLUGIN_URL |& $LOGGER; then
     echo "Error downloading $PLUGIN_URL" |& $LOGGER
     exit 3
   fi
