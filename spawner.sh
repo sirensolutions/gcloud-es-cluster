@@ -3,7 +3,7 @@
 # This script is invoked on the controller node to spawn a cluster with
 # a given configuration. It should have sensible (i.e. inexpensive!) defaults.
 
-SELF=$(basename $0)
+SELF=$(dirname $0)
 
 if [[ $1 == "help" || $1 == "-h" || $1 == "--help" ]]; then
 	echo "Usage: $0 [NUM_SLAVES [SLAVE_TYPE]]"
