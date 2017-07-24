@@ -25,8 +25,8 @@ IMAGE_FAMILY=ubuntu-1604-lts
 IMAGE_PROJECT=ubuntu-os-cloud
 
 SLAVES=""
-for i in 1..$NUM_SLAVES; do
+for i in $(seq 1 $NUM_SLAVES); do
 	SLAVES="$SLAVES es-node-$i"
-fi
+done
 
 echo gcloud compute instances create $SLAVES --image-family=$IMAGE_FAMILY--image-project=$IMAGE_PROJECT --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$SELF/pull-constructor.sh
