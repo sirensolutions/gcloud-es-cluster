@@ -40,7 +40,7 @@ ARTIFACTORY_HOST=10.0.0.1:8080
 # they can in principle be anything. So be careful.
 
 echo Evaluating \"$*\" |& $SLOGGER
-eval $* |& $LOGGER
+eval "$*" |& $LOGGER
 
 
 
@@ -189,7 +189,7 @@ else
 fi
 
 # only need this if we are using enterprise edition v4
-if [[ $ES_MAJOR_VERSION lt 5 ]]; then
+if [[ $ES_MAJOR_VERSION -lt 5 ]]; then
   $ES_BASE/$PLUGIN_TOOL install lmenezes/elasticsearch-kopf  |& $LOGGER|| exit 2
   if [[ -f $SRC_DIR/license-siren-$ES_VERSION.zip ]]; then
 	$ES_BASE/$PLUGIN_TOOL install file:$SRC_DIR/license-siren-$ES_VERSION.zip  |& $LOGGER|| exit 3
