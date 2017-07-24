@@ -40,7 +40,7 @@ ARTIFACTORY_HOST=10.0.0.1:8080
 # they can in principle be anything. So be careful.
 
 echo Evaluating \"$*\" |& $SLOGGER
-eval "echo $*" |& $LOGGER
+eval $(echo $*) |& $LOGGER
 
 
 
