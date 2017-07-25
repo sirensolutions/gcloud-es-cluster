@@ -42,12 +42,8 @@ eval $(echo $*)
 
 echo DEBUG=$DEBUG 
 
-
-if [[ $DEBUG ]]; then
-	CURL_ARGS="-f"
-else
-	CURL_ARGS="-s -f"
-fi
+# Don't show progress bar, but do show errors
+CURL_ARGS="-sS -f"
 	
 
 ES_MAJOR_VERSION=${ES_VERSION%%.*}
@@ -100,7 +96,7 @@ fi
 ES_BASE=$BASE/elasticsearch-$ES_VERSION
 ES_ZIPFILE="elasticsearch-$ES_VERSION.zip"
 ES_URL="https://artifacts.elastic.co/downloads/elasticsearch/$ES_ZIPFILE"
-ES_URL2="https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/zip/elasticsearch/$ES_VERSION/$ES_ZIPFILE"
+ES_URL2="https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/zip/elasticsearch/$ES_VERSION/$ES_ZIPFILE"
 
 LOGSTASH_BASE=$BASE/logstash-$LOGSTASH_VERSION
 LOGSTASH_ZIPFILE="logstash-$LOGSTASH_VERSION.zip"
