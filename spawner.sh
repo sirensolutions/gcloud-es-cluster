@@ -57,6 +57,7 @@ PULLER=$(tempfile)
 cat <<EOF > $PULLER
 #!/bin/bash
 export http_proxy="http://$PRIMARY_IP:3128/"
+export https_proxy="\$http_proxy"
 if ! git -c http.proxy=\$http_proxy clone https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
 	echo "Aborting; no git repository found" |& logger -t es-puller
 fi
