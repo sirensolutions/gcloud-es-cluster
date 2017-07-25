@@ -58,7 +58,7 @@ cat <<EOF > $PULLER
 #!/bin/bash
 cd /tmp
 export http_proxy="http://$PRIMARY_IP:3128/"
-if ! git -c http.proxy=$http_proxy clone https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
+if ! git -c http.proxy=\$http_proxy clone https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
 	echo "Aborting; no git repository found" |& logger -t es-puller
 fi
 gcloud-es-cluster/constructor.sh "CONTROLLER_IP=$PRIMARY_IP; DEBUG=$DEBUG; $CONSTRUCTOR_ARGS" |& logger -t es-constructor
