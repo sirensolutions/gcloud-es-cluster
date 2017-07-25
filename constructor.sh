@@ -19,8 +19,17 @@ PLUGIN_VERSION=2.4.4
 BASE_PARENT=/opt
 # The user that will own the files and processes.
 USER=elastic
-# How much memory to allocate to elastic.
-ES_HEAP_SIZE=4g
+
+# How much memory to allocate to elastic. We default this to half the
+# machine's total memory or 31GB (whichever is smaller)
+# but the spawner can override below.
+total_mem_kb=$(grep MemTotal /proc/meminfo|awk '{print $2}')
+half_mem_mb=$[total_mem_kb / 2048]
+if [[ $half_mem_mb -gt 31744 ]]; then
+  ES_HEAP_SIZE=31744m
+else
+  ES_HEAP_SIZE=${half_mem_mb}m
+fi
 
 # Use default ports for simplicity
 ES_PORT=9200
@@ -32,11 +41,11 @@ CURL_ARGS="-sS -f"
 ##### END SETTINGS #####
 
 
-# Evaluate all the command line arguments.
+# Evaluate all the command line arguments passed from the spawner.
 # These will normally be variable assignments overriding the above, but
 # they can in principle be anything. So be careful.
 
-echo Evaluating \"$*\" 
+echo Evaluating spawner commands \"$*\" 
 eval $(echo $*) 
 
 echo DEBUG=$DEBUG 
