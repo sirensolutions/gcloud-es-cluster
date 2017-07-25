@@ -257,7 +257,7 @@ user=$USER
 directory=$ES_BASE
 command=$ES_BASE/bin/elasticsearch
 environment=
-	ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE"
+	ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE" http_proxy=$http_proxy https_proxy=$https_proxy
 autorestart=True
 EOF
 
