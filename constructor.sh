@@ -161,6 +161,8 @@ BmuKvUJ4
 =0Cp+
 -----END PGP PUBLIC KEY BLOCK-----
 EOF
+# make sure it's readable by the 'apt' user
+chmod og=r /etc/apt/trusted.gpg.d/webupd8team-java.gpg
 
 apt-get update
 apt-get -y install unzip supervisor ufw oracle-java8-installer
