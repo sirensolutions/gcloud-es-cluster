@@ -165,7 +165,10 @@ EOF
 chmod og=r /etc/apt/trusted.gpg.d/webupd8team-java.gpg
 
 apt-get update
-apt-get -y install unzip supervisor ufw oracle-java8-installer
+# preseed the debian installer with our Java license acceptance
+echo ‘oracle-java8-installer shared/accepted-oracle-license-v1-1 boolean true’ | debconf-set-selections
+# make sure the installer does not prompt; there's nobody listening
+DEBIAN_FRONTEND=noninteractive apt-get -y install unzip supervisor ufw oracle-java8-installer
 
 
 if ! curl $CURL_ARGS -o $TMP_DIR/$ES_ZIPFILE $ES_URL ; then
