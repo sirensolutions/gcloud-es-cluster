@@ -26,10 +26,6 @@ ES_HEAP_SIZE=4g
 ES_PORT=9200
 ES_TRANS_PORT=9300
 
-# We need a proxy to get to the artifactory, because we don't want to 
-# maintain VPN state. This should be the IP of our controller node.
-ARTIFACTORY_HOST=10.0.0.1:8080
-
 ##### END SETTINGS #####
 
 
@@ -90,7 +86,7 @@ if [[ $PLUGIN_VERSION ]]; then
   else
     PLUGIN_ZIPFILE="${PLUGIN_NAME}-${PLUGIN_VERSION}-plugin.zip"
   fi
-  PLUGIN_URL="http://${ARTIFACTORY_HOST}/artifactory/${ARTIFACTORY_PATH}/solutions/siren/${PLUGIN_NAME}/${PLUGIN_DIR_VERSION}/${PLUGIN_ZIPFILE}"
+  PLUGIN_URL="http://artifactory.siren.io:8443/artifactory/${ARTIFACTORY_PATH}/solutions/siren/${PLUGIN_NAME}/${PLUGIN_DIR_VERSION}/${PLUGIN_ZIPFILE}"
 fi
 
 ES_BASE=$BASE/elasticsearch-$ES_VERSION
