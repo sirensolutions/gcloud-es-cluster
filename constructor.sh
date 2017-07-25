@@ -142,7 +142,7 @@ deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main
 # deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main
 EOF
 
-cat <<EOF | gpg --import --keyring /etc/apt/trusted.gpg.d/webupd8team-java.gpg
+cat <<EOF | gpg --no-default-keyring --keyring /etc/apt/trusted.gpg.d/webupd8team-java.gpg --import
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: GnuPG v1
 
