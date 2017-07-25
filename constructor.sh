@@ -42,6 +42,7 @@ ARTIFACTORY_HOST=10.0.0.1:8080
 echo Evaluating \"$*\" |& $LOGGER
 eval $(echo $*) |& $LOGGER
 
+echo DEBUG=$DEBUG |& $LOGGER
 
 
 if [[ $DEBUG ]]; then
