@@ -206,8 +206,7 @@ fi
 unzip $TMP_DIR/$LOGSTASH_ZIPFILE >/dev/null
 
 
-#### TODO: REMOVE THIS 'false' WHEN WE HAVE A WORKING PLUGIN DOWNLOAD
-if [[ $PLUGIN_URL && false ]]; then
+if [[ $PLUGIN_URL ]]; then
   # We will also need to download a snapshot plugin from the artifactory
   if ! curl $CURL_ARGS -o $TMP_DIR/$PLUGIN_ZIPFILE $PLUGIN_URL ; then
     echo "Error downloading $PLUGIN_URL" 
