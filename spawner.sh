@@ -57,7 +57,11 @@ cat <<EOF > $PULLER
 #!/bin/bash
 cd /tmp
 export http_proxy="http://$PRIMARY_IP:3128/"
-git clone https://github.com/sirensolutions/gcloud-es-cluster && gcloud-es-cluster/constructor.sh "CONTROLLER_IP=$PRIMARY_IP; $CONSTRUCTOR_ARGS" |& logger -t es-constructor
+git config --global http.proxy $http_proxy |& logger -t es-constructor
+git clone https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-constructor; then
+	echo "Aborting; no git repository found" |& logger -t es-constructor
+fi
+gcloud-es-cluster/constructor.sh "CONTROLLER_IP=$PRIMARY_IP; $CONSTRUCTOR_ARGS" |& logger -t es-constructor
 EOF
 
 gcloud compute instances create $SLAVES --no-address --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
