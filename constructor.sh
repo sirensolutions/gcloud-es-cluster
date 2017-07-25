@@ -228,6 +228,7 @@ cat > $ES_BASE/config/elasticsearch.yml <<EOF
 http.port: $ES_PORT
 transport.tcp.port: $ES_TRANS_PORT
 path.repo: $BASE
+index.queries.cache.everything: true
 EOF
 
 # Now install the elasticsearch plugins
