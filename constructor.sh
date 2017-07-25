@@ -46,8 +46,7 @@ cat <<EOF >/etc/profile.d/00-proxy.sh
 export http_proxy=$http_proxy
 EOF
 
-# elasticsearch does not parse envars, we need to set java properties instead
-# do this several different ways to cover all the options
+# elasticsearch does not parse proxy envars, so define java properties
 # note that elasticsearch is inconsistent, so we need to cover MANY options
 # https://github.com/elastic/puppet-elasticsearch/issues/152
 http_proxy_host=${http_proxy%:*}
@@ -62,7 +61,9 @@ if [[ $DEBUG ]]; then
 fi
 
 if [[ ${ES_MAJOR_VERSION} == "2" ]]; then
-  PLUGIN_TOOL=bin/plugin
+  # The plugin tool does not read the envar ES_JAVA_OPTS in 2.x
+  # https://github.com/elastic/elasticsearch/issues/21824
+  PLUGIN_TOOL=bin/plugin $ES_JAVA_OPTS
   PLUGIN_NAME=siren-join
 elif [[ ${ES_MAJOR_VERSION} == "5" ]]; then
   PLUGIN_TOOL=bin/elasticsearch-plugin
