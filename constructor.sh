@@ -47,11 +47,14 @@ export http_proxy=$http_proxy
 EOF
 
 # elasticsearch does not parse envars, we need to set java properties instead
+# do this several different ways to cover all the options
+# note that elasticsearch is inconsistent, so we need to cover MANY options
+# https://github.com/elastic/puppet-elasticsearch/issues/152
 http_proxy_host=${http_proxy%:*}
 https_proxy_host=${https_proxy%:*}
 http_proxy_port=${http_proxy##*:}
 https_proxy_port=${https_proxy##*:}
-JAVA_PROXY_PARAMS="-Dhttp.proxyHost=$http_proxy_host -Dhttp.proxyPort=$http_proxy_port -Dhttps.proxyHost=$https_proxy_host -Dhttps.proxyPort=$https_proxy_port" 
+export ES_JAVA_OPTS="-Dhttp.proxyHost=$http_proxy_host -Dhttp.proxyPort=$http_proxy_port -Dhttps.proxyHost=$https_proxy_host -Dhttps.proxyPort=$https_proxy_port -DproxyHost=$http_proxy_host -DproxyPort=$http_proxy_port" 
 
 ES_MAJOR_VERSION=${ES_VERSION%%.*}
 if [[ $DEBUG ]]; then
@@ -228,16 +231,16 @@ EOF
 
 # Now install the elasticsearch plugins
 if [[ $PLUGIN_ZIPFILE ]]; then
-  $ES_BASE/$PLUGIN_TOOL $JAVA_PROXY_PARAMS install file:$PLUGIN_ZIPFILE  || exit 3
+  $ES_BASE/$PLUGIN_TOOL install file:$PLUGIN_ZIPFILE  || exit 3
 else
-  $ES_BASE/$PLUGIN_TOOL $JAVA_PROXY_PARAMS install solutions.siren/$PLUGIN_NAME/$ES_VERSION  || exit 2
+  $ES_BASE/$PLUGIN_TOOL install solutions.siren/$PLUGIN_NAME/$ES_VERSION  || exit 2
 fi
 
 # only need this if we are using enterprise edition v4
 if [[ $ES_MAJOR_VERSION -lt 5 ]]; then
-  $ES_BASE/$PLUGIN_TOOL $JAVA_PROXY_PARAMS install lmenezes/elasticsearch-kopf  || exit 2
+  $ES_BASE/$PLUGIN_TOOL install lmenezes/elasticsearch-kopf  || exit 2
   if [[ -f $SRC_DIR/license-siren-$ES_VERSION.zip ]]; then
-	$ES_BASE/$PLUGIN_TOOL $JAVA_PROXY_PARAMS install file:$SRC_DIR/license-siren-$ES_VERSION.zip  || exit 3
+	$ES_BASE/$PLUGIN_TOOL install file:$SRC_DIR/license-siren-$ES_VERSION.zip  || exit 3
   fi
 fi
 
@@ -264,7 +267,7 @@ user=$USER
 directory=$ES_BASE
 command=$ES_BASE/bin/elasticsearch
 environment=
-	ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE $JAVA_PROXY_PARAMS"
+	ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE $ES_JAVA_OPTS"
 autorestart=True
 EOF
 
