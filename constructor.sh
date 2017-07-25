@@ -4,8 +4,6 @@
 
 ##### SETTINGS #####
 
-LOGGER='logger -t es-constructor'
-
 # Sysctl max_map_count (>=262144)
 MAX_MAP_COUNT=262144
 
@@ -39,10 +37,10 @@ ARTIFACTORY_HOST=10.0.0.1:8080
 # These will normally be variable assignments overriding the above, but
 # they can in principle be anything. So be careful.
 
-echo Evaluating \"$*\" |& $LOGGER
-eval $(echo $*) |& $LOGGER
+echo Evaluating \"$*\" 
+eval $(echo $*) 
 
-echo DEBUG=$DEBUG |& $LOGGER
+echo DEBUG=$DEBUG 
 
 
 if [[ $DEBUG ]]; then
@@ -54,7 +52,7 @@ fi
 
 ES_MAJOR_VERSION=${ES_VERSION%%.*}
 if [[ $DEBUG ]]; then
-	echo ES_MAJOR_VERSION=$ES_MAJOR_VERSION |& $LOGGER
+	echo ES_MAJOR_VERSION=$ES_MAJOR_VERSION 
 fi
 
 if [[ ${ES_MAJOR_VERSION} == "2" ]]; then
@@ -64,17 +62,17 @@ elif [[ ${ES_MAJOR_VERSION} == "5" ]]; then
   PLUGIN_TOOL=bin/elasticsearch-plugin
   PLUGIN_NAME=platform-core
 else
-  echo "Elasticsearch version ${ES_VERSION} not supported by this script. Aborting!" |& $LOGGER
+  echo "Elasticsearch version ${ES_VERSION} not supported by this script. Aborting!" 
   exit 1
 fi
 if [[ $DEBUG ]]; then
-	echo ES_MAJOR_VERSION=$ES_MAJOR_VERSION |& $LOGGER
+	echo ES_MAJOR_VERSION=$ES_MAJOR_VERSION 
 fi
 
 
 # Check that the user exists
 if ! grep -q "^${USER}:" /etc/passwd; then
-	adduser --disabled-login --system $USER |& $LOGGER
+	adduser --disabled-login --system $USER 
 fi
  
 
@@ -114,55 +112,55 @@ if ! mkdir -p $BASE; then
   exit 1
 fi
 if [[ $DEBUG ]]; then
-	echo PLUGIN_NAME=$PLUGIN_NAME |& $LOGGER
-	echo PLUGIN_URL=$PLUGIN_URL |& $LOGGER
-	echo PLUGIN_VERSION=$PLUGIN_VERSION |& $LOGGER
-	echo PLUGIN_ZIPFILE=$PLUGIN_ZIPFILE |& $LOGGER
-	echo ES_BASE=$ES_BASE |& $LOGGER
-	echo ES_ZIPFILE=$ES_ZIPFILE |& $LOGGER
-	echo ES_URL=$ES_URL |& $LOGGER
-	echo ES_URL2=$ES_URL2 |& $LOGGER
-	echo LOGSTASH_BASE=$LOGSTASH_BASE |& $LOGGER
-	echo LOGSTASH_ZIPFILE=$LOGSTASH_ZIPFILE |& $LOGGER
-	echo LOGSTASH_URL=$LOGSTASH_URL |& $LOGGER
-	echo LOGSTASH_URL2=$LOGSTASH_URL2 |& $LOGGER
+	echo PLUGIN_NAME=$PLUGIN_NAME 
+	echo PLUGIN_URL=$PLUGIN_URL 
+	echo PLUGIN_VERSION=$PLUGIN_VERSION 
+	echo PLUGIN_ZIPFILE=$PLUGIN_ZIPFILE 
+	echo ES_BASE=$ES_BASE 
+	echo ES_ZIPFILE=$ES_ZIPFILE 
+	echo ES_URL=$ES_URL 
+	echo ES_URL2=$ES_URL2 
+	echo LOGSTASH_BASE=$LOGSTASH_BASE 
+	echo LOGSTASH_ZIPFILE=$LOGSTASH_ZIPFILE 
+	echo LOGSTASH_URL=$LOGSTASH_URL 
+	echo LOGSTASH_URL2=$LOGSTASH_URL2 
 fi
 
 
 
 ##### DOWNLOAD SOFTWARE #####
 
-apt-get -y install unzip supervisor |& $LOGGER
+apt-get -y install unzip supervisor 
 
-if ! curl $CURL_ARGS -o $TMP_DIR/$ES_ZIPFILE $ES_URL |& $LOGGER; then
-  echo "Error downloading $ES_URL, trying alternative download location..." |& $LOGGER
-  if ! curl $CURL_ARGS -o $TMP_DIR/$ES_ZIPFILE $ES_URL2 |& $LOGGER; then
-    echo "Error downloading $ES_URL2" |& $LOGGER
+if ! curl $CURL_ARGS -o $TMP_DIR/$ES_ZIPFILE $ES_URL ; then
+  echo "Error downloading $ES_URL, trying alternative download location..." 
+  if ! curl $CURL_ARGS -o $TMP_DIR/$ES_ZIPFILE $ES_URL2 ; then
+    echo "Error downloading $ES_URL2" 
     exit 3
   else
-    echo "Success" |& $LOGGER
+    echo "Success" 
   fi
 fi
-unzip $TMP_DIR/$ES_ZIPFILE |& $LOGGER
+unzip $TMP_DIR/$ES_ZIPFILE 
 
 
-if ! curl $CURL_ARGS -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL |& $LOGGER; then
-  echo "Error downloading $LOGSTASH_URL, trying alternative download location..." |& $LOGGER
-  if ! curl $CURL_ARGS -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL2 |& $LOGGER; then
-    echo "Error downloading $LOGSTASH_URL2" |& $LOGGER
+if ! curl $CURL_ARGS -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL ; then
+  echo "Error downloading $LOGSTASH_URL, trying alternative download location..." 
+  if ! curl $CURL_ARGS -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL2 ; then
+    echo "Error downloading $LOGSTASH_URL2" 
     exit 3
   else
-    echo "Success" |& $LOGGER
+    echo "Success" 
   fi
 fi
-unzip $TMP_DIR/$LOGSTASH_ZIPFILE |& $LOGGER
+unzip $TMP_DIR/$LOGSTASH_ZIPFILE 
 
 
 #### TODO: REMOVE THIS 'false' WHEN WE HAVE A WORKING PLUGIN DOWNLOAD
 if [[ $PLUGIN_URL && false ]]; then
   # We will also need to download a snapshot plugin from the artifactory
-  if ! curl $CURL_ARGS -o $TMP_DIR/$PLUGIN_ZIPFILE $PLUGIN_URL |& $LOGGER; then
-    echo "Error downloading $PLUGIN_URL" |& $LOGGER
+  if ! curl $CURL_ARGS -o $TMP_DIR/$PLUGIN_ZIPFILE $PLUGIN_URL ; then
+    echo "Error downloading $PLUGIN_URL" 
     exit 3
   fi
   PLUGIN_ZIPFILE=$TMP_DIR/$PLUGIN_ZIPFILE
@@ -184,16 +182,16 @@ EOF
 
 # Now install the elasticsearch plugins
 if [[ $PLUGIN_ZIPFILE ]]; then
-  $ES_BASE/$PLUGIN_TOOL install file:$PLUGIN_ZIPFILE |& $LOGGER || exit 3
+  $ES_BASE/$PLUGIN_TOOL install file:$PLUGIN_ZIPFILE  || exit 3
 else
-  $ES_BASE/$PLUGIN_TOOL install solutions.siren/$PLUGIN_NAME/$ES_VERSION |& $LOGGER || exit 2
+  $ES_BASE/$PLUGIN_TOOL install solutions.siren/$PLUGIN_NAME/$ES_VERSION  || exit 2
 fi
 
 # only need this if we are using enterprise edition v4
 if [[ $ES_MAJOR_VERSION -lt 5 ]]; then
-  $ES_BASE/$PLUGIN_TOOL install lmenezes/elasticsearch-kopf  |& $LOGGER|| exit 2
+  $ES_BASE/$PLUGIN_TOOL install lmenezes/elasticsearch-kopf  || exit 2
   if [[ -f $SRC_DIR/license-siren-$ES_VERSION.zip ]]; then
-	$ES_BASE/$PLUGIN_TOOL install file:$SRC_DIR/license-siren-$ES_VERSION.zip  |& $LOGGER|| exit 3
+	$ES_BASE/$PLUGIN_TOOL install file:$SRC_DIR/license-siren-$ES_VERSION.zip  || exit 3
   fi
 fi
 
@@ -201,7 +199,7 @@ fi
 current_max_map_count=$(sysctl -n vm.max_map_count)
 if [[ $current_max_map_count -lt $MAX_MAP_COUNT ]]; then
   echo "vm.max_map_count = $MAX_MAP_COUNT" > /etc/sysctl.d/99-elasticsearch.conf
-  sysctl -w "vm.max_map_count = $MAX_MAP_COUNT" |& $LOGGER
+  sysctl -w "vm.max_map_count = $MAX_MAP_COUNT" 
 fi
 
 ##### END ELASTICSEARCH CONFIGURATION #####

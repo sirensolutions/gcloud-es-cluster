@@ -54,7 +54,7 @@ PULLER=$(tempfile)
 cat <<EOF > $PULLER
 #!/bin/bash
 cd /tmp
-git clone https://github.com/sirensolutions/gcloud-es-cluster && /bin/bash ./gcloud-es-cluster/constructor.sh CONTROLLER_IP=$MASTER_IP ARTIFACTORY_HOST=$MASTER_IP $CONSTRUCTOR_ARGS
+git clone https://github.com/sirensolutions/gcloud-es-cluster && /bin/bash ./gcloud-es-cluster/constructor.sh CONTROLLER_IP=$MASTER_IP ARTIFACTORY_HOST=$MASTER_IP $CONSTRUCTOR_ARGS |& logger -t es-constructor
 EOF
 
 gcloud compute instances create $SLAVES --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
