@@ -49,11 +49,12 @@ EOF
 # elasticsearch does not parse proxy envars, so define java properties
 # note that elasticsearch is inconsistent, so we need to cover MANY options
 # https://github.com/elastic/puppet-elasticsearch/issues/152
+# we assume here that http and https proxies will be the same
 http_proxy_host=${http_proxy%:*}
-https_proxy_host=${https_proxy%:*}
+http_proxy_host=${http_proxy_host#http://}
 http_proxy_port=${http_proxy##*:}
-https_proxy_port=${https_proxy##*:}
-export ES_JAVA_OPTS="-Dhttp.proxyHost=$http_proxy_host -Dhttp.proxyPort=$http_proxy_port -Dhttps.proxyHost=$https_proxy_host -Dhttps.proxyPort=$https_proxy_port -DproxyHost=$http_proxy_host -DproxyPort=$http_proxy_port" 
+http_proxy_port=${http_proxy_port%/}
+export ES_JAVA_OPTS="-Dhttp.proxyHost=$http_proxy_host -Dhttp.proxyPort=$http_proxy_port -Dhttps.proxyHost=$http_proxy_host -Dhttps.proxyPort=$http_proxy_port -DproxyHost=$http_proxy_host -DproxyPort=$http_proxy_port" 
 
 ES_MAJOR_VERSION=${ES_VERSION%%.*}
 if [[ $DEBUG ]]; then
@@ -63,7 +64,7 @@ fi
 if [[ ${ES_MAJOR_VERSION} == "2" ]]; then
   # The plugin tool does not read the envar ES_JAVA_OPTS in 2.x
   # https://github.com/elastic/elasticsearch/issues/21824
-  PLUGIN_TOOL=bin/plugin $ES_JAVA_OPTS
+  PLUGIN_TOOL="bin/plugin $ES_JAVA_OPTS"
   PLUGIN_NAME=siren-join
 elif [[ ${ES_MAJOR_VERSION} == "5" ]]; then
   PLUGIN_TOOL=bin/elasticsearch-plugin
