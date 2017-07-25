@@ -61,6 +61,19 @@ if [[ $DEBUG ]]; then
 	echo ES_MAJOR_VERSION=$ES_MAJOR_VERSION 
 fi
 
+PLUGIN_MINOR_VERSION=${PLUGIN_VERSION%%-*}
+if [[ ${PLUGIN_MINOR_VERSION} != ${PLUGIN_VERSION} ]]; then
+  echo "This is a snapshot build."
+  SNAPSHOT=true
+  PLUGIN_DIR_VERSION=${PLUGIN_MINOR_VERSION}-SNAPSHOT
+  ES_DEFAULT=$PLUGIN_MINOR_VERSION
+  ARTIFACTORY_PATH=libs-snapshot-local
+else
+  ARTIFACTORY_PATH=libs-release-local
+  KIBI_DIR_VERSION=${KIBI_VERSION}
+fi
+
+
 
 # Check that the user exists
 if ! grep -q "^${USER}:" /etc/passwd; then
