@@ -39,7 +39,7 @@ ARTIFACTORY_HOST=10.0.0.1:8080
 # These will normally be variable assignments overriding the above, but
 # they can in principle be anything. So be careful.
 
-echo Evaluating \"$*\" |& $SLOGGER
+echo Evaluating \"$*\" |& $LOGGER
 eval $(echo $*) |& $LOGGER
 
 
