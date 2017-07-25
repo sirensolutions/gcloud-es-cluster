@@ -270,8 +270,10 @@ supervisorctl update
 ##### FIREWALL CONFIGURATION #####
 
 if [[ $CONTROLLER_IP ]]; then
+	subnet=${CONTROLLER_IP%.*}.0/24
 	ufw allow to any port 22 from $CONTROLLER_IP
-	# Should also configure elastic ports here for local subnet only
+	ufw allow to any port $ES_PORT from $subnet
+	ufw allow to any port $ES_TRANS_PORT from $subnet
 	sudo ufw enable
 fi
 
