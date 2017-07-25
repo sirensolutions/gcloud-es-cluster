@@ -57,11 +57,9 @@ PULLER=$(tempfile)
 cat <<EOF > $PULLER
 #!/bin/bash
 cd /tmp
-export HOME=/root
 export http_proxy="http://$PRIMARY_IP:3128/"
-git config --global http.proxy $http_proxy |& logger -t es-constructor
-if ! git clone https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-constructor; then
-	echo "Aborting; no git repository found" |& logger -t es-constructor
+if ! git -c http.proxy=$http_proxy clone https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
+	echo "Aborting; no git repository found" |& logger -t es-puller
 fi
 gcloud-es-cluster/constructor.sh "CONTROLLER_IP=$PRIMARY_IP; DEBUG=$DEBUG; $CONSTRUCTOR_ARGS" |& logger -t es-constructor
 EOF
