@@ -14,7 +14,7 @@ is unlikely to be useful for real applications.
 For advanced use, you can set the following envars [defaults]:
 
 IMAGE [ubuntu-os-cloud/ubuntu-1604-lts]
-SLAVE_PREFIX [es-<timestamp>]
+CLUSTER_NAME [es-<timestamp>]
 DEBUG []
 CONSTRUCTOR_ARGS []
 EOF
@@ -40,8 +40,8 @@ else
 	IMAGE_PROJECT=ubuntu-os-cloud
 fi
 
-if [[ ! $SLAVE_PREFIX ]]; then
-	SLAVE_PREFIX=es-$(date +%s)
+if [[ ! $CLUSTER_NAME ]]; then
+	CLUSTER_NAME=es-$(date +%s)
 fi
 
 # Let's go
@@ -50,7 +50,7 @@ PRIMARY_IP=$(hostname --ip-address)
 
 SLAVES=""
 for i in $(seq 1 $NUM_SLAVES); do
-	SLAVES="$SLAVES $SLAVE_PREFIX-node$i"
+	SLAVES="$SLAVES $CLUSTER_NAME-node$i"
 done
 
 # Now create a one-shot puller script

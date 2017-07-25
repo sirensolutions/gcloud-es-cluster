@@ -230,13 +230,34 @@ fi
 
 
 
+##### FIREWALL CONFIGURATION #####
+
+subnet=${CONTROLLER_IP%.*}.0/24
+ufw allow to any port 22 from $CONTROLLER_IP
+ufw allow to any port $ES_PORT from $subnet
+ufw allow to any port $ES_TRANS_PORT from $subnet
+sudo ufw enable
+
+##### END FIREWALL CONFIGURATION #####
+
+
+
 ##### ELASTICSEARCH CONFIGURATION #####
+
+# We configure the node name to be the hostname, and the cluster name 
+# is inferred from the hostname.
+
+
+##### WIP - need to populate unicast.hosts properly!!! 
 
 mv $ES_BASE/config/elasticsearch.yml $ES_BASE/config/elasticsearch.yml.dist
 cat > $ES_BASE/config/elasticsearch.yml <<EOF
 http.port: $ES_PORT
 transport.tcp.port: $ES_TRANS_PORT
 path.repo: $BASE
+cluster.name: ${HOSTNAME%-node*}
+node.name: ${HOSTNAME}
+discovery.zen.ping.unicast.hosts: ["10.0.0.1", "10.0.0.2", "10.0.0.3"]
 EOF
 
 # Now install the elasticsearch plugins
@@ -284,20 +305,6 @@ EOF
 supervisorctl update
 
 ##### END SUPERVISOR CONFIGURATION #####
-
-
-
-##### FIREWALL CONFIGURATION #####
-
-if [[ $CONTROLLER_IP ]]; then
-	subnet=${CONTROLLER_IP%.*}.0/24
-	ufw allow to any port 22 from $CONTROLLER_IP
-	ufw allow to any port $ES_PORT from $subnet
-	ufw allow to any port $ES_TRANS_PORT from $subnet
-	sudo ufw enable
-fi
-
-##### END FIREWALL CONFIGURATION #####
 
 
 if [[ ! $DEBUG ]]; then
