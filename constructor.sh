@@ -86,7 +86,7 @@ if [[ $PLUGIN_VERSION ]]; then
   else
     PLUGIN_ZIPFILE="${PLUGIN_NAME}-${PLUGIN_VERSION}-plugin.zip"
   fi
-  PLUGIN_URL="http://artifactory.siren.io:8443/artifactory/${ARTIFACTORY_PATH}/solutions/siren/${PLUGIN_NAME}/${PLUGIN_DIR_VERSION}/${PLUGIN_ZIPFILE}"
+  PLUGIN_URL="http://artifactory.siren.io:8081/artifactory/${ARTIFACTORY_PATH}/solutions/siren/${PLUGIN_NAME}/${PLUGIN_DIR_VERSION}/${PLUGIN_ZIPFILE}"
 fi
 
 ES_BASE=$BASE/elasticsearch-$ES_VERSION
