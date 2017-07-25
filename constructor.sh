@@ -83,7 +83,7 @@ fi
 
 ### Shouldn't need to change any of these
 
-SRC_DIR=$PWD
+SRC_DIR=/root
 TMP_DIR=$(mktemp -d)
 BASE=$BASE_PARENT/elastic
 
@@ -115,7 +115,10 @@ LOGSTASH_URL2="https://download.elastic.co/logstash/logstash/$LOGSTASH_ZIPFILE"
 if ! mkdir -p $BASE; then
   echo "Could not create directory $BASE. Aborting"
   exit 1
+else
+  cd $BASE
 fi
+
 if [[ $DEBUG ]]; then
 	echo PLUGIN_NAME=$PLUGIN_NAME 
 	echo PLUGIN_URL=$PLUGIN_URL 
