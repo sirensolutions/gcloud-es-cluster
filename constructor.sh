@@ -41,12 +41,10 @@ eval $(echo $*)
 
 echo DEBUG=$DEBUG 
 
-# NB you need to specify http_proxy EXACTLY as "http://<ip>:<port>/" if using apt
-# https://unix.stackexchange.com/questions/180312/cant-install-debian-because-installer-doesnt-parse-ip-correctly
+# save our http_proxy configuration for future use
 cat <<EOF >/etc/profile.d/00-proxy.sh
-export http_proxy=http://$CONTROLLER_IP:3128/
+export http_proxy=$http_proxy
 EOF
-. /etc/profile.d/00-proxy.sh
 
 ES_MAJOR_VERSION=${ES_VERSION%%.*}
 if [[ $DEBUG ]]; then

@@ -70,4 +70,4 @@ acl localnet src 10.132.0.0/24
 http_access allow localnet
 ```
 
-This will allow the slaves access to both public and private websites (e.g. artifactory) by setting the envar http_proxy="http://<controller_ip>:3128/". The constructor does this.
+This will allow the slaves access to both public and private websites (e.g. artifactory) by setting the envar http_proxy="http://<controller_ip>:3128/".
