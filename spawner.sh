@@ -1,13 +1,17 @@
 #!/bin/bash
-#
-# This script is invoked on the controller node to spawn a cluster with
-# a given configuration. It should have sensible (i.e. inexpensive!) defaults.
 
 if [[ $1 == "help" || $1 == "-h" || $1 == "--help" ]]; then
 cat <<EOF
 Usage: $0 [NUM_SLAVES [SLAVE_TYPE]]
 
-It also reads the following envars for defaults:
+This script is invoked on the controller node to spawn a cluster.
+
+In normal operation, the only values you should have to provide are 
+the number and type of slaves, and these are given on the command line.
+They default to 1 and 'f1-micro' respectively, but note that f1-micro
+is unlikely to be useful for real applications.
+
+For advanced use, you can set the following envars [defaults]:
 
 IMAGE [ubuntu-os-cloud/ubuntu-1604-lts]
 SLAVE_PREFIX [es-<timestamp>]
