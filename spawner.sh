@@ -11,6 +11,7 @@ It also reads the following envars for defaults:
 
 IMAGE [ubuntu-os-cloud/ubuntu-1604-lts]
 SLAVE_PREFIX [es-<timestamp>]
+DEBUG []
 CONSTRUCTOR_ARGS []
 EOF
 fi
@@ -56,17 +57,20 @@ PULLER=$(tempfile)
 cat <<EOF > $PULLER
 #!/bin/bash
 cd /tmp
+export HOME=/root
 export http_proxy="http://$PRIMARY_IP:3128/"
 git config --global http.proxy $http_proxy |& logger -t es-constructor
-git clone https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-constructor; then
+if ! git clone https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-constructor; then
 	echo "Aborting; no git repository found" |& logger -t es-constructor
 fi
-gcloud-es-cluster/constructor.sh "CONTROLLER_IP=$PRIMARY_IP; $CONSTRUCTOR_ARGS" |& logger -t es-constructor
+gcloud-es-cluster/constructor.sh "CONTROLLER_IP=$PRIMARY_IP; DEBUG=$DEBUG; $CONSTRUCTOR_ARGS" |& logger -t es-constructor
 EOF
 
 gcloud compute instances create $SLAVES --no-address --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
 
-rm $PULLER
+if [[ ! $DEBUG ]]; then
+  rm $PULLER
+fi
 
 # Now poll the info for each slave and wait until they are all connectible
 
