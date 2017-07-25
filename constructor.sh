@@ -12,7 +12,7 @@ MAX_MAP_COUNT=262144
 # Software versions
 ES_VERSION=2.4.4
 LOGSTASH_VERSION=2.4.1
-PLUGIN_VERSION=4.6.4
+PLUGIN_VERSION=2.4.4
 
 # The parent directory under which we create our data subdirectory. 
 # If SHOVE_BASE is defined, any conflicting subdir will be renamed.
