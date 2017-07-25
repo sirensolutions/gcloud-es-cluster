@@ -58,3 +58,16 @@ invoke it with the appropriate arguments. Most of the logic is then contained in
 
 - The spawner script is `spawner.sh`. This runs on the controller, creates a one-shot puller script and invokes gcloud to create the slaves.
 - The constructor script is `constructor.sh`. This is invoked on each slave node by the puller.
+
+
+Proxy
+-----
+
+To allow slaves to download stuff without having a routable IP, we install squid on the controller and add the following to /etc/squid/squid.conf:
+
+```
+acl localnet src 10.132.0.0/24
+http_access allow localnet
+```
+
+This will allow the slaves access to both public and private websites (e.g. artifactory) by setting the envar http_proxy="http://<controller_ip>:3128/". The constructor does this.

@@ -26,6 +26,9 @@ ES_HEAP_SIZE=4g
 ES_PORT=9200
 ES_TRANS_PORT=9300
 
+# Don't show progress bar, but do show errors
+CURL_ARGS="-sS -f"
+	
 ##### END SETTINGS #####
 
 
@@ -38,9 +41,12 @@ eval $(echo $*)
 
 echo DEBUG=$DEBUG 
 
-# Don't show progress bar, but do show errors
-CURL_ARGS="-sS -f"
-	
+# NB you need to specify http_proxy EXACTLY as "http://<ip>:<port>/" if using apt
+# https://unix.stackexchange.com/questions/180312/cant-install-debian-because-installer-doesnt-parse-ip-correctly
+cat <<EOF >/etc/profile.d/00-proxy.sh
+export http_proxy=http://$CONTROLLER_IP:3128/
+EOF
+. /etc/profile.d/00-proxy.sh
 
 ES_MAJOR_VERSION=${ES_VERSION%%.*}
 if [[ $DEBUG ]]; then

@@ -51,12 +51,10 @@ done
 # Now create a one-shot puller script
 PULLER=$(tempfile)
 
-# NB you need to specify http_proxy EXACTLY as "http://<ip>:<port>/" if using apt
-# https://unix.stackexchange.com/questions/180312/cant-install-debian-because-installer-doesnt-parse-ip-correctly
 cat <<EOF > $PULLER
 #!/bin/bash
 cd /tmp
-git clone https://github.com/sirensolutions/gcloud-es-cluster && /bin/bash ./gcloud-es-cluster/constructor.sh CONTROLLER_IP=$MASTER_IP; export http_proxy=http://$MASTER_IP:3128/; $CONSTRUCTOR_ARGS |& logger -t es-constructor
+git clone https://github.com/sirensolutions/gcloud-es-cluster && /bin/bash ./gcloud-es-cluster/constructor.sh "MASTER_IP=$MASTER_IP; $CONSTRUCTOR_ARGS" |& logger -t es-constructor
 EOF
 
 gcloud compute instances create $SLAVES --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
