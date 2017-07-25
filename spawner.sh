@@ -56,7 +56,6 @@ PULLER=$(tempfile)
 # https://unix.stackexchange.com/questions/180312/cant-install-debian-because-installer-doesnt-parse-ip-correctly
 cat <<EOF > $PULLER
 #!/bin/bash
-cd /tmp
 export http_proxy="http://$PRIMARY_IP:3128/"
 if ! git -c http.proxy=\$http_proxy clone https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
 	echo "Aborting; no git repository found" |& logger -t es-puller

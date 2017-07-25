@@ -86,13 +86,11 @@ fi
 
 ### Shouldn't need to change any of these
 
-SRC_DIR=/root
-TMP_DIR=$(mktemp -d)
+SRC_DIR=$PWD
 BASE=$BASE_PARENT/elastic
 
 if [[ $DEBUG ]]; then
 	echo SRC_DIR=$SRC_DIR
-	echo TMP_DIR=$TMP_DIR
 	echo BASE=$BASE
 fi
 	
@@ -166,38 +164,38 @@ apt-get update
 apt-get -y install unzip supervisor ufw oracle-java8-installer
 
 
-if ! curl $CURL_ARGS -o $TMP_DIR/$ES_ZIPFILE $ES_URL ; then
+if ! curl $CURL_ARGS -o $SRC_DIR/$ES_ZIPFILE $ES_URL ; then
   echo "Error downloading $ES_URL, trying alternative download location..." 
-  if ! curl $CURL_ARGS -o $TMP_DIR/$ES_ZIPFILE $ES_URL2 ; then
+  if ! curl $CURL_ARGS -o $SRC_DIR/$ES_ZIPFILE $ES_URL2 ; then
     echo "Error downloading $ES_URL2" 
     exit 3
   else
     echo "Success" 
   fi
 fi
-unzip $TMP_DIR/$ES_ZIPFILE >/dev/null
+unzip $SRC_DIR/$ES_ZIPFILE >/dev/null
 
 
-if ! curl $CURL_ARGS -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL ; then
+if ! curl $CURL_ARGS -o $SRC_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL ; then
   echo "Error downloading $LOGSTASH_URL, trying alternative download location..." 
-  if ! curl $CURL_ARGS -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL2 ; then
+  if ! curl $CURL_ARGS -o $SRC_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL2 ; then
     echo "Error downloading $LOGSTASH_URL2" 
     exit 3
   else
     echo "Success" 
   fi
 fi
-unzip $TMP_DIR/$LOGSTASH_ZIPFILE >/dev/null
+unzip $SRC_DIR/$LOGSTASH_ZIPFILE >/dev/null
 
 
 #### TODO: REMOVE THIS 'false' WHEN WE HAVE A WORKING PLUGIN DOWNLOAD
 if [[ $PLUGIN_URL && false ]]; then
   # We will also need to download a snapshot plugin from the artifactory
-  if ! curl $CURL_ARGS -o $TMP_DIR/$PLUGIN_ZIPFILE $PLUGIN_URL ; then
+  if ! curl $CURL_ARGS -o $SRC_DIR/$PLUGIN_ZIPFILE $PLUGIN_URL ; then
     echo "Error downloading $PLUGIN_URL" 
     exit 3
   fi
-  PLUGIN_ZIPFILE=$TMP_DIR/$PLUGIN_ZIPFILE
+  PLUGIN_ZIPFILE=$SRC_DIR/$PLUGIN_ZIPFILE
 fi
 
 ##### END DOWNLOAD SOFTWARE #####
@@ -272,7 +270,3 @@ fi
 
 ##### END FIREWALL CONFIGURATION #####
 
-
-if [[ ! $DEBUG ]]; then
-	rm -rf $TMP_DIR
-fi
