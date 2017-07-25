@@ -148,7 +148,7 @@ if ! curl $CURL_ARGS -o $TMP_DIR/$ES_ZIPFILE $ES_URL ; then
     echo "Success" 
   fi
 fi
-unzip $TMP_DIR/$ES_ZIPFILE 
+unzip $TMP_DIR/$ES_ZIPFILE >/dev/null
 
 
 if ! curl $CURL_ARGS -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL ; then
@@ -160,7 +160,7 @@ if ! curl $CURL_ARGS -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL ; then
     echo "Success" 
   fi
 fi
-unzip $TMP_DIR/$LOGSTASH_ZIPFILE 
+unzip $TMP_DIR/$LOGSTASH_ZIPFILE >/dev/null
 
 
 #### TODO: REMOVE THIS 'false' WHEN WE HAVE A WORKING PLUGIN DOWNLOAD
