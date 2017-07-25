@@ -184,7 +184,7 @@ DEBIAN_FRONTEND=noninteractive apt-get -y install unzip supervisor ufw oracle-ja
 
 
 if ! curl $CURL_ARGS -o $TMP_DIR/$ES_ZIPFILE $ES_URL ; then
-  echo "Error downloading $ES_URL, trying alternative download location..." 
+  echo "Warning: problem downloading $ES_URL, trying alternative download location..." 
   if ! curl $CURL_ARGS -o $TMP_DIR/$ES_ZIPFILE $ES_URL2 ; then
     echo "Error downloading $ES_URL2" 
     exit 3
@@ -196,7 +196,7 @@ unzip $TMP_DIR/$ES_ZIPFILE >/dev/null
 
 
 if ! curl $CURL_ARGS -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL ; then
-  echo "Error downloading $LOGSTASH_URL, trying alternative download location..." 
+  echo "Warning: problem downloading $LOGSTASH_URL, trying alternative download location..." 
   if ! curl $CURL_ARGS -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL2 ; then
     echo "Error downloading $LOGSTASH_URL2" 
     exit 3
