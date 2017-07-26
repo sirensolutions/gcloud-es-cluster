@@ -110,8 +110,9 @@ fi
 SRC_DIR=/root
 TMP_DIR=$(mktemp -d)
 BASE=$BASE_PARENT/elastic
+PRIMARY_IP=$(hostname --ip-address)
 
-SUBNET=${CONTROLLER_IP%.*}.0/24
+SUBNET=${PRIMARY_IP%.*}.0/24
 
 if [[ $DEBUG ]]; then
 	echo SRC_DIR=$SRC_DIR
@@ -234,7 +235,7 @@ fi
 
 ##### FIREWALL CONFIGURATION #####
 
-ufw allow to any port 22 from $CONTROLLER_IP
+ufw allow to any port 22 from $SUBNET
 ufw allow to any port $ES_PORT from $SUBNET
 ufw allow to any port $ES_TRANS_PORT from $SUBNET
 sudo ufw enable
@@ -252,7 +253,7 @@ mv $ES_BASE/config/elasticsearch.yml $ES_BASE/config/elasticsearch.yml.dist
 cat > $ES_BASE/config/elasticsearch.yml <<EOF
 http.port: $ES_PORT
 transport.tcp.port: $ES_TRANS_PORT
-network.bind_host: "0"
+network.bind_host: "$PRIMARY_IP"
 path.repo: $BASE
 cluster.name: ${HOSTNAME%-node*}
 node.name: ${HOSTNAME}
