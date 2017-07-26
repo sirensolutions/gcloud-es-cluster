@@ -95,15 +95,15 @@ for ip in $SLAVE_IPS; do
 	while ! nc -w 5 $ip $ES_PORT </dev/null >/dev/null; do
 		sleep 5
 	done
-	echo $slave running
+	echo $ip running
 done
 
 echo "Assembling cluster..."
 for ip in $SLAVE_IPS; do
 	curl -XPUT http://$ip:$ES_PORT/_cluster/settings -d '{
 		"persistent" : {
-			"discovery.zen.minimum_master_nodes" : $NUM_MASTERS,
-			"discovery.zen.ping.unicast.hosts" : [ $SLAVE_IPS_QUOTED ]
+			"discovery.zen.minimum_master_nodes" : '$NUM_MASTERS',
+			"discovery.zen.ping.unicast.hosts" : [ '$SLAVE_IPS_QUOTED' ]
 		}
 	}'
 done
