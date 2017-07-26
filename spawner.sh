@@ -51,9 +51,9 @@ fi
 PRIMARY_IP=$(hostname --ip-address)
 NUM_MASTERS=$[(NUM_SLAVES/2)+1]
 
-SLAVES=""
+SLAVES=()
 for i in $(seq 1 $NUM_SLAVES); do
-	SLAVES="$SLAVES $CLUSTER_NAME-node$i"
+	SLAVES=(${SLAVES[@]} $CLUSTER_NAME-node$i)
 done
 
 # Now create a one-shot puller script
@@ -72,26 +72,26 @@ fi
 gcloud-es-cluster/constructor.sh "CONTROLLER_IP=$PRIMARY_IP; DEBUG=$DEBUG; $CONSTRUCTOR_ARGS" |& logger -t es-constructor
 EOF
 
-gcloud compute instances create $SLAVES --no-address --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
+gcloud compute instances create ${SLAVES[@]} --no-address --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
 
 if [[ ! $DEBUG ]]; then
   rm $PULLER
 fi
 
 # Do all the housekeeping first, get it over with
-SLAVE_IPS=""
-for slave in $SLAVES; do
+SLAVE_IPS=()
+SLAVE_IPS_QUOTED=()
+for slave in ${SLAVES[@]}; do
 	ip=$(gcloud compute instances describe $slave|grep networkIP|awk '{print $2}')
-	SLAVE_IPS="$SLAVE_IPS $ip"
-	SLAVE_IPS_QUOTED="$SLAVE_IPS_QUOTED \"$ip\","
+	SLAVE_IPS=(${SLAVE_IPS[@]} $ip)
+	SLAVE_IPS_QUOTED=(${SLAVE_IPS_QUOTED[@]} \"$ip\")
 	# Delete this IP from our known_hosts because we know it has been changed
 	ssh-keygen -f "$HOME/.ssh/known_hosts" -R $ip >& /dev/null
 done
-# Remove trailing comma
-SLAVE_IPS_QUOTED=${SLAVE_IPS_QUOTED%,}
+IFS=", " SLAVE_IPS_ARRAY="[ ${SLAVE_IPS_QUOTED[*]} ]"
 
 echo "Waiting for elasticsearch to come up on each slave..."
-for ip in $SLAVE_IPS; do
+for ip in ${SLAVE_IPS[@]}; do
 	while ! nc -w 5 $ip $ES_PORT </dev/null >/dev/null; do
 		sleep 5
 	done
@@ -99,14 +99,14 @@ for ip in $SLAVE_IPS; do
 done
 
 echo "Assembling cluster..."
-for ip in $SLAVE_IPS; do
+for ip in ${SLAVE_IPS[@]}; do
 	curl -XPUT http://$ip:$ES_PORT/_cluster/settings -d "{
 		\"persistent\" : {
 			\"discovery.zen.minimum_master_nodes\" : $NUM_MASTERS,
-			\"discovery.zen.ping.unicast.hosts\" : [ $SLAVE_IPS_QUOTED ]
+			\"discovery.zen.ping.unicast.hosts\" : $SLAVE_IPS_ARRAY
 		}
 	}"
 done
 
 # Now get the status of the cluster from the first node
-curl -XGET http://${SLAVE_IPS% *}:$ES_PORT/_cluster/state?pretty
+curl -XGET http://${SLAVE_IPS[0]}:$ES_PORT/_cluster/state?pretty
