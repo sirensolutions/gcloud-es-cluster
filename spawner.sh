@@ -49,7 +49,7 @@ fi
 # Let's go
 
 PRIMARY_IP=$(hostname --ip-address)
-NUM_MASTERS=$[int(NUM_SLAVES/2)+1]
+NUM_MASTERS=$[(NUM_SLAVES/2)+1]
 
 SLAVES=""
 for i in $(seq 1 $NUM_SLAVES); do
