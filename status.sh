@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# QAD script to get the status of all known clusters
+# QAD script to list all running clusters
+# Use -v to get elasticsearch status of each
 
 ES_PORT=9200
 
@@ -15,10 +16,12 @@ IFS="
 " unique_clusters=$(echo "${cluster_list[*]}"|sort -u)
 echo "Found clusters: $unique_clusters"
 
-for cluster in $unique_clusters; do
+if [[ $1 == "-v" ]]; then
+  for cluster in $unique_clusters; do
 	# get the slave ip from 'describe' rather than 'list' because 'list'
 	# returns empty columns sometimes, making parsing difficult
 	first_slave=$(gcloud compute instances list | egrep ^${cluster}-node | head -1 | awk '{ print $1 }')
 	ip=$(gcloud compute instances describe $first_slave|grep networkIP|awk '{print $2}')
 	curl -XGET http://$ip:$ES_PORT/_cluster/state?pretty
-done
+  done
+fi
