@@ -257,7 +257,8 @@ transport.tcp.port: $ES_TRANS_PORT
 path.repo: $BASE
 cluster.name: ${HOSTNAME%-node*}
 node.name: ${HOSTNAME}
-discovery.zen.ping.unicast.hosts: ["10.0.0.1", "10.0.0.2", "10.0.0.3"]
+#discovery.zen.ping.unicast.hosts: ["10.0.0.1", "10.0.0.2", "10.0.0.3"]
+bootstrap.mlockall: true
 EOF
 
 # Now install the elasticsearch plugins
@@ -298,7 +299,7 @@ user=$USER
 directory=$ES_BASE
 command=$ES_BASE/bin/elasticsearch
 environment=
-	ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE $ES_JAVA_OPTS"
+	ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE MAX_LOCKED_MEMORY=unlimited $ES_JAVA_OPTS"
 autorestart=True
 EOF
 
