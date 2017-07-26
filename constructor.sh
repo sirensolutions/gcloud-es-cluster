@@ -265,13 +265,13 @@ sudo ufw enable
 # is inferred from the hostname.
 
 # first put our slave ip list into json format (QAD)
-SLAVE_IPS_QUOTED=()
+SLAVE_IPS_QUOTED_ARRAY=()
 for i in $SLAVE_IPS; do
-	SLAVE_IPS_QUOTED=($SLAVE_IPS_QUOTED \"$i\")
+	SLAVE_IPS_QUOTED_ARRAY=(${SLAVE_IPS_QUOTED_ARRAY[@]} \"$i\")
 done
 IFS_SAVE=$IFS
 IFS=","
-SLAVE_IPS_QUOTED="${SLAVE_IPS_QUOTED[@]}"
+SLAVE_IPS_QUOTED="${SLAVE_IPS_QUOTED_ARRAY[@]}"
 IFS=$IFS_SAVE
 
 mv $ES_BASE/config/elasticsearch.yml $ES_BASE/config/elasticsearch.yml.dist
