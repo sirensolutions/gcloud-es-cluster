@@ -79,6 +79,7 @@ fi
 
 # Now poll the info for each slave and wait until they are all connectible
 
+echo Waiting for elasticsearch to come up on each slave...
 SLAVE_IPS=""
 for slave in $SLAVES; do
 	ip=$(gcloud compute instances describe $slave|grep networkIP|awk '{print $2}')
@@ -96,7 +97,7 @@ SLAVE_IPS_QUOTED=${SLAVE_IPS_QUOTED%,}
 
 NUM_MASTERS=$[int(NUM_SLAVES/2)+1]
 
-echo Assembling cluster
+echo Assembling cluster...
 # Push cluster options to each slave
 for ip in $SLAVE_IPS; do
 	curl -XPUT http://$ip:$ES_PORT/_cluster/settings?pretty -d '{
