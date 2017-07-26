@@ -90,9 +90,8 @@ done
 # Now that we know all the slave IPs, we can tell the slaves themselves.
 echo "Pushing metadata..."
 for slave in ${SLAVES[@]}; do
-	gcloud compute instances add-metadata $slave --metadata es_slave_ips="${SLAVE_IPS[*]}",es_num_masters=$NUM_MASTERS,es_debug="$DEBUG"
-	# The constructors should spin here to avoid race conditions
-	gcloud compute instances add-metadata $slave --metadata es_spinlock_1=released
+	# The constructors should spin on es_spinlock_1 to avoid race conditions
+	gcloud compute instances add-metadata $slave --metadata es_slave_ips="${SLAVE_IPS[*]}",es_num_masters=$NUM_MASTERS,es_debug="$DEBUG",es_spinlock_1=released
 done
 
 echo "Waiting for elasticsearch to come up on each slave..."
