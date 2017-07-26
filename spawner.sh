@@ -49,6 +49,7 @@ fi
 # Let's go
 
 PRIMARY_IP=$(hostname --ip-address)
+NUM_MASTERS=$[int(NUM_SLAVES/2)+1]
 
 SLAVES=""
 for i in $(seq 1 $NUM_SLAVES); do
@@ -77,9 +78,7 @@ if [[ ! $DEBUG ]]; then
   rm $PULLER
 fi
 
-# Now poll the info for each slave and wait until they are all connectible
-
-echo Waiting for elasticsearch to come up on each slave...
+# Do all the housekeeping first, get it over with
 SLAVE_IPS=""
 for slave in $SLAVES; do
 	ip=$(gcloud compute instances describe $slave|grep networkIP|awk '{print $2}')
@@ -87,18 +86,19 @@ for slave in $SLAVES; do
 	SLAVE_IPS_QUOTED="$SLAVE_IPS_QUOTED \"$ip\","
 	# Delete this IP from our known_hosts because we know it has been changed
 	ssh-keygen -f "$HOME/.ssh/known_hosts" -R $ip >& /dev/null
+done
+# Remove trailing comma
+SLAVE_IPS_QUOTED=${SLAVE_IPS_QUOTED%,}
+
+echo "Waiting for elasticsearch to come up on each slave..."
+for ip in $SLAVE_IPS; do
 	while ! nc -w 5 $ip $ES_PORT </dev/null >/dev/null; do
 		sleep 5
 	done
 	echo $slave running
 done
-# Remove trailing comma
-SLAVE_IPS_QUOTED=${SLAVE_IPS_QUOTED%,}
 
-NUM_MASTERS=$[int(NUM_SLAVES/2)+1]
-
-echo Assembling cluster...
-# Push cluster options to each slave
+echo "Assembling cluster..."
 for ip in $SLAVE_IPS; do
 	curl -XPUT http://$ip:$ES_PORT/_cluster/settings?pretty -d '{
 		"persistent" : {
