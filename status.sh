@@ -12,8 +12,10 @@ for node in $all_nodes; do
 	node_cluster=${node%-node*}
 	cluster_list=(${cluster_list[@]} $node_cluster)
 done
-IFS="
-" unique_clusters=$(echo "${cluster_list[*]}"|sort -u)
+IFS_SAVE=$IFS
+IFS="\n"
+unique_clusters=$(echo "${cluster_list[*]}"|sort -u)
+IFS=$IFS_SAVE
 
 for cluster in $unique_clusters; do
 	# get the slave ip from 'describe' rather than 'list' because 'list'

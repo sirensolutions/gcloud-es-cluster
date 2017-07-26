@@ -69,7 +69,7 @@ export https_proxy="\$http_proxy"
 if ! git -c http.proxy=\$http_proxy clone https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
 	echo "Aborting; no git repository found" |& logger -t es-puller
 fi
-gcloud-es-cluster/constructor.sh "DEBUG=$DEBUG; $CONSTRUCTOR_ARGS" |& logger -t es-constructor
+gcloud-es-cluster/constructor.sh "$CONSTRUCTOR_ARGS" |& logger -t es-constructor
 EOF
 
 gcloud compute instances create ${SLAVES[@]} --no-address --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
@@ -80,46 +80,20 @@ fi
 
 # Do all the housekeeping first, get it over with
 SLAVE_IPS=()
-SLAVE_IPS_QUOTED=()
 for slave in ${SLAVES[@]}; do
 	ip=$(gcloud compute instances describe $slave|grep networkIP|awk '{print $2}')
 	SLAVE_IPS=(${SLAVE_IPS[@]} $ip)
-	SLAVE_IPS_QUOTED=(${SLAVE_IPS_QUOTED[@]} \"$ip\")
 	# Delete this IP from our known_hosts because we know it has been changed
 	ssh-keygen -f "$HOME/.ssh/known_hosts" -R $ip >& /dev/null
 done
-IFS_SAVE=$IFS
-IFS=","
-SLAVE_IPS_ARRAY="[ ${SLAVE_IPS_QUOTED[*]} ]"
-IFS=$IFS_SAVE
 
-echo "Assembling cluster..."
-
-# cluster configuration is not dynamically configurable. We need to push
-# a one-shot assembler script to each node.
-ASSEMBLER=$(tempfile)
-cat <<EOF > $ASSEMBLER
-#!/bin/bash
-. /var/cache/es-constructor.conf
-cat <<EEE >> \$ES_BASE/config/elasticsearch.yml
-discovery.zen.ping.unicast.hosts: $SLAVE_IPS_ARRAY
-discovery.zen.minimum_master_nodes: $NUM_MASTERS
-EEE
-supervisorctl update
-EOF
-
-for ip in ${SLAVE_IPS[@]}; do
-	while ! nc -w 5 $ip 22 </dev/null >/dev/null; do
-		sleep 5
-	done
-	scp $ASSEMBLER $ip:/tmp/assembler.sh
-	ssh -t $ip bash /tmp/assembler.sh
-	echo "$ip booted"
+# Now that we know all the slave IPs, we can tell the slaves themselves.
+echo "Pushing metadata..."
+for slave in ${SLAVES[@]}; do
+	gcloud compute instances add-metadata $slave --metadata es_slave_ips="${SLAVE_IPS[*]}",es_num_masters=$NUM_MASTERS,es_debug="$DEBUG"
+	# The constructors should spin here to avoid race conditions
+	gcloud compute instances add-metadata $slave --metadata es_spinlock_1=released
 done
-
-if [[ ! $DEBUG ]]; then
-	rm $ASSEMBLER
-fi
 
 echo "Waiting for elasticsearch to come up on each slave..."
 for ip in ${SLAVE_IPS[@]}; do

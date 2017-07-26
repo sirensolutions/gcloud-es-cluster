@@ -38,12 +38,30 @@ ES_TRANS_PORT=9300
 # Don't show progress bar, but do show errors
 CURL_ARGS="-sS -f"
 	
-##### END SETTINGS #####
+##### END DEFAULT SETTINGS #####
 
+
+# Now read the metadata server for further settings. Need to temporarily
+# disable http_proxy for this
+
+http_proxy_save=$http_proxy
+http_proxy=
+
+# Poll until the spawner is ready.
+while ! curl $CURL_ARGS "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/es_spinlock_1"; do
+	sleep 5
+done
+
+SLAVE_IPS=$( curl $CURL_ARGS "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/es_slave_ips" )
+NUM_MASTERS=$( curl $CURL_ARGS -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/es_num_masters" )
+DEBUG=$( curl $CURL_ARGS -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/es_debug" )
+
+http_proxy=$http_proxy_save
 
 # Evaluate all the command line arguments passed from the spawner.
 # These will normally be variable assignments overriding the above, but
 # they can in principle be anything. So be careful.
+# THIS IS DEPRECATED IN FAVOUR OF METADATA, SEE ABOVE
 
 echo Evaluating spawner commands \"$*\" 
 eval $(echo $*) 
@@ -231,8 +249,6 @@ fi
 ##### END DOWNLOAD SOFTWARE #####
 
 
-
-
 ##### FIREWALL CONFIGURATION #####
 
 ufw allow to any port 22 from $SUBNET
@@ -243,11 +259,19 @@ sudo ufw enable
 ##### END FIREWALL CONFIGURATION #####
 
 
-
 ##### ELASTICSEARCH CONFIGURATION #####
 
 # We configure the node name to be the hostname, and the cluster name 
 # is inferred from the hostname.
+
+# first put our slave ip list into json format (QAD)
+for i in $SLAVE_IPS; do
+	SLAVE_IPS_QUOTED=(SLAVE_IPS_QUOTED \"$i\")
+done
+IFS_SAVE=$IFS
+IFS=","
+SLAVE_IPS_QUOTED="${SLAVE_IPS_QUOTED[@]}"
+IFS=$IFS_SAVE
 
 mv $ES_BASE/config/elasticsearch.yml $ES_BASE/config/elasticsearch.yml.dist
 cat > $ES_BASE/config/elasticsearch.yml <<EOF
@@ -257,7 +281,8 @@ network.bind_host: "$PRIMARY_IP"
 path.repo: $BASE
 cluster.name: ${HOSTNAME%-node*}
 node.name: ${HOSTNAME}
-#discovery.zen.ping.unicast.hosts: ["10.0.0.1", "10.0.0.2", "10.0.0.3"]
+discovery.zen.ping.unicast.hosts: [ $SLAVE_IPS_QUOTED ]
+discovery.zen.minimum_master_nodes: $NUM_MASTERS
 bootstrap.mlockall: true
 EOF
 
@@ -305,8 +330,7 @@ environment=
 autorestart=True
 EOF
 
-# Don't do this now, the spawner will have to restart us anyway
-#supervisorctl update
+supervisorctl update
 
 ##### END SUPERVISOR CONFIGURATION #####
 
