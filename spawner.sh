@@ -1,5 +1,7 @@
 #!/bin/bash
 
+ES_PORT=9200
+
 if [[ $1 == "help" || $1 == "-h" || $1 == "--help" ]]; then
 cat <<EOF
 Usage: $0 [NUM_SLAVES [SLAVE_TYPE]]
@@ -77,12 +79,30 @@ fi
 
 # Now poll the info for each slave and wait until they are all connectible
 
+SLAVE_IPS=""
 for slave in $SLAVES; do
 	ip=$(gcloud compute instances describe $slave|grep networkIP|awk '{print $2}')
+	SLAVE_IPS="$SLAVE_IPS $ip"
+	SLAVE_IPS_QUOTED="$SLAVE_IPS_QUOTED \"$ip\","
 	# Delete this IP from our known_hosts because we know it has been changed
 	ssh-keygen -f "$HOME/.ssh/known_hosts" -R $ip >& /dev/null
-	while ! nc -w 5 $ip 22 </dev/null >/dev/null; do
+	while ! nc -w 5 $ip $ES_PORT </dev/null >/dev/null; do
 		sleep 5
 	done
-	echo $slave ready
+	echo $slave running
+done
+# Remove trailing comma
+SLAVE_IPS_QUOTED=${SLAVE_IPS_QUOTED%,}
+
+NUM_MASTERS=$[int(NUM_SLAVES/2)+1]
+
+echo Assembling cluster
+# Push cluster options to each slave
+for ip in $SLAVE_IPS; do
+	curl -XPUT http://$ip:$ES_PORT/_cluster/settings?pretty -d '{
+		"persistent" : {
+			"discovery.zen.minimum_master_nodes" : $NUM_MASTERS,
+			"discovery.zen.ping.unicast.hosts" : [ $SLAVE_IPS_QUOTED ]
+		}
+	}'
 done

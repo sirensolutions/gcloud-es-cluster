@@ -248,8 +248,6 @@ sudo ufw enable
 # We configure the node name to be the hostname, and the cluster name 
 # is inferred from the hostname.
 
-##### WIP - need to populate unicast.hosts properly!!! 
-
 mv $ES_BASE/config/elasticsearch.yml $ES_BASE/config/elasticsearch.yml.dist
 cat > $ES_BASE/config/elasticsearch.yml <<EOF
 http.port: $ES_PORT
