@@ -14,6 +14,8 @@ $node_cluster"
 done
 
 unique_clusters=$(echo $cluster_list|sort -u)
+echo "Found clusters: $unique_clusters"
+
 for cluster in $unique_clusters; do
 	# get the slave ip from 'describe' rather than 'list' because 'list'
 	# returns empty columns sometimes, making parsing difficult
