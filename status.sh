@@ -6,13 +6,13 @@ ES_PORT=9200
 
 all_nodes=$(gcloud compute instances list | egrep ^\\\S+-node | awk '{ print $1 }')
 
-cluster_list=""
+cluster_list=()
 for node in $all_nodes; do
 	node_cluster=${node%-node*}
-	cluster_list="$cluster_list
-$node_cluster"
+	cluster_list=(${cluster_list[@]} $node_cluster)
 done
-unique_clusters=$(echo $cluster_list|sort -u)
+IFS="
+" unique_clusters=$(echo "${cluster_list[*]}"|sort -u)
 echo "Found clusters: $unique_clusters"
 
 for cluster in $unique_clusters; do
