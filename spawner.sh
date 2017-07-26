@@ -107,3 +107,6 @@ for ip in $SLAVE_IPS; do
 		}
 	}'
 done
+
+# Now get the status of the cluster from the first node
+curl -XGET http://${SLAVE_IPS% *}:$ES_PORT/_cluster/state?pretty
