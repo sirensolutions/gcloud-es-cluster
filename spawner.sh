@@ -93,26 +93,40 @@ IFS=","
 SLAVE_IPS_ARRAY="[ ${SLAVE_IPS_QUOTED[*]} ]"
 IFS=$IFS_SAVE
 
+echo "Assembling cluster..."
+
+# cluster configuration is not dynamically configurable. We need to push
+# a one-shot assembler script to each node.
+ASSEMBLER=$(tempfile)
+cat <<EOF > 
+#!/bin/bash
+. /var/cache/es-constructor.conf
+cat <<EEE >> \$ES_BASE/config/elasticsearch.yml
+discovery.zen.ping.unicast.hosts: $SLAVE_IPS_ARRAY
+discovery.zen.minimum_master_nodes: $NUM_MASTERS
+EEE
+supervisorctl update
+EOF
+
+for ip in ${SLAVE_IPS[@]}; do
+	while ! nc -w 5 $ip 22 </dev/null >/dev/null; do
+		sleep 5
+	done
+	scp $ASSEMBLER $ip:/tmp/assembler.sh
+	ssh -t $ip bash /tmp/assembler.sh
+	echo "$ip booted"
+done
+
+if [[ ! $DEBUG ]]; then
+	rm $ASSEMBLER
+fi
+
 echo "Waiting for elasticsearch to come up on each slave..."
 for ip in ${SLAVE_IPS[@]}; do
 	while ! nc -w 5 $ip $ES_PORT </dev/null >/dev/null; do
 		sleep 5
 	done
-	echo $ip running
-done
-
-echo "Assembling cluster..."
-transcript="{
-		\"persistent\" : {
-			\"discovery.zen.minimum_master_nodes\" : $NUM_MASTERS,
-			\"discovery.zen.ping.unicast.hosts\" : $SLAVE_IPS_ARRAY
-		}
-	}"
-if [[ $DEBUG ]]; then
-	echo $transcript
-fi
-for ip in ${SLAVE_IPS[@]}; do
-	curl -XPUT http://$ip:$ES_PORT/_cluster/settings -d "$transcript"
+	echo "$ip running"
 done
 
 # Now get the status of the cluster from the first node

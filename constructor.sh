@@ -305,9 +305,34 @@ environment=
 autorestart=True
 EOF
 
-supervisorctl update
+# Don't do this now, the spawner will have to restart us anyway
+#supervisorctl update
 
 ##### END SUPERVISOR CONFIGURATION #####
+
+
+##### STORE CONFIGURATION VARIABLES #####
+
+cat <<EOF >/var/cache/es-constructor.conf
+# Stored configuration from the es-constructor.
+# Source this to populate handy variables, saves looking for them.
+
+ES_BASE=$ES_BASE
+LOGSTASH_BASE=$LOGSTASH_BASE
+ES_VERSION=$ES_VERSION
+LOGSTASH_VERSION=$LOGSTASH_VERSION
+PLUGIN_VERSION=$PLUGIN_VERSION
+PLUGIN_NAME=$PLUGIN_NAME
+ES_PORT=$ES_PORT
+ES_TRANS_PORT=$ES_TRANS_PORT
+ES_HEAP_SIZE=$ES_HEAP_SIZE
+ES_JAVA_OPTS=$ES_JAVA_OPTS
+PRIMARY_IP=$PRIMARY_IP
+SUBNET=$SUBNET
+USER=$USER
+EOF
+
+##### END STORE CONFIGURATION VARIABLES #####
 
 
 if [[ ! $DEBUG ]]; then
