@@ -4,7 +4,7 @@
 
 ES_PORT=9200
 
-all_nodes=$(gcloud compute instances list | egrep ^\\\S-node | awk '{ print $1 }')
+all_nodes=$(gcloud compute instances list | egrep ^\\\S+-node | awk '{ print $1 }')
 
 cluster_list=""
 for node in $all_nodes; do
