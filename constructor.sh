@@ -271,7 +271,7 @@ for i in $SLAVE_IPS; do
 done
 IFS_SAVE=$IFS
 IFS=","
-SLAVE_IPS_QUOTED="${SLAVE_IPS_QUOTED_ARRAY[@]}"
+SLAVE_IPS_QUOTED="${SLAVE_IPS_QUOTED_ARRAY[*]}"
 IFS=$IFS_SAVE
 
 mv $ES_BASE/config/elasticsearch.yml $ES_BASE/config/elasticsearch.yml.dist
