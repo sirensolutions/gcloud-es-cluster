@@ -281,6 +281,8 @@ if [[ $current_max_map_count -lt $MAX_MAP_COUNT ]]; then
   sysctl -w "vm.max_map_count = $MAX_MAP_COUNT" 
 fi
 
+echo "elastic - memlock unlimited" > /etc/security/limits.d/elasticsearch.conf
+
 ##### END ELASTICSEARCH CONFIGURATION #####
 
 
@@ -297,7 +299,7 @@ user=$USER
 directory=$ES_BASE
 command=$ES_BASE/bin/elasticsearch
 environment=
-	ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE MAX_LOCKED_MEMORY=unlimited $ES_JAVA_OPTS"
+	ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE $ES_JAVA_OPTS"
 autorestart=True
 EOF
 
