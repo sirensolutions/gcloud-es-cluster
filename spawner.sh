@@ -88,7 +88,7 @@ for slave in ${SLAVES[@]}; do
 	# Delete this IP from our known_hosts because we know it has been changed
 	ssh-keygen -f "$HOME/.ssh/known_hosts" -R $ip >& /dev/null
 done
-IFS=", " SLAVE_IPS_ARRAY="[ ${SLAVE_IPS_QUOTED[*]} ]"
+IFS="," SLAVE_IPS_ARRAY="[ ${SLAVE_IPS_QUOTED[*]} ]"
 
 echo "Waiting for elasticsearch to come up on each slave..."
 for ip in ${SLAVE_IPS[@]}; do
