@@ -59,6 +59,11 @@ invoke it with the appropriate arguments. Most of the logic is then contained in
 - The spawner script is `spawner.sh`. This runs on the controller, creates a one-shot puller script and invokes gcloud to create the slaves.
 - The constructor script is `constructor.sh`. This is invoked on each slave node by the puller.
 
+There are also two other scripts for use on the controller:
+
+- `killer.sh` deletes all nodes in a given cluster. It assumes the node naming convention used in the spawner.
+- `status.sh` lists all running clusters. With the argument "-v" it also queries elasticsearch for the status of the cluster.
+
 
 Proxy
 -----
