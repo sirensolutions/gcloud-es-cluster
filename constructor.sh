@@ -278,7 +278,8 @@ mv $ES_BASE/config/elasticsearch.yml $ES_BASE/config/elasticsearch.yml.dist
 cat > $ES_BASE/config/elasticsearch.yml <<EOF
 http.port: $ES_PORT
 transport.tcp.port: $ES_TRANS_PORT
-network.bind_host: "$PRIMARY_IP"
+network.bind_host: "0"
+network.publish_host: "$PRIMARY_IP"
 path.repo: $BASE
 cluster.name: ${HOSTNAME%-node*}
 node.name: ${HOSTNAME}
