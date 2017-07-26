@@ -100,7 +100,7 @@ done
 
 echo "Assembling cluster..."
 for ip in $SLAVE_IPS; do
-	curl -XPUT http://$ip:$ES_PORT/_cluster/settings?pretty -d '{
+	curl -XPUT http://$ip:$ES_PORT/_cluster/settings -d '{
 		"persistent" : {
 			"discovery.zen.minimum_master_nodes" : $NUM_MASTERS,
 			"discovery.zen.ping.unicast.hosts" : [ $SLAVE_IPS_QUOTED ]
