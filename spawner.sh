@@ -98,7 +98,7 @@ echo "Assembling cluster..."
 # cluster configuration is not dynamically configurable. We need to push
 # a one-shot assembler script to each node.
 ASSEMBLER=$(tempfile)
-cat <<EOF > 
+cat <<EOF > $ASSEMBLER
 #!/bin/bash
 . /var/cache/es-constructor.conf
 cat <<EEE >> \$ES_BASE/config/elasticsearch.yml
