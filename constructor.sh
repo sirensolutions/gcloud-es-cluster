@@ -111,6 +111,8 @@ SRC_DIR=/root
 TMP_DIR=$(mktemp -d)
 BASE=$BASE_PARENT/elastic
 
+SUBNET=${CONTROLLER_IP%.*}.0/24
+
 if [[ $DEBUG ]]; then
 	echo SRC_DIR=$SRC_DIR
 	echo TMP_DIR=$TMP_DIR
@@ -232,10 +234,9 @@ fi
 
 ##### FIREWALL CONFIGURATION #####
 
-subnet=${CONTROLLER_IP%.*}.0/24
 ufw allow to any port 22 from $CONTROLLER_IP
-ufw allow to any port $ES_PORT from $subnet
-ufw allow to any port $ES_TRANS_PORT from $subnet
+ufw allow to any port $ES_PORT from $SUBNET
+ufw allow to any port $ES_TRANS_PORT from $SUBNET
 sudo ufw enable
 
 ##### END FIREWALL CONFIGURATION #####
@@ -246,7 +247,6 @@ sudo ufw enable
 
 # We configure the node name to be the hostname, and the cluster name 
 # is inferred from the hostname.
-
 
 ##### WIP - need to populate unicast.hosts properly!!! 
 
