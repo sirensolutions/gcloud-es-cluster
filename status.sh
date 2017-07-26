@@ -13,7 +13,8 @@ for node in $all_nodes; do
 	cluster_list=(${cluster_list[@]} $node_cluster)
 done
 IFS_SAVE=$IFS
-IFS="\n"
+IFS="
+"
 unique_clusters=$(echo "${cluster_list[*]}"|sort -u)
 IFS=$IFS_SAVE
 
