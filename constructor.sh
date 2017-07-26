@@ -265,8 +265,9 @@ sudo ufw enable
 # is inferred from the hostname.
 
 # first put our slave ip list into json format (QAD)
+SLAVE_IPS_QUOTED=()
 for i in $SLAVE_IPS; do
-	SLAVE_IPS_QUOTED=(SLAVE_IPS_QUOTED \"$i\")
+	SLAVE_IPS_QUOTED=($SLAVE_IPS_QUOTED \"$i\")
 done
 IFS_SAVE=$IFS
 IFS=","
