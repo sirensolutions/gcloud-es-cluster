@@ -48,11 +48,11 @@ http_proxy_save=$http_proxy
 http_proxy=
 
 # Poll until the spawner is ready.
-while ! curl $CURL_ARGS "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/es_spinlock_1"; do
+while ! curl $CURL_ARGS -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/es_spinlock_1"; do
 	sleep 5
 done
 
-SLAVE_IPS=$( curl $CURL_ARGS "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/es_slave_ips" )
+SLAVE_IPS=$( curl $CURL_ARGS -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/es_slave_ips" )
 NUM_MASTERS=$( curl $CURL_ARGS -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/es_num_masters" )
 DEBUG=$( curl $CURL_ARGS -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/es_debug" )
 
