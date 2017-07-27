@@ -1,6 +1,7 @@
 #!/bin/bash
 
 ES_PORT=9200
+SITE_CONFIG=gcloud.conf
 
 if [[ $1 == "help" || $1 == "-h" || $1 == "--help" ]]; then
 cat <<EOF
@@ -18,7 +19,7 @@ For advanced use, you can set the following envars [defaults]:
 IMAGE [ubuntu-os-cloud/ubuntu-1604-lts]
 CLUSTER_NAME [es-<timestamp>]
 DEBUG []
-CONSTRUCTOR_ARGS []
+SITE_CONFIG [gcloud.conf]
 EOF
 fi
 
@@ -49,6 +50,7 @@ fi
 # Let's go
 
 PRIMARY_IP=$(hostname --ip-address)
+SUBNET=${PRIMARY_IP%.*}.0/24
 NUM_MASTERS=$[(NUM_SLAVES/2)+1]
 
 SLAVES=()
@@ -69,7 +71,7 @@ export https_proxy="\$http_proxy"
 if ! git -c http.proxy=\$http_proxy clone https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
 	echo "Aborting; no git repository found" |& logger -t es-puller
 fi
-gcloud-es-cluster/constructor.sh "$CONSTRUCTOR_ARGS" |& logger -t es-constructor
+gcloud-es-cluster/constructor.sh "$SITE_CONFIG" |& logger -t es-constructor
 EOF
 
 gcloud compute instances create ${SLAVES[@]} --no-address --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
@@ -91,7 +93,8 @@ done
 echo "Pushing metadata..."
 for slave in ${SLAVES[@]}; do
 	# The constructors should spin on es_spinlock_1 to avoid race conditions
-	gcloud compute instances add-metadata $slave --metadata es_slave_ips="${SLAVE_IPS[*]}",es_num_masters=$NUM_MASTERS,es_debug="$DEBUG",es_spinlock_1=released
+	gcloud compute instances add-metadata $slave \
+	--metadata es_slave_ips="${SLAVE_IPS[*]}",es_num_masters=$NUM_MASTERS,es_debug="$DEBUG",es_subnet="$SUBNET",es_cluster_name="$CLUSTER_NAME",es_spinlock_1=released
 done
 
 echo "Waiting for elasticsearch to come up on each slave..."

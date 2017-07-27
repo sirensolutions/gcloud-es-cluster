@@ -15,7 +15,6 @@ LOGSTASH_VERSION=2.4.1
 PLUGIN_VERSION=2.4.4
 
 # The parent directory under which we create our data subdirectory. 
-# If SHOVE_BASE is defined, any conflicting subdir will be renamed.
 BASE_PARENT=/opt
 # The user that will own the files and processes.
 USER=elastic
@@ -40,31 +39,8 @@ CURL_ARGS="-sS -f"
 	
 ##### END DEFAULT SETTINGS #####
 
-
-# Now read the metadata server for further settings. Need to temporarily
-# disable http_proxy for this
-
-http_proxy_save=$http_proxy
-http_proxy=
-
-# Poll until the spawner is ready.
-while ! curl $CURL_ARGS -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/es_spinlock_1"; do
-	sleep 5
-done
-
-SLAVE_IPS=$( curl $CURL_ARGS -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/es_slave_ips" )
-NUM_MASTERS=$( curl $CURL_ARGS -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/es_num_masters" )
-DEBUG=$( curl $CURL_ARGS -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/es_debug" )
-
-http_proxy=$http_proxy_save
-
-# Evaluate all the command line arguments passed from the spawner.
-# These will normally be variable assignments overriding the above, but
-# they can in principle be anything. So be careful.
-# THIS IS DEPRECATED IN FAVOUR OF METADATA, SEE ABOVE
-
-echo Evaluating spawner commands \"$*\" 
-eval $(echo $*) 
+echo Loading site config \"$1\" 
+. $(dirname $0)/$1
 
 echo DEBUG=$DEBUG 
 
@@ -129,8 +105,6 @@ SRC_DIR=/root
 TMP_DIR=$(mktemp -d)
 BASE=$BASE_PARENT/elastic
 PRIMARY_IP=$(hostname --ip-address)
-
-SUBNET=${PRIMARY_IP%.*}.0/24
 
 if [[ $DEBUG ]]; then
 	echo SRC_DIR=$SRC_DIR
@@ -251,9 +225,12 @@ fi
 
 ##### FIREWALL CONFIGURATION #####
 
-ufw allow to any port 22 from $SUBNET
-ufw allow to any port $ES_PORT from $SUBNET
-ufw allow to any port $ES_TRANS_PORT from $SUBNET
+for subnet in $SUBNETS; do
+  ufw allow to any port 22 from $subnet
+  ufw allow to any port $ES_PORT from $subnet
+  ufw allow to any port $ES_TRANS_PORT from $subnet
+done
+
 sudo ufw enable
 
 ##### END FIREWALL CONFIGURATION #####
@@ -261,8 +238,7 @@ sudo ufw enable
 
 ##### ELASTICSEARCH CONFIGURATION #####
 
-# We configure the node name to be the hostname, and the cluster name 
-# is inferred from the hostname.
+# We configure the node name to be the hostname
 
 # first put our slave ip list into json format (QAD)
 SLAVE_IPS_QUOTED_ARRAY=()
@@ -281,7 +257,7 @@ transport.tcp.port: $ES_TRANS_PORT
 network.bind_host: "0"
 network.publish_host: "$PRIMARY_IP"
 path.repo: $BASE
-cluster.name: ${HOSTNAME%-node*}
+cluster.name: ${CLUSTER_NAME}
 node.name: ${HOSTNAME}
 discovery.zen.ping.unicast.hosts: [ $SLAVE_IPS_QUOTED ]
 discovery.zen.minimum_master_nodes: $NUM_MASTERS
@@ -359,7 +335,7 @@ ES_TRANS_PORT=$ES_TRANS_PORT
 ES_HEAP_SIZE=$ES_HEAP_SIZE
 ES_JAVA_OPTS=$ES_JAVA_OPTS
 PRIMARY_IP=$PRIMARY_IP
-SUBNET=$SUBNET
+SUBNETS=$SUBNETS
 USER=$USER
 EOF
 
