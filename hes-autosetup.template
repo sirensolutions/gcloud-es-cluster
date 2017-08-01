@@ -6,7 +6,7 @@ SWRAIDLEVEL 0
 
 BOOTLOADER grub
 
-HOSTNAME {{ inventory_hostname }}
+HOSTNAME {{ inventory_hostname }}.siren.io
 
 PART /boot ext3 512M
 PART lvm   vg0   all

@@ -39,8 +39,12 @@ CURL_ARGS="-sS -f"
 	
 ##### END DEFAULT SETTINGS #####
 
-echo Loading site config \"$1\" 
-. $(dirname $0)/$1
+echo Loading site config \"$1\"
+
+# Pushd/popd so we can handle both absolute and relative paths sensibly.
+pushd $(dirname $0) >/dev/null
+. $1
+popd >/dev/null
 
 echo DEBUG=$DEBUG 
 
