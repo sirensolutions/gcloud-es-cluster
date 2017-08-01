@@ -5,7 +5,6 @@
 # Machines will take their names from /etc/ansible/hosts
 
 PRIMARY_IP=$(hostname --fqdn)
-SUBNETS="${PRIMARY_IP}/32 "
 
 echo "Populate root's authorized_keys in the rescue OS"
 ansible $1 -m authorized_key -k -a "user=root key=$(ssh-add -L | head -1)"
@@ -29,7 +28,7 @@ cat <<EOF >${supplement}
 SLAVE_IPS="{% for host in groups['$CLUSTER'] %} {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }} {% endfor %}"
 NUM_MASTERS=\$[ \$(echo \$SLAVE_IPS | wc -w) / 2 + 1 ]
 DEBUG=1
-SUBNETS="${SUBNETS}"
+SUBNETS="${PRIMARY_IP}/32 {% for host in groups['$CLUSTER'] %} {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}/32 {% endfor %}"
 CLUSTER_NAME=$CLUSTER
 EOF
 ansible $1 -u root -m template -b -a "src=${supplement} dest=/tmp/baremetal.conf.supplement"
