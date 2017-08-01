@@ -1,0 +1,17 @@
+#!/bin/bash
+cd /tmp
+if ! git clone https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
+	echo "Aborting; no git repository found" |& logger -t es-puller
+fi
+
+# We set this on the fly so that ansible can substitute for variables
+# This should work because ansible has cached the other IPs
+cat <<EOF >gcloud-es-cluster/baremetal.conf
+SLAVE_IPS="{{  }}"
+NUM_MASTERS="{{  }}"
+DEBUG="{{  }}"
+SUBNETS="{{  }}"
+CLUSTER_NAME="{{  }}"
+EOF
+
+gcloud-es-cluster/constructor.sh "baremetal.conf" |& logger -t es-constructor

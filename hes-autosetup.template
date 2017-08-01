@@ -1,0 +1,18 @@
+DRIVE1 /dev/sda
+DRIVE2 /dev/sdb
+
+SWRAID 0
+SWRAIDLEVEL 0
+
+BOOTLOADER grub
+
+HOSTNAME {{ inventory_hostname }}
+
+PART /boot ext3 512M
+PART lvm   vg0   all
+
+LV vg0 root /    ext4  20G
+LV vg0 swap swap swap  16G
+LV vg0 data /data ext4 all
+
+IMAGE /root/images/Ubuntu-1604-xenial-64-minimal.tar.gz
