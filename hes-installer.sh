@@ -55,8 +55,8 @@ CLUSTER_NAME=$CLUSTER
 EOF
 
 for slave in $SLAVES; do
-	scp ${conffile} $slave:/tmp/baremetal.conf
-	scp baremetal-puller.sh $slave:/tmp/puller.sh
+	scp ${conffile} root@$slave:/tmp/baremetal.conf
+	scp baremetal-puller.sh root@$slave:/tmp/puller.sh
 	ssh root@$slave /tmp/puller.sh &
 done
 
