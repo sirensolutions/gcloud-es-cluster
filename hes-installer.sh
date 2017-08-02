@@ -31,19 +31,18 @@ ansible $CLUSTER -u root -m template -a "src=hes-autosetup.template dest=/autose
 # we use cat to make ansible wait for the connection to drop
 ansible $CLUSTER -u root -m command -a "bash -c '/root/.oldroot/nfs/install/installimage && reboot && cat'"
 
-# Delete entries from our known_hosts because the keys will have changed
-for slave in $SLAVES; do
-	ssh-keygen -f $HOME/.ssh/known_hosts -R $slave
-done
-# And replace them, to prevent annoying prompts
-ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
-
 echo "Waiting for each slave to come back up..."
 ansible $CLUSTER -c local -m wait_for -a "port=22"
 
+# Clean and repopulate known_hosts because the keys will have changed
+for entry in $SLAVES ${SLAVE_IPS[@]}; do
+	ssh-keygen -f $HOME/.ssh/known_hosts -R $entry
+done
+ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
+
 echo "Repopulate root's authorized_keys in the new base OS"
 for slave in $SLAVES; do
-	echo ${SLAVE_PASSWDS[$slave]} | sshpass ssh-copy-id root@$slave
+	echo "${SLAVE_PASSWDS[$slave]}" | sshpass ssh-copy-id root@$slave
 done
 
 echo "Now push cluster configuration and invoke the puller"
