@@ -229,6 +229,10 @@ fi
 
 ##### FIREWALL CONFIGURATION #####
 
+# Always prepend the ssh remote client to SUBNETS
+SSH_REMOTE_HOST=${SSH_CLIENT%% *}
+SUBNETS="$SSH_REMOTE_HOST $SUBNETS"
+
 for subnet in $SUBNETS; do
   ufw allow to any port 22 from $subnet
   ufw allow to any port $ES_PORT from $subnet

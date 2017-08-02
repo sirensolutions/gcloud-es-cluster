@@ -8,7 +8,7 @@
 # IPs must be defined in /etc/hosts
 
 CLUSTER=$1
-PRIMARY_IP=$(hostname --fqdn)
+PRIMARY_IP=$(hostname --ip-address)
 SLAVES=$(ansible $CLUSTER -c local -m command -a "echo {{ inventory_hostname }}" | grep -v ">>" | sort -n )
 NUM_MASTERS=$[ $(echo $SLAVES | wc -w) / 2 + 1 ]
 
@@ -18,7 +18,6 @@ echo "Populate root's authorized_keys in each rescue OS"
 declare -A SLAVE_PASSWDS
 declare -A SLAVE_IPS
 declare -A SUBNETS
-SUBNETS[primary]="${PRIMARY_IP}/32"
 for slave in $SLAVES; do
 	SLAVE_IPS[$slave]=$(grep "\b${slave}\b" /etc/hosts|awk '{print $1}')
 	SUBNETS[$slave]="${SLAVE_IPS[$slave]}/32"
