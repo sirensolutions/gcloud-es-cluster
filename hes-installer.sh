@@ -10,17 +10,13 @@ CLUSTER=$1
 PRIMARY_IP=$(hostname --fqdn)
 SLAVES=$(ansible $CLUSTER -c local -m command -a "echo {{ inventory_hostname }}" | grep -v ">>" )
  
-# First, let's populate a hash with our passwords
-# Ansible's password caching is unusable, so we do this ourselves
+echo "Populate root's authorized_keys in each rescue OS"
+# Ansible's password caching is unusable, so we roll our own
 declare -A SLAVE_PASSWDS
 for slave in $SLAVES; do
 	echo -n "Root password for ${slave}: "
-	read passwd
+	read -s passwd
 	SLAVE_PASSWDS[$slave]="$passwd"
-done
-
-echo "Populate root's authorized_keys in each rescue OS"
-for slave in $SLAVES; do
 	echo "${SLAVE_PASSWDS[$slave]}" | sshpass ssh-copy-id root@$slave
 done
 
