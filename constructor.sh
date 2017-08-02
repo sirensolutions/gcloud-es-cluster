@@ -307,13 +307,23 @@ chmod -R og=rx $BASE
 
 ##### SUPERVISOR CONFIGURATION #####
 
+# This is nasty. The only way we can get memlock to be unlimited from
+# supervisor without rebooting the machine is to run the service as
+# root, set the limit, and then sudo to the service account. But sudo
+# will throw away the environment, so...
+
+cat <<EOF > /usr/local/bin/elastic-launcher.sh
+#!/bin/bash
+export ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE $ES_JAVA_OPTS"
+$ES_BASE/bin/elasticsearch
+EOF
+chmod +x /usr/local/bin/elastic-launcher.sh
+
 cat > /etc/supervisor/conf.d/elastic.conf <<EOF
 [program:elastic]
-user=$USER
+user=root
 directory=$ES_BASE
-command=$ES_BASE/bin/elasticsearch
-environment=
-	ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE $ES_JAVA_OPTS"
+command="bash -c 'ulimit -l unlimited; sudo -u $USER /usr/local/bin/elastic-launcher.sh'"
 autorestart=True
 EOF
 
