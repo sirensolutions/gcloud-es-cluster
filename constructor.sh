@@ -229,14 +229,13 @@ fi
 
 ##### FIREWALL CONFIGURATION #####
 
-# Always prepend the ssh remote client to SUBNETS
+# Always allow the ssh remote client
 SSH_REMOTE_HOST=${SSH_CLIENT%% *}
-SUBNETS="$SSH_REMOTE_HOST $SUBNETS"
 
-for subnet in $SUBNETS; do
-  ufw allow to any port 22 from $subnet
-  ufw allow to any port $ES_PORT from $subnet
-  ufw allow to any port $ES_TRANS_PORT from $subnet
+for ip in $SSH_REMOTE_HOST $SLAVE_IPS; do
+  ufw allow to any port 22 from $ip
+  ufw allow to any port $ES_PORT from $ip
+  ufw allow to any port $ES_TRANS_PORT from $ip
 done
 
 sudo ufw enable
@@ -353,7 +352,7 @@ ES_TRANS_PORT=$ES_TRANS_PORT
 ES_HEAP_SIZE=$ES_HEAP_SIZE
 ES_JAVA_OPTS=$ES_JAVA_OPTS
 PRIMARY_IP=$PRIMARY_IP
-SUBNETS=$SUBNETS
+SLAVE_IPS=$SLAVE_IPS
 USER=$USER
 EOF
 

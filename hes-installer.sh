@@ -17,10 +17,8 @@ echo "Populate root's authorized_keys in each rescue OS"
 # Let's do some other housekeeping in this loop
 declare -A SLAVE_PASSWDS
 declare -A SLAVE_IPS
-declare -A SUBNETS
 for slave in $SLAVES; do
 	SLAVE_IPS[$slave]=$(grep "\b${slave}\b" /etc/hosts|awk '{print $1}')
-	SUBNETS[$slave]="${SLAVE_IPS[$slave]}/32"
 	echo -n "Root password for ${slave}: "
 	read -s passwd
 	SLAVE_PASSWDS[$slave]="$passwd"
@@ -54,7 +52,6 @@ cat <<EOF >${supplement}
 SLAVE_IPS="${SLAVE_IPS[@]}"
 NUM_MASTERS=$NUM_MASTERS
 DEBUG=1
-SUBNETS="${SUBNETS[@]}"
 CLUSTER_NAME=$CLUSTER
 EOF
 ansible $CLUSTER -u root -m copy -b -a "src=${supplement} dest=/tmp/baremetal.conf.supplement"
