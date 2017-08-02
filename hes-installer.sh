@@ -8,7 +8,7 @@
 
 CLUSTER=$1
 PRIMARY_IP=$(hostname --fqdn)
-SLAVES=$(ansible $CLUSTER -c local -m command -a "echo {{ inventory_hostname }}" | grep -v ">>" )
+SLAVES=$(ansible $CLUSTER -c local -m command -a "echo {{ inventory_hostname }}" | grep -v ">>" | sort -n )
  
 echo "Populate root's authorized_keys in each rescue OS"
 # Ansible's password caching is unusable, so we roll our own
@@ -22,10 +22,12 @@ done
 
 echo "Configure the OS"
 ansible $CLUSTER -u root -m template -a "src=hes-autosetup.template dest=/autosetup"
-ansible $CLUSTER -u root -m command -a "bash -c 'installimage && reboot'"
+ansible $CLUSTER -u root -m command -a "bash -c '/root/.oldroot/nfs/install/installimage && reboot'"
 
 # Delete entries from our known_hosts because the keys will have changed
-ansible $CLUSTER -c local -m command -a "ssh-keygen -f $HOME/.ssh/known_hosts -R {{ inventory_hostname }}"
+for slave in $SLAVES; do
+	ssh-keygen -f $HOME/.ssh/known_hosts -R $slave
+done
 
 echo "Waiting for each slave to come back up..."
 ansible $CLUSTER -c local -m wait_for -a "port=22"
