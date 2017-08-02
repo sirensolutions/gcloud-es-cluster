@@ -1,13 +1,27 @@
 #!/bin/bash
 
+# This script requires sshpass
+
 # This script takes one argument, the name of the cluster as defined
 # as a group in /etc/ansible/hosts
 # Machines will take their names from /etc/ansible/hosts
 
 PRIMARY_IP=$(hostname --fqdn)
+SLAVES=$(ansible $1 -c local -m command -a "echo {{ inventory_hostname }}" | grep -v ">>" )
+ 
+# First, let's populate a hash with our passwords
+# Ansible's password caching is unusable, so we do this ourselves
+declare -A SLAVE_PASSWDS
+for slave in $SLAVES; do
+	echo -n "Root password for ${slave}: "
+	read passwd
+	SLAVE_PASSWDS[$slave]="$passwd"
+done
 
-echo "Populate root's authorized_keys in the rescue OS"
-ansible $1 -m authorized_key -k -a "user=root key=$(ssh-add -L | head -1)"
+echo "Populate root's authorized_keys in each rescue OS"
+for slave in $SLAVES; do
+	echo "${SLAVE_PASSWDS[$slave]}" | sshpass ssh-copy-id root@$slave
+done
 
 echo "Configure the OS"
 ansible $1 -u root -m template -a "src=hes-autosetup.template dest=/autosetup"
@@ -20,7 +34,9 @@ echo "Waiting for each slave to come back up..."
 ansible $1 -c local -m wait_for -a "port=22"
 
 echo "Repopulate root's authorized_keys in the new base OS"
-ansible $1 -m authorized_key -k -a "user=root key=$(ssh-add -L | head -1)"
+for slave in $SLAVES; do
+	echo ${SLAVE_PASSWDS[$slave]} | sshpass ssh-copy-id root@$slave
+done
 
 echo "Now push cluster configuration and invoke the puller"
 supplement=$(tempfile)
