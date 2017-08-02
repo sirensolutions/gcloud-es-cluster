@@ -24,12 +24,14 @@ for slave in $SLAVES; do
 	echo -n "Root password for ${slave}: "
 	read -s passwd
 	SLAVE_PASSWDS[$slave]="$passwd"
+	echo
 	echo "${SLAVE_PASSWDS[$slave]}" | sshpass ssh-copy-id root@$slave
 done
 
 echo "Configure the OS"
 ansible $CLUSTER -u root -m template -a "src=hes-autosetup.template dest=/autosetup"
-ansible $CLUSTER -u root -m command -a "bash -c '/root/.oldroot/nfs/install/installimage && reboot'"
+# we use cat to make ansible wait for the connection to drop
+ansible $CLUSTER -u root -m command -a "bash -c '/root/.oldroot/nfs/install/installimage && reboot && cat'"
 
 # Delete entries from our known_hosts because the keys will have changed
 for slave in $SLAVES; do
