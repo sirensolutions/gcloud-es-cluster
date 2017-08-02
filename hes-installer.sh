@@ -48,13 +48,13 @@ done
 
 echo "Now push cluster configuration and invoke the puller"
 supplement=$(tempfile)
-cat <<EOF >${supplement}
+cat <<EOF >${conffile}
 SLAVE_IPS="${SLAVE_IPS[@]}"
 NUM_MASTERS=$NUM_MASTERS
 DEBUG=1
 CLUSTER_NAME=$CLUSTER
 EOF
-ansible $CLUSTER -u root -m copy -b -a "src=${supplement} dest=/tmp/baremetal.conf.supplement"
+ansible $CLUSTER -u root -m copy -b -a "src=${conffile} dest=/tmp/baremetal.conf"
 rm ${supplement}
 
 ansible $CLUSTER -u root -m copy -b -a "src=baremetal-puller.sh dest=/tmp/puller.sh"

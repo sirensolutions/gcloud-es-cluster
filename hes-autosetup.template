@@ -1,5 +1,5 @@
-DRIVE1 /dev/sda
-DRIVE2 /dev/sdb
+DRIVE1 /dev/nvme0n1
+DRIVE2 /dev/nvme1n1
 
 SWRAID 0
 SWRAIDLEVEL 0
