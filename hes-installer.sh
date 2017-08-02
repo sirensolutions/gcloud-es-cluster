@@ -28,6 +28,8 @@ ansible $CLUSTER -u root -m command -a "bash -c '/root/.oldroot/nfs/install/inst
 for slave in $SLAVES; do
 	ssh-keygen -f $HOME/.ssh/known_hosts -R $slave
 done
+# And replace them, to prevent annoying prompts
+ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
 
 echo "Waiting for each slave to come back up..."
 ansible $CLUSTER -c local -m wait_for -a "port=22"
