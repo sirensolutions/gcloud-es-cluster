@@ -4,16 +4,24 @@
 
 # This script takes one argument, the name of the cluster as defined
 # as a group in /etc/ansible/hosts
-# Machines will take their names from /etc/ansible/hosts
+# Machines will take their names from /etc/ansible/hosts and their
+# IPs must be defined in /etc/hosts
 
 CLUSTER=$1
 PRIMARY_IP=$(hostname --fqdn)
 SLAVES=$(ansible $CLUSTER -c local -m command -a "echo {{ inventory_hostname }}" | grep -v ">>" | sort -n )
- 
+NUM_MASTERS=$[ $(echo $SLAVES | wc -w) / 2 + 1 ]
+
 echo "Populate root's authorized_keys in each rescue OS"
 # Ansible's password caching is unusable, so we roll our own
+# Let's do some other housekeeping in this loop
 declare -A SLAVE_PASSWDS
+declare -A SLAVE_IPS
+declare -A SUBNETS
+SUBNETS[primary]="${PRIMARY_IP}/32"
 for slave in $SLAVES; do
+	SLAVE_IPS[$slave]=$(grep "\b${slave}\b" /etc/hosts|awk '{print $1}')
+	SUBNETS[$slave]="${SLAVE_IPS[$slave]}/32"
 	echo -n "Root password for ${slave}: "
 	read -s passwd
 	SLAVE_PASSWDS[$slave]="$passwd"
@@ -42,13 +50,13 @@ done
 echo "Now push cluster configuration and invoke the puller"
 supplement=$(tempfile)
 cat <<EOF >${supplement}
-SLAVE_IPS="{% for host in groups['$CLUSTER'] %} {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }} {% endfor %}"
-NUM_MASTERS=\$[ \$(echo \$SLAVE_IPS | wc -w) / 2 + 1 ]
+SLAVE_IPS="${SLAVE_IPS[@]}"
+NUM_MASTERS=$NUM_MASTERS
 DEBUG=1
-SUBNETS="${PRIMARY_IP}/32 {% for host in groups['$CLUSTER'] %} {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}/32 {% endfor %}"
+SUBNETS="${SUBNETS[@]}"
 CLUSTER_NAME=$CLUSTER
 EOF
-ansible $CLUSTER -u root -m template -b -a "src=${supplement} dest=/tmp/baremetal.conf.supplement"
+ansible $CLUSTER -u root -m copy -b -a "src=${supplement} dest=/tmp/baremetal.conf.supplement"
 rm ${supplement}
 
 ansible $CLUSTER -u root -m copy -b -a "src=baremetal-puller.sh dest=/tmp/puller.sh"
