@@ -22,7 +22,7 @@ done
 
 echo "Configure the OS"
 ansible $CLUSTER -u root -m template -a "src=hes-autosetup.template dest=/autosetup"
-ansible $CLUSTER -u root -m command -a "installimage && reboot"
+ansible $CLUSTER -u root -m command -a "bash -c 'installimage && reboot'"
 
 # Delete entries from our known_hosts because the keys will have changed
 ansible $CLUSTER -c local -m command -a "ssh-keygen -f $HOME/.ssh/known_hosts -R {{ inventory_hostname }}"
