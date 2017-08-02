@@ -53,8 +53,11 @@ NUM_MASTERS=$NUM_MASTERS
 DEBUG=1
 CLUSTER_NAME=$CLUSTER
 EOF
-ansible $CLUSTER -u root -m copy -b -a "src=${conffile} dest=/tmp/baremetal.conf"
-rm ${supplement}
 
-ansible $CLUSTER -u root -m copy -b -a "src=baremetal-puller.sh dest=/tmp/puller.sh"
-ansible $CLUSTER -u root -m command -b -a "bash /tmp/puller.sh"
+for slave in $SLAVES; do
+	scp ${conffile} $slave:/tmp/baremetal.conf
+	scp baremetal-puller.sh $slave:/tmp/puller.sh
+	ssh root@$slave /tmp/puller.sh &
+done
+
+rm ${conffile}
