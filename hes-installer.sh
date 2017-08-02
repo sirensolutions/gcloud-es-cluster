@@ -46,7 +46,7 @@ for slave in $SLAVES; do
 done
 
 echo "Now push cluster configuration and invoke the puller"
-supplement=$(tempfile)
+conffile=$(tempfile)
 cat <<EOF >${conffile}
 SLAVE_IPS="${SLAVE_IPS[@]}"
 NUM_MASTERS=$NUM_MASTERS
