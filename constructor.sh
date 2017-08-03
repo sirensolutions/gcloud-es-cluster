@@ -243,7 +243,7 @@ for ip in $SSH_REMOTE_HOST $CONTROLLER_IP $SLAVE_IPS; do
   ufw allow to any port $ES_TRANS_PORT from $ip
 done
 
-sudo ufw enable
+sudo ufw --force enable
 
 ##### END FIREWALL CONFIGURATION #####
 
