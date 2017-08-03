@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SCRIPT_LOCATION=$(dirname $(readlink -f $0))
+GIT_BRANCH=$(cd ${SCRIPT_LOCATION}; git status | head -1 | awk '{print $3}')
 
 ES_PORT=9200
 
@@ -89,7 +90,7 @@ cd /tmp
 CONTROLLER_IP="${PRIMARY_IP}"
 export http_proxy="http://\$CONTROLLER_IP:3128/"
 export https_proxy="\$http_proxy"
-if ! git -c http.proxy=\$http_proxy clone https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
+if ! git -c http.proxy=\$http_proxy clone -b ${GIT_BRANCH} https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
 	echo "Aborting; no git repository found" |& logger -t es-puller
 fi
 gcloud-es-cluster/constructor.sh "$SITE_CONFIG" |& logger -t es-constructor

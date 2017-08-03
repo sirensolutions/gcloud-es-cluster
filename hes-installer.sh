@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SCRIPT_LOCATION=$(dirname $(readlink -f $0))
+GIT_BRANCH=$(cd ${SCRIPT_LOCATION}; git status | head -1 | awk '{print $3}')
 
 ES_PORT=9200
 
@@ -123,7 +124,8 @@ BASE_PARENT=/data
 DISABLE_IPV6=${DISABLE_IPV6}
 EOF
 
-PULLER_ARGS="APT_INSTALL_GIT DISABLE_IPV6"
+# Make sure the remote is using the same branch as us
+PULLER_ARGS="APT_INSTALL_GIT DISABLE_IPV6 GIT_BRANCH=${GIT_BRANCH}"
 
 for slave in $SLAVES; do
 	scp ${conffile} root@$slave:/tmp/baremetal.conf
