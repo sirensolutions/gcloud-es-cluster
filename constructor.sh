@@ -298,8 +298,6 @@ if [[ $current_max_map_count -lt $MAX_MAP_COUNT ]]; then
   sysctl -w "vm.max_map_count = $MAX_MAP_COUNT" 
 fi
 
-echo "elastic - memlock unlimited" > /etc/security/limits.d/elasticsearch.conf
-
 ##### END ELASTICSEARCH CONFIGURATION #####
 
 
@@ -326,6 +324,7 @@ EOF
 cat <<EOF > /usr/local/bin/elastic-unlimiter.sh
 #!/bin/bash
 ulimit -l unlimited
+ulimit -n 65536
 sudo -u $USER /usr/local/bin/elastic-launcher.sh
 EOF
 chmod +x /usr/local/bin/elastic-unlimiter.sh
