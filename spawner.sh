@@ -89,6 +89,8 @@ for slave in ${SLAVES[@]}; do
 	# Delete this IP from our known_hosts because we know it has been changed
 	ssh-keygen -f "$HOME/.ssh/known_hosts" -R $ip >& /dev/null
 done
+# Repopulate known_hosts
+ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
 
 # Now that we know all the slave IPs, we can tell the slaves themselves.
 echo "Pushing metadata..."
