@@ -1,7 +1,6 @@
 #!/bin/bash
 
 ES_PORT=9200
-SITE_CONFIG=gcloud.conf
 
 if [[ $1 == "help" || $1 == "-h" || $1 == "--help" ]]; then
 cat <<EOF
@@ -20,6 +19,9 @@ IMAGE [ubuntu-os-cloud/ubuntu-1604-lts]
 CLUSTER_NAME [es-<timestamp>]
 DEBUG []
 SITE_CONFIG [gcloud.conf]
+ES_VERSION [2.4.4]
+PLUGIN_VERSION [2.4.4]
+LOGSTASH_VERSION [2.4.1]
 EOF
 fi
 
@@ -45,6 +47,22 @@ fi
 
 if [[ ! $CLUSTER_NAME ]]; then
 	CLUSTER_NAME=es-$(date +%s)
+fi
+
+if [[ ! $SITE_CONFIG ]]; then
+	SITE_CONFIG="gcloud.conf"
+fi
+
+if [[ ! $ES_VERSION ]]; then
+	ES_VERSION=2.4.4
+fi
+
+if [[ ! $PLUGIN_VERSION ]]; then
+	PLUGIN_VERSION=2.4.4
+fi
+
+if [[ ! $LOGSTASH_VERSION ]]; then
+	LOGSTASH_VERSION=2.4.4
 fi
 
 # Let's go
@@ -95,7 +113,7 @@ echo "Pushing metadata..."
 for slave in ${SLAVES[@]}; do
 	# The constructors should spin on es_spinlock_1 to avoid race conditions
 	gcloud compute instances add-metadata $slave \
-	--metadata es_slave_ips="${SLAVE_IPS[*]}",es_num_masters=$NUM_MASTERS,es_debug="$DEBUG",es_cluster_name="$CLUSTER_NAME",es_controller_ip="${PRIMARY_IP}",es_spinlock_1=released
+	--metadata es_slave_ips="${SLAVE_IPS[*]}",es_num_masters="$NUM_MASTERS",es_debug="$DEBUG",es_cluster_name="$CLUSTER_NAME",es_controller_ip="${PRIMARY_IP}",es_version="${ES_VERSION}",es_plugin_version="${PLUGIN_VERSION}",es_logstash_version="${LOGSTASH_VERSION}",es_spinlock_1=released
 done
 
 echo "Waiting for OS to come up on each slave..."
