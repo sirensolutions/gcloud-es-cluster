@@ -89,8 +89,6 @@ for slave in ${SLAVES[@]}; do
 	# Delete this IP from our known_hosts because we know it has been changed
 	ssh-keygen -f "$HOME/.ssh/known_hosts" -R $ip >& /dev/null
 done
-# Repopulate known_hosts
-ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
 
 # Now that we know all the slave IPs, we can tell the slaves themselves.
 echo "Pushing metadata..."
@@ -99,6 +97,16 @@ for slave in ${SLAVES[@]}; do
 	gcloud compute instances add-metadata $slave \
 	--metadata es_slave_ips="${SLAVE_IPS[*]}",es_num_masters=$NUM_MASTERS,es_debug="$DEBUG",es_cluster_name="$CLUSTER_NAME",es_controller_ip="${PRIMARY_IP}",es_spinlock_1=released
 done
+
+echo "Waiting for OS to come up on each slave..."
+for ip in ${SLAVE_IPS[@]}; do
+	while ! nc -w 5 $ip 22 </dev/null >/dev/null; do
+		sleep 5
+	done
+	echo "$ip running"
+done
+# Repopulate known_hosts
+ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
 
 echo "Waiting for elasticsearch to come up on each slave..."
 for ip in ${SLAVE_IPS[@]}; do
