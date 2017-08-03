@@ -7,6 +7,9 @@
 # 	ES_PORT
 # 	ES_VERSION
 
+# Don't show progress bar, but do show errors
+CURL_ARGS="-sS -f"
+
 SLAVE_IPS=("$@")
 
 echo "Waiting for elasticsearch to come up on each slave..."
@@ -20,7 +23,7 @@ done
 # For ES 5, we set cache preferences here
 # For ES 2, we set it elsewhere using the constructor
 if [[ ${ES_VERSION%%.*} -ge 5 ]]; then
-	curl -XPUT http://${SLAVE_IPS[0]}:$ES_PORT/_all/_settings?preserve_existing=true -d '{
+	curl $CURL_ARGS -XPUT http://${SLAVE_IPS[0]}:$ES_PORT/_all/_settings?preserve_existing=true -d '{
 		"index.queries.cache.enabled" : "true",
 		"index.queries.cache.everything" : "true",
 		"indices.queries.cache.all_segments" : "true"
@@ -28,4 +31,4 @@ if [[ ${ES_VERSION%%.*} -ge 5 ]]; then
 fi
 
 # Now get the status of the cluster from the first node
-curl -XGET http://${SLAVE_IPS[0]}:$ES_PORT/_cluster/state?pretty
+curl $CURL_ARGS -XGET http://${SLAVE_IPS[0]}:$ES_PORT/_cluster/state?pretty
