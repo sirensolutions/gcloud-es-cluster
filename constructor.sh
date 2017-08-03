@@ -36,6 +36,7 @@ ES_TRANS_PORT=9300
 
 # We may not be able to access the artifactory directly
 ARTIFACTORY_HOST=artifactory.siren.io
+ARTIFACTORY_HOST_HEADER="-H 'Host: $ARTIFACTORY_HOST'"
 ARTIFACTORY_PORT=8081
 
 # Don't show progress bar, but do show errors
@@ -221,7 +222,7 @@ unzip $TMP_DIR/$LOGSTASH_ZIPFILE >/dev/null
 
 if [[ $PLUGIN_URL ]]; then
   # We will also need to download a snapshot plugin from the artifactory
-  if ! curl $CURL_ARGS -o $TMP_DIR/$PLUGIN_ZIPFILE $PLUGIN_URL ; then
+  if ! curl $CURL_ARGS -o $TMP_DIR/$PLUGIN_ZIPFILE $ARTIFACTORY_HOST_HEADER $PLUGIN_URL ; then
     echo "Error downloading $PLUGIN_URL" 
     exit 3
   fi
