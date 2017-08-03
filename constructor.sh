@@ -115,7 +115,10 @@ fi
 SRC_DIR=/root
 TMP_DIR=$(mktemp -d)
 BASE=$BASE_PARENT/elastic
-PRIMARY_IP=$(hostname --ip-address)
+
+PRIMARY_INTERFACE=$(route -n|grep ^0.0.0.0|awk '{print $8}')
+PRIMARY_IP_CIDR=$(ip address list dev $PRIMARY_INTERFACE |grep "\binet\b"|awk '{print $2}')
+PRIMARY_IP=${PRIMARY_IP_CIDR%%/*}
 
 if [[ $DEBUG ]]; then
 	echo SRC_DIR=$SRC_DIR
