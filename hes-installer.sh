@@ -26,6 +26,7 @@ DEBUG []
 ES_VERSION [2.4.4]
 PLUGIN_VERSION [2.4.4]
 LOGSTASH_VERSION [2.4.1]
+FOREIGN_MEMBERS []
 EOF
 fi
 
@@ -104,7 +105,7 @@ fi
 echo "Push cluster configuration and invoke the puller"
 conffile=$(tempfile)
 cat <<EOF >${conffile}
-SLAVE_IPS="${SLAVE_IPS[@]}"
+SLAVE_IPS="${SLAVE_IPS[@]} ${FOREIGN_MEMBERS}"
 NUM_MASTERS=$NUM_MASTERS
 DEBUG=$DEBUG
 CLUSTER_NAME=$CLUSTER
