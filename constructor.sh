@@ -78,9 +78,11 @@ if [[ ${ES_MAJOR_VERSION} == "2" ]]; then
   # https://github.com/elastic/elasticsearch/issues/21824
   PLUGIN_TOOL="bin/plugin $ES_JAVA_OPTS"
   PLUGIN_NAME=siren-join
+  M_LOCK_ALL_SETTING="bootstrap.mlockall"
 elif [[ ${ES_MAJOR_VERSION} == "5" ]]; then
   PLUGIN_TOOL=bin/elasticsearch-plugin
   PLUGIN_NAME=platform-core
+  M_LOCK_ALL_SETTING="bootstrap.memory_lock"
 else
   echo "Elasticsearch version ${ES_VERSION} not supported by this script. Aborting!" 
   exit 1
@@ -273,7 +275,7 @@ cluster.name: ${CLUSTER_NAME}
 node.name: ${HOSTNAME}
 discovery.zen.ping.unicast.hosts: [ $SLAVE_IPS_QUOTED ]
 discovery.zen.minimum_master_nodes: $NUM_MASTERS
-bootstrap.mlockall: true
+${M_LOCK_ALL_SETTING}: true
 EOF
 
 # For ES 2, we set cache preferences here
