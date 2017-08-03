@@ -315,20 +315,27 @@ chmod -R og=rx $BASE
 # root, set the limit, and then sudo to the service account. But sudo
 # will throw away the environment, so...
 
+cat > /etc/supervisor/conf.d/elastic.conf <<EOF
+[program:elastic]
+user=root
+directory=$ES_BASE
+command="/usr/local/bin/elastic-unlimiter.sh"
+autorestart=True
+EOF
+
+cat <<EOF > /usr/local/bin/elastic-unlimiter.sh
+#!/bin/bash
+ulimit -l unlimited
+sudo -u $USER /usr/local/bin/elastic-launcher.sh
+EOF
+chmod +x /usr/local/bin/elastic-launcher.sh
+
 cat <<EOF > /usr/local/bin/elastic-launcher.sh
 #!/bin/bash
 export ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE $ES_JAVA_OPTS"
 $ES_BASE/bin/elasticsearch
 EOF
 chmod +x /usr/local/bin/elastic-launcher.sh
-
-cat > /etc/supervisor/conf.d/elastic.conf <<EOF
-[program:elastic]
-user=root
-directory=$ES_BASE
-command="bash -c 'ulimit -l unlimited; sudo -u $USER /usr/local/bin/elastic-launcher.sh'"
-autorestart=True
-EOF
 
 supervisorctl update
 
