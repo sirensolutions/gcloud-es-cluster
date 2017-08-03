@@ -125,7 +125,7 @@ DISABLE_IPV6=${DISABLE_IPV6}
 EOF
 
 # Make sure the remote is using the same branch as us
-PULLER_ARGS="APT_INSTALL_GIT DISABLE_IPV6 GIT_BRANCH=${GIT_BRANCH}"
+PULLER_ARGS="APT_INSTALL_GIT=true DISABLE_IPV6=${DISABLE_IPV6} GIT_BRANCH=${GIT_BRANCH}"
 
 for slave in $SLAVES; do
 	scp ${conffile} root@$slave:/tmp/baremetal.conf

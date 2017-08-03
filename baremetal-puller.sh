@@ -4,14 +4,7 @@ cd /tmp
 GIT_BRANCH=master
 
 for arg in $@; do
-	case "$arg" in
-	*=*)
-		eval $arg
-		;;
-	*)
-		eval $arg=true
-		;;
-	esac
+	eval $arg
 done
 
 if [[ $DISABLE_IPV6 ]]; then
