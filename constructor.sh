@@ -229,10 +229,10 @@ fi
 
 ##### FIREWALL CONFIGURATION #####
 
-# Always allow the ssh remote client
+# Always allow the ssh remote client and the controller ip
 SSH_REMOTE_HOST=${SSH_CLIENT%% *}
 
-for ip in $SSH_REMOTE_HOST $SLAVE_IPS; do
+for ip in $SSH_REMOTE_HOST $CONTROLLER_IP $SLAVE_IPS; do
   ufw allow to any port 22 from $ip
   ufw allow to any port $ES_PORT from $ip
   ufw allow to any port $ES_TRANS_PORT from $ip
