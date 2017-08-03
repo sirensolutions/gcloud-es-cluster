@@ -122,6 +122,7 @@ ARTIFACTORY_HOST=localhost
 ARTIFACTORY_PORT=${ARTIFACTORY_REMOTE_PORT}
 BASE_PARENT=/data
 DISABLE_IPV6=${DISABLE_IPV6}
+SHOVE_BASE=${SHOVE_BASE}
 EOF
 
 # Make sure the remote is using the same branch as us

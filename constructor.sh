@@ -154,6 +154,19 @@ LOGSTASH_ZIPFILE="logstash-$LOGSTASH_VERSION.zip"
 LOGSTASH_URL="https://artifacts.elastic.co/downloads/logstash/$LOGSTASH_ZIPFILE"
 LOGSTASH_URL2="https://download.elastic.co/logstash/logstash/$LOGSTASH_ZIPFILE"
 
+# Make sure our workspace is clean
+if [[ -d $BASE ]]; then
+	if [[ $SHOVE_BASE ]]; then
+		$OLD_BASE=$BASE.$(date --iso-8601=seconds)
+		if ! mv $BASE $OLD_BASE; then
+		  echo "Could not move $BASE to $OLD_BASE. Aborting"
+		  exit 1
+		fi
+	else
+		echo "Directory $BASE already exists. Aborting"
+		exit 1
+	fi
+fi
 if ! mkdir -p $BASE; then
   echo "Could not create directory $BASE. Aborting"
   exit 1
