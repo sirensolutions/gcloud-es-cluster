@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCRIPT_LOCATION=$(dirname $(readlink -f $0))
+
 ES_PORT=9200
 
 if [[ $1 == "help" || $1 == "-h" || $1 == "--help" ]]; then
@@ -130,4 +132,4 @@ ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
 
 export ES_VERSION
 export ES_PORT
-$(dirname $0)/post-assembly.sh ${SLAVE_IPS[@]}
+$SCRIPT_LOCATION/post-assembly.sh ${SLAVE_IPS[@]}

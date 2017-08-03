@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCRIPT_LOCATION=$(dirname $(readlink -f $0))
+
 ES_PORT=9200
 
 ARTIFACTORY_PORT=8081
@@ -131,4 +133,4 @@ rm ${conffile}
 
 export ES_VERSION
 export ES_PORT
-$(dirname $0)/post-assembly.sh ${SLAVE_IPS[@]}
+$SCRIPT_LOCATION/post-assembly.sh ${SLAVE_IPS[@]}
