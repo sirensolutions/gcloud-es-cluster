@@ -1,5 +1,7 @@
 #!/bin/bash
 
+ES_PORT=9200
+
 ARTIFACTORY_PORT=8081
 ARTIFACTORY_HOST=artifactory.siren.io
 ARTIFACTORY_REMOTE_PORT=18081
@@ -124,3 +126,9 @@ for slave in $SLAVES; do
 done
 
 rm ${conffile}
+
+### Perform post-assembly tasks (common)
+
+export ES_VERSION
+export ES_PORT
+$(dirname $0)/post-assembly.sh ${SLAVE_IPS[@]}

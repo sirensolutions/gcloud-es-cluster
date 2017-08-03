@@ -274,12 +274,19 @@ node.name: ${HOSTNAME}
 discovery.zen.ping.unicast.hosts: [ $SLAVE_IPS_QUOTED ]
 discovery.zen.minimum_master_nodes: $NUM_MASTERS
 bootstrap.mlockall: true
+EOF
+
+# For ES 2, we set cache preferences here
+# For ES 5, we set it elsewhere AFTER the cluster is assembled.
+if [[ ${ES_MAJOR_VERSION} -lt 5 ]]; then
+	cat >> $ES_BASE/config/elasticsearch.yml <<EOF
 
 # Vanguard plugin recommended settings
 index.queries.cache.enabled: true
 index.queries.cache.everything: true
 indices.queries.cache.all_segments: true
 EOF
+fi
 
 # Now install the elasticsearch plugins
 if [[ $PLUGIN_ZIPFILE ]]; then

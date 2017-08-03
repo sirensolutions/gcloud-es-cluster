@@ -126,13 +126,8 @@ done
 # Repopulate known_hosts
 ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
 
-echo "Waiting for elasticsearch to come up on each slave..."
-for ip in ${SLAVE_IPS[@]}; do
-	while ! nc -w 5 $ip $ES_PORT </dev/null >/dev/null; do
-		sleep 5
-	done
-	echo "$ip running"
-done
+### Perform post-assembly tasks (common)
 
-# Now get the status of the cluster from the first node
-curl -XGET http://${SLAVE_IPS[0]}:$ES_PORT/_cluster/state?pretty
+export ES_VERSION
+export ES_PORT
+$(dirname $0)/post-assembly.sh ${SLAVE_IPS[@]}
