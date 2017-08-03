@@ -8,49 +8,62 @@
 # IPs must be defined in /etc/hosts
 
 CLUSTER=$1
+if [[ ! $2 == "rescue" ]]; then
+	RESCUE=true
+fi
+
 PRIMARY_IP=$(hostname --ip-address)
 SLAVES=$(ansible $CLUSTER -c local -m command -a "echo {{ inventory_hostname }}" | grep -v ">>" | sort -n )
 NUM_MASTERS=$[ $(echo $SLAVES | wc -w) / 2 + 1 ]
 
-echo "Populate root's authorized_keys in each rescue OS"
-# Ansible's password caching is unusable, so we roll our own
-# Let's do some other housekeeping in this loop
-declare -A SLAVE_PASSWDS
+# get our slave IPs from /etc/hosts
 declare -A SLAVE_IPS
 for slave in $SLAVES; do
 	SLAVE_IPS[$slave]=$(grep "\b${slave}\b" /etc/hosts|awk '{print $1}')
-	echo -n "Root password for ${slave}: "
-	read -s passwd
-	SLAVE_PASSWDS[$slave]="$passwd"
-	echo
-	echo "${SLAVE_PASSWDS[$slave]}" | sshpass ssh-copy-id root@$slave
 done
 
-echo "Configure the OS"
-ansible $CLUSTER -u root -m template -a "src=hes-autosetup.template dest=/autosetup"
-# we use cat to make ansible wait for the connection to drop
-ansible $CLUSTER -u root -m command -a "bash -c '/root/.oldroot/nfs/install/installimage && reboot && cat'"
+if [[ $RESCUE ]]; then
+	# We need to install the OS from the hetzner rescue OS
 
-echo "Waiting for each slave to come back up..."
-for ip in ${SLAVE_IPS[@]}; do
-	while ! nc -w 5 $ip 22 </dev/null >/dev/null; do
-		sleep 5
+	echo "Populate root's authorized_keys in each rescue OS"
+	# Ansible's password caching is unusable, so we roll our own
+	# Let's do some other housekeeping in this loop
+	declare -A SLAVE_PASSWDS
+	for slave in $SLAVES; do
+		echo -n "Root password for ${slave}: "
+		read -s passwd
+		SLAVE_PASSWDS[$slave]="$passwd"
+		echo
+		echo "${SLAVE_PASSWDS[$slave]}" | sshpass ssh-copy-id root@$slave
 	done
-	echo "$ip running"
-done
+	
+	echo "Configure the OS"
+	ansible $CLUSTER -u root -m template -a "src=hes-autosetup.template dest=/autosetup"
+	# we use cat to make ansible wait for the connection to drop
+	ansible $CLUSTER -u root -m command -a "bash -c '/root/.oldroot/nfs/install/installimage && reboot && cat'"
+	
+	echo "Waiting for each slave to come back up..."
+	for ip in ${SLAVE_IPS[@]}; do
+		while ! nc -w 5 $ip 22 </dev/null >/dev/null; do
+			sleep 5
+		done
+		echo "$ip running"
+	done
+	
+	# Clean and repopulate known_hosts because the keys will have changed
+	for entry in $SLAVES ${SLAVE_IPS[@]}; do
+		ssh-keygen -f $HOME/.ssh/known_hosts -R $entry
+	done
+	ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
+	
+	echo "Repopulate root's authorized_keys in the new base OS"
+	for slave in $SLAVES; do
+		echo "${SLAVE_PASSWDS[$slave]}" | sshpass ssh-copy-id root@$slave
+	done
 
-# Clean and repopulate known_hosts because the keys will have changed
-for entry in $SLAVES ${SLAVE_IPS[@]}; do
-	ssh-keygen -f $HOME/.ssh/known_hosts -R $entry
-done
-ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
+fi
 
-echo "Repopulate root's authorized_keys in the new base OS"
-for slave in $SLAVES; do
-	echo "${SLAVE_PASSWDS[$slave]}" | sshpass ssh-copy-id root@$slave
-done
-
-echo "Now push cluster configuration and invoke the puller"
+echo "Push cluster configuration and invoke the puller"
 conffile=$(tempfile)
 cat <<EOF >${conffile}
 SLAVE_IPS="${SLAVE_IPS[@]}"
