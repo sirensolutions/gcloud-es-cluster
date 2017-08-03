@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# This script requires sshpass
+ARTIFACTORY_PORT=8081
+ARTIFACTORY_HOST=artifactory.siren.io
+ARTIFACTORY_REMOTE_PORT=18081
 
 if [[ ! $1 || $1 = "-h" || $1 = "--help" ]]; then
 cat <<EOF
@@ -109,12 +111,14 @@ CLUSTER_NAME=$CLUSTER
 ES_VERSION=2.4.4
 LOGSTASH_VERSION=2.4.1
 PLUGIN_VERSION=2.4.4
+ARTIFACTORY_HOST=localhost
+ARTIFACTORY_PORT=${ARTIFACTORY_REMOTE_PORT}
 EOF
 
 for slave in $SLAVES; do
 	scp ${conffile} root@$slave:/tmp/baremetal.conf
 	scp baremetal-puller.sh root@$slave:/tmp/puller.sh
-	ssh root@$slave /tmp/puller.sh &
+	ssh -R${ARTIFACTORY_REMOTE_PORT}:${ARTIFACTORY_HOST}:${ARTIFACTORY_PORT} root@$slave /tmp/puller.sh &
 done
 
 rm ${conffile}

@@ -34,6 +34,10 @@ fi
 ES_PORT=9200
 ES_TRANS_PORT=9300
 
+# We may not be able to access the artifactory directly
+ARTIFACTORY_HOST=artifactory.siren.io
+ARTIFACTORY_PORT=8081
+
 # Don't show progress bar, but do show errors
 CURL_ARGS="-sS -f"
 	
@@ -122,7 +126,7 @@ if [[ $PLUGIN_VERSION ]]; then
   else
     PLUGIN_ZIPFILE="${PLUGIN_NAME}-${PLUGIN_VERSION}-plugin.zip"
   fi
-  PLUGIN_URL="http://artifactory.siren.io:8081/artifactory/${ARTIFACTORY_PATH}/solutions/siren/${PLUGIN_NAME}/${PLUGIN_DIR_VERSION}/${PLUGIN_ZIPFILE}"
+  PLUGIN_URL="http://${ARTIFACTORY_HOST}:${ARTIFACTORY_PORT}/artifactory/${ARTIFACTORY_PATH}/solutions/siren/${PLUGIN_NAME}/${PLUGIN_DIR_VERSION}/${PLUGIN_ZIPFILE}"
 fi
 
 ES_BASE=$BASE/elasticsearch-$ES_VERSION
