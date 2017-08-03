@@ -116,9 +116,18 @@ SRC_DIR=/root
 TMP_DIR=$(mktemp -d)
 BASE=$BASE_PARENT/elastic
 
-PRIMARY_INTERFACE=$(route -n|grep ^0.0.0.0|awk '{print $8}')
+PRIMARY_INTERFACE=$(route -n | grep ^0.0.0.0 | head -1 | awk '{print $8}')
 PRIMARY_IP_CIDR=$(ip address list dev $PRIMARY_INTERFACE |grep "\binet\b"|awk '{print $2}')
 PRIMARY_IP=${PRIMARY_IP_CIDR%%/*}
+
+# sometimes (I'm looking at you, Hetzner) we can find ourselves with a
+# bad IPv6 configuration. If so, we can disable it here.
+if [[ $DISABLE_IPV6 ]]; then
+	echo "net.ipv6.conf.${PRIMARY_INTERFACE}.disable_ipv6 = 1" > /etc/sysctl.d/99-disable-ipv6-${PRIMARY_INTERFACE}.conf
+	sysctl -w "net.ipv6.conf.${PRIMARY_INTERFACE}.disable_ipv6=1" 
+EOF
+	sysctl --system
+fi
 
 if [[ $DEBUG ]]; then
 	echo SRC_DIR=$SRC_DIR
@@ -312,7 +321,7 @@ fi
 current_max_map_count=$(sysctl -n vm.max_map_count)
 if [[ $current_max_map_count -lt $MAX_MAP_COUNT ]]; then
   echo "vm.max_map_count = $MAX_MAP_COUNT" > /etc/sysctl.d/99-elasticsearch.conf
-  sysctl -w "vm.max_map_count = $MAX_MAP_COUNT" 
+  sysctl -w "vm.max_map_count=$MAX_MAP_COUNT" 
 fi
 
 ##### END ELASTICSEARCH CONFIGURATION #####
