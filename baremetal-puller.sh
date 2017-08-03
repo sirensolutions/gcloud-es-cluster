@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /tmp
+cd $(mktemp -d)
 
 GIT_BRANCH=master
 

@@ -86,7 +86,7 @@ PULLER=$(tempfile)
 # https://unix.stackexchange.com/questions/180312/cant-install-debian-because-installer-doesnt-parse-ip-correctly
 cat <<EOF > $PULLER
 #!/bin/bash
-cd /tmp
+cd \$(mktemp -d)
 CONTROLLER_IP="${PRIMARY_IP}"
 export http_proxy="http://\$CONTROLLER_IP:3128/"
 export https_proxy="\$http_proxy"
