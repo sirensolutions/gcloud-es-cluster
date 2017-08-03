@@ -36,7 +36,7 @@ EOF
 fi
 
 CLUSTER=$1
-if [[ ! $2 == "rescue" ]]; then
+if [[ $2 == "rescue" ]]; then
 	RESCUE=true
 fi
 
@@ -53,7 +53,7 @@ if [[ ! $PLUGIN_VERSION ]]; then
 fi
 
 if [[ ! $LOGSTASH_VERSION ]]; then
-	LOGSTASH_VERSION=2.4.4
+	LOGSTASH_VERSION=2.4.1
 fi
 
 
