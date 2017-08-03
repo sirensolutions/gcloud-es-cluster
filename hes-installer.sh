@@ -123,10 +123,12 @@ BASE_PARENT=/data
 DISABLE_IPV6=${DISABLE_IPV6}
 EOF
 
+PULLER_ARGS="APT_INSTALL_GIT DISABLE_IPV6"
+
 for slave in $SLAVES; do
 	scp ${conffile} root@$slave:/tmp/baremetal.conf
 	scp baremetal-puller.sh root@$slave:/tmp/puller.sh
-	ssh -R${ARTIFACTORY_REMOTE_PORT}:${ARTIFACTORY_HOST}:${ARTIFACTORY_PORT} root@$slave /tmp/puller.sh &
+	ssh -R${ARTIFACTORY_REMOTE_PORT}:${ARTIFACTORY_HOST}:${ARTIFACTORY_PORT} root@$slave /tmp/puller.sh ${PULLER_ARGS} &
 done
 
 rm ${conffile}

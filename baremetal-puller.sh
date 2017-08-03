@@ -1,7 +1,26 @@
 #!/bin/bash
 cd /tmp
 
-apt-get update && apt-get install -y git
+for arg in $@; do
+	case "$arg" in
+	*=*)
+		eval $arg
+		;;
+	*)
+		eval $arg=true
+		;;
+	esac
+done
+
+if [[ $DISABLE_IPV6 ]]; then
+	# This is temporary, we'll fix it permanently in the constructor
+	sysctl -w "net.ipv6.conf.all.disable_ipv6=1" |& logger -t es-puller
+fi
+
+if [[ $APT_INSTALL_GIT ]]; then
+	apt-get update |& logger -t es-puller
+	DEBIAN_FRONTEND=noninteractive apt-get install -y git |& logger -t es-puller
+fi
 
 if ! git clone https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
 	echo "Aborting; no git repository found" |& logger -t es-puller
