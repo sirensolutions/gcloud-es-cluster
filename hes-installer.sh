@@ -2,10 +2,30 @@
 
 # This script requires sshpass
 
-# This script takes one argument, the name of the cluster as defined
-# as a group in /etc/ansible/hosts
-# Machines will take their names from /etc/ansible/hosts and their
-# IPs must be defined in /etc/hosts
+if [[ ! $1 || $1 = "-h" || $1 = "--help" ]]; then
+cat <<EOF
+Usage: $0 CLUSTER_NAME [rescue]
+
+This script is invoked on the controller node to spawn a cluster on
+physical machines. 
+
+CLUSTER_NAME is the name of the cluster as defined as a group in
+/etc/ansible/hosts. Machines will take their names from
+/etc/ansible/hosts and their IPs must be defined in /etc/hosts
+
+The optional argument "rescue" causes the script to first install a
+base OS using the Hetzner rescue installer. Currently only Xenial is
+supported, and the machines must already have been booted into rescue
+mode (this can be selected in the Hetzner provisioner).
+
+For advanced use, you can set the following envars [defaults]:
+
+DEBUG []
+ES_VERSION [2.4.4]
+PLUGIN_VERSION [2.4.4]
+LOGSTASH_VERSION [2.4.1]
+EOF
+fi
 
 CLUSTER=$1
 if [[ ! $2 == "rescue" ]]; then
@@ -16,6 +36,19 @@ PRIMARY_IP=$(hostname --ip-address)
 SLAVES=$(ansible $CLUSTER -c local -m command -a "echo {{ inventory_hostname }}" | grep -v ">>" | sort -n )
 NUM_MASTERS=$[ $(echo $SLAVES | wc -w) / 2 + 1 ]
 
+if [[ ! $ES_VERSION ]]; then
+	ES_VERSION=2.4.4
+fi
+
+if [[ ! $PLUGIN_VERSION ]]; then
+	PLUGIN_VERSION=2.4.4
+fi
+
+if [[ ! $LOGSTASH_VERSION ]]; then
+	LOGSTASH_VERSION=2.4.4
+fi
+
+
 # get our slave IPs from /etc/hosts
 declare -A SLAVE_IPS
 for slave in $SLAVES; do
@@ -24,6 +57,9 @@ done
 
 if [[ $RESCUE ]]; then
 	# We need to install the OS from the hetzner rescue OS
+	
+	# Make sure sshpass is installed
+	apt-get -y install sshpass
 
 	echo "Populate root's authorized_keys in each rescue OS"
 	# Ansible's password caching is unusable, so we roll our own
@@ -68,7 +104,7 @@ conffile=$(tempfile)
 cat <<EOF >${conffile}
 SLAVE_IPS="${SLAVE_IPS[@]}"
 NUM_MASTERS=$NUM_MASTERS
-DEBUG=1
+DEBUG=$DEBUG
 CLUSTER_NAME=$CLUSTER
 ES_VERSION=2.4.4
 LOGSTASH_VERSION=2.4.1
