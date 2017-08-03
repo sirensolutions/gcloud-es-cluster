@@ -32,7 +32,12 @@ ansible $CLUSTER -u root -m template -a "src=hes-autosetup.template dest=/autose
 ansible $CLUSTER -u root -m command -a "bash -c '/root/.oldroot/nfs/install/installimage && reboot && cat'"
 
 echo "Waiting for each slave to come back up..."
-ansible $CLUSTER -c local -m wait_for -a "port=22"
+for ip in ${SLAVE_IPS[@]}; do
+	while ! nc -w 5 $ip 22 </dev/null >/dev/null; do
+		sleep 5
+	done
+	echo "$ip running"
+done
 
 # Clean and repopulate known_hosts because the keys will have changed
 for entry in $SLAVES ${SLAVE_IPS[@]}; do
