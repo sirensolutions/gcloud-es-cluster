@@ -328,7 +328,7 @@ cat <<EOF > /usr/local/bin/elastic-unlimiter.sh
 ulimit -l unlimited
 sudo -u $USER /usr/local/bin/elastic-launcher.sh
 EOF
-chmod +x /usr/local/bin/elastic-launcher.sh
+chmod +x /usr/local/bin/elastic-unlimiter.sh
 
 cat <<EOF > /usr/local/bin/elastic-launcher.sh
 #!/bin/bash
