@@ -1,5 +1,8 @@
 #!/bin/bash
 
+SCRIPT_LOCATION=$(dirname $(readlink -f $0))
+GIT_BRANCH=$(cd ${SCRIPT_LOCATION}; git status | head -1 | awk '{print $3}')
+
 ES_PORT=9200
 
 if [[ $1 == "help" || $1 == "-h" || $1 == "--help" ]]; then
@@ -83,11 +86,11 @@ PULLER=$(tempfile)
 # https://unix.stackexchange.com/questions/180312/cant-install-debian-because-installer-doesnt-parse-ip-correctly
 cat <<EOF > $PULLER
 #!/bin/bash
-cd /tmp
+cd \$(mktemp -d)
 CONTROLLER_IP="${PRIMARY_IP}"
 export http_proxy="http://\$CONTROLLER_IP:3128/"
 export https_proxy="\$http_proxy"
-if ! git -c http.proxy=\$http_proxy clone https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
+if ! git -c http.proxy=\$http_proxy clone -b ${GIT_BRANCH} https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
 	echo "Aborting; no git repository found" |& logger -t es-puller
 fi
 gcloud-es-cluster/constructor.sh "$SITE_CONFIG" |& logger -t es-constructor
@@ -126,13 +129,8 @@ done
 # Repopulate known_hosts
 ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
 
-echo "Waiting for elasticsearch to come up on each slave..."
-for ip in ${SLAVE_IPS[@]}; do
-	while ! nc -w 5 $ip $ES_PORT </dev/null >/dev/null; do
-		sleep 5
-	done
-	echo "$ip running"
-done
+### Perform post-assembly tasks (common)
 
-# Now get the status of the cluster from the first node
-curl -XGET http://${SLAVE_IPS[0]}:$ES_PORT/_cluster/state?pretty
+export ES_VERSION
+export ES_PORT
+$SCRIPT_LOCATION/post-assembly.sh ${SLAVE_IPS[@]}

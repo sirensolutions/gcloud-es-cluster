@@ -1,7 +1,7 @@
 DRIVE1 /dev/nvme0n1
 DRIVE2 /dev/nvme1n1
 
-SWRAID 0
+SWRAID 1
 SWRAIDLEVEL 0
 
 BOOTLOADER grub

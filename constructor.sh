@@ -34,6 +34,11 @@ fi
 ES_PORT=9200
 ES_TRANS_PORT=9300
 
+# We may not be able to access the artifactory directly
+ARTIFACTORY_HOST=artifactory.siren.io
+ARTIFACTORY_HEADER_HOST=$ARTIFACTORY_HOST
+ARTIFACTORY_PORT=8081
+
 # Don't show progress bar, but do show errors
 CURL_ARGS="-sS -f"
 	
@@ -73,9 +78,11 @@ if [[ ${ES_MAJOR_VERSION} == "2" ]]; then
   # https://github.com/elastic/elasticsearch/issues/21824
   PLUGIN_TOOL="bin/plugin $ES_JAVA_OPTS"
   PLUGIN_NAME=siren-join
+  M_LOCK_ALL_SETTING="bootstrap.mlockall"
 elif [[ ${ES_MAJOR_VERSION} == "5" ]]; then
   PLUGIN_TOOL=bin/elasticsearch-plugin
   PLUGIN_NAME=platform-core
+  M_LOCK_ALL_SETTING="bootstrap.memory_lock"
 else
   echo "Elasticsearch version ${ES_VERSION} not supported by this script. Aborting!" 
   exit 1
@@ -108,7 +115,19 @@ fi
 SRC_DIR=/root
 TMP_DIR=$(mktemp -d)
 BASE=$BASE_PARENT/elastic
-PRIMARY_IP=$(hostname --ip-address)
+
+PRIMARY_INTERFACE=$(route -n | grep ^0.0.0.0 | head -1 | awk '{print $8}')
+PRIMARY_IP_CIDR=$(ip address list dev $PRIMARY_INTERFACE |grep "\binet\b"|awk '{print $2}')
+PRIMARY_IP=${PRIMARY_IP_CIDR%%/*}
+
+# sometimes (I'm looking at you, Hetzner) we can find ourselves with a
+# bad IPv6 configuration. If so, we can disable it here.
+if [[ $DISABLE_IPV6 ]]; then
+	echo "net.ipv6.conf.all.disable_ipv6 = 1" > /etc/sysctl.d/99-disable-ipv6-all.conf
+	sysctl -w "net.ipv6.conf.all.disable_ipv6=1" 
+EOF
+	sysctl --system
+fi
 
 if [[ $DEBUG ]]; then
 	echo SRC_DIR=$SRC_DIR
@@ -122,7 +141,7 @@ if [[ $PLUGIN_VERSION ]]; then
   else
     PLUGIN_ZIPFILE="${PLUGIN_NAME}-${PLUGIN_VERSION}-plugin.zip"
   fi
-  PLUGIN_URL="http://artifactory.siren.io:8081/artifactory/${ARTIFACTORY_PATH}/solutions/siren/${PLUGIN_NAME}/${PLUGIN_DIR_VERSION}/${PLUGIN_ZIPFILE}"
+  PLUGIN_URL="http://${ARTIFACTORY_HOST}:${ARTIFACTORY_PORT}/artifactory/${ARTIFACTORY_PATH}/solutions/siren/${PLUGIN_NAME}/${PLUGIN_DIR_VERSION}/${PLUGIN_ZIPFILE}"
 fi
 
 ES_BASE=$BASE/elasticsearch-$ES_VERSION
@@ -135,6 +154,19 @@ LOGSTASH_ZIPFILE="logstash-$LOGSTASH_VERSION.zip"
 LOGSTASH_URL="https://artifacts.elastic.co/downloads/logstash/$LOGSTASH_ZIPFILE"
 LOGSTASH_URL2="https://download.elastic.co/logstash/logstash/$LOGSTASH_ZIPFILE"
 
+# Make sure our workspace is clean
+if [[ -d $BASE ]]; then
+	if [[ $SHOVE_BASE ]]; then
+		$OLD_BASE=$BASE.$(date --iso-8601=seconds)
+		if ! mv $BASE $OLD_BASE; then
+		  echo "Could not move $BASE to $OLD_BASE. Aborting"
+		  exit 1
+		fi
+	else
+		echo "Directory $BASE already exists. Aborting"
+		exit 1
+	fi
+fi
 if ! mkdir -p $BASE; then
   echo "Could not create directory $BASE. Aborting"
   exit 1
@@ -217,7 +249,7 @@ unzip $TMP_DIR/$LOGSTASH_ZIPFILE >/dev/null
 
 if [[ $PLUGIN_URL ]]; then
   # We will also need to download a snapshot plugin from the artifactory
-  if ! curl $CURL_ARGS -o $TMP_DIR/$PLUGIN_ZIPFILE $PLUGIN_URL ; then
+  if ! curl $CURL_ARGS -o $TMP_DIR/$PLUGIN_ZIPFILE -H "Host: $ARTIFACTORY_HEADER_HOST" $PLUGIN_URL ; then
     echo "Error downloading $PLUGIN_URL" 
     exit 3
   fi
@@ -233,12 +265,12 @@ fi
 SSH_REMOTE_HOST=${SSH_CLIENT%% *}
 
 for ip in $SSH_REMOTE_HOST $CONTROLLER_IP $SLAVE_IPS; do
-  ufw allow to any port 22 from $ip
-  ufw allow to any port $ES_PORT from $ip
-  ufw allow to any port $ES_TRANS_PORT from $ip
+  ufw allow to any port 22 from ${ip%%:*}
+  ufw allow to any port $ES_PORT from ${ip%%:*}
+  ufw allow to any port $ES_TRANS_PORT from ${ip%%:*}
 done
 
-sudo ufw enable
+sudo ufw --force enable
 
 ##### END FIREWALL CONFIGURATION #####
 
@@ -268,13 +300,20 @@ cluster.name: ${CLUSTER_NAME}
 node.name: ${HOSTNAME}
 discovery.zen.ping.unicast.hosts: [ $SLAVE_IPS_QUOTED ]
 discovery.zen.minimum_master_nodes: $NUM_MASTERS
-bootstrap.mlockall: true
+${M_LOCK_ALL_SETTING}: true
+EOF
+
+# For ES 2, we set cache preferences here
+# For ES 5, we set it elsewhere AFTER the cluster is assembled.
+if [[ ${ES_MAJOR_VERSION} -lt 5 ]]; then
+	cat >> $ES_BASE/config/elasticsearch.yml <<EOF
 
 # Vanguard plugin recommended settings
 index.queries.cache.enabled: true
 index.queries.cache.everything: true
 indices.queries.cache.all_segments: true
 EOF
+fi
 
 # Now install the elasticsearch plugins
 if [[ $PLUGIN_ZIPFILE ]]; then
@@ -295,7 +334,7 @@ fi
 current_max_map_count=$(sysctl -n vm.max_map_count)
 if [[ $current_max_map_count -lt $MAX_MAP_COUNT ]]; then
   echo "vm.max_map_count = $MAX_MAP_COUNT" > /etc/sysctl.d/99-elasticsearch.conf
-  sysctl -w "vm.max_map_count = $MAX_MAP_COUNT" 
+  sysctl -w "vm.max_map_count=$MAX_MAP_COUNT" 
 fi
 
 ##### END ELASTICSEARCH CONFIGURATION #####

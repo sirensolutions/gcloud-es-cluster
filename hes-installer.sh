@@ -1,6 +1,13 @@
 #!/bin/bash
 
-# This script requires sshpass
+SCRIPT_LOCATION=$(dirname $(readlink -f $0))
+GIT_BRANCH=$(cd ${SCRIPT_LOCATION}; git status | head -1 | awk '{print $3}')
+
+ES_PORT=9200
+
+ARTIFACTORY_PORT=8081
+ARTIFACTORY_HOST=artifactory.siren.io
+ARTIFACTORY_REMOTE_PORT=18081
 
 if [[ ! $1 || $1 = "-h" || $1 = "--help" ]]; then
 cat <<EOF
@@ -24,17 +31,24 @@ DEBUG []
 ES_VERSION [2.4.4]
 PLUGIN_VERSION [2.4.4]
 LOGSTASH_VERSION [2.4.1]
+FOREIGN_MEMBERS []
+DISABLE_IPV6 []
+
+Note that FOREIGN_MEMBERS is a whitespace separated list of items in
+the format "IP" or "IP:TRANS_PORT" (default port 9300). These are 
+members that should be added to the cluster but won't be managed by
+this installer script.
 EOF
 fi
 
 CLUSTER=$1
-if [[ ! $2 == "rescue" ]]; then
+if [[ $2 == "rescue" ]]; then
 	RESCUE=true
 fi
 
 PRIMARY_IP=$(hostname --ip-address)
 SLAVES=$(ansible $CLUSTER -c local -m command -a "echo {{ inventory_hostname }}" | grep -v ">>" | sort -n )
-NUM_MASTERS=$[ $(echo $SLAVES | wc -w) / 2 + 1 ]
+NUM_MASTERS=$[ $(echo $SLAVES $FOREIGN_MEMBERS | wc -w) / 2 + 1 ]
 
 if [[ ! $ES_VERSION ]]; then
 	ES_VERSION=2.4.4
@@ -45,7 +59,7 @@ if [[ ! $PLUGIN_VERSION ]]; then
 fi
 
 if [[ ! $LOGSTASH_VERSION ]]; then
-	LOGSTASH_VERSION=2.4.4
+	LOGSTASH_VERSION=2.4.1
 fi
 
 
@@ -61,11 +75,18 @@ if [[ $RESCUE ]]; then
 	# Make sure sshpass is installed
 	apt-get -y install sshpass
 
+	# Clean and repopulate known_hosts because the keys may have changed
+	for entry in $SLAVES ${SLAVE_IPS[@]}; do
+		ssh-keygen -f $HOME/.ssh/known_hosts -R $entry
+	done
+	ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
+	
 	echo "Populate root's authorized_keys in each rescue OS"
 	# Ansible's password caching is unusable, so we roll our own
 	# Let's do some other housekeeping in this loop
 	declare -A SLAVE_PASSWDS
 	for slave in $SLAVES; do
+		echo "Enter a blank password if your pubkey is already installed"
 		echo -n "Root password for ${slave}: "
 		read -s passwd
 		SLAVE_PASSWDS[$slave]="$passwd"
@@ -96,25 +117,44 @@ if [[ $RESCUE ]]; then
 	for slave in $SLAVES; do
 		echo "${SLAVE_PASSWDS[$slave]}" | sshpass ssh-copy-id root@$slave
 	done
+	
+	echo "Disabling password authentication for root"
+	ansible $CLUSTER -u root -m command -a "passwd -l root"
 
 fi
 
 echo "Push cluster configuration and invoke the puller"
 conffile=$(tempfile)
 cat <<EOF >${conffile}
-SLAVE_IPS="${SLAVE_IPS[@]}"
+SLAVE_IPS="${SLAVE_IPS[@]} ${FOREIGN_MEMBERS}"
 NUM_MASTERS=$NUM_MASTERS
-DEBUG=$DEBUG
-CLUSTER_NAME=$CLUSTER
-ES_VERSION=2.4.4
-LOGSTASH_VERSION=2.4.1
-PLUGIN_VERSION=2.4.4
+DEBUG=${DEBUG}
+CLUSTER_NAME=${CLUSTER}
+ES_VERSION=${ES_VERSION}
+LOGSTASH_VERSION=${LOGSTASH_VERSION}
+PLUGIN_VERSION=${PLUGIN_VERSION}
+ARTIFACTORY_HOST=localhost
+ARTIFACTORY_PORT=${ARTIFACTORY_REMOTE_PORT}
+BASE_PARENT=/data
+DISABLE_IPV6=${DISABLE_IPV6}
+SHOVE_BASE=${SHOVE_BASE}
 EOF
+
+# Git is not installed on hetzner
+# IPv6 must be disabled on hetzner
+# Make sure the remote is using the same branch as us
+PULLER_ARGS="APT_INSTALL_GIT=true DISABLE_IPV6=${DISABLE_IPV6} GIT_BRANCH=${GIT_BRANCH}"
 
 for slave in $SLAVES; do
 	scp ${conffile} root@$slave:/tmp/baremetal.conf
 	scp baremetal-puller.sh root@$slave:/tmp/puller.sh
-	ssh root@$slave /tmp/puller.sh &
+	ssh -R${ARTIFACTORY_REMOTE_PORT}:${ARTIFACTORY_HOST}:${ARTIFACTORY_PORT} root@$slave /tmp/puller.sh ${PULLER_ARGS} &
 done
 
 rm ${conffile}
+
+### Perform post-assembly tasks (common)
+
+export ES_VERSION
+export ES_PORT
+$SCRIPT_LOCATION/post-assembly.sh ${SLAVE_IPS[@]}
