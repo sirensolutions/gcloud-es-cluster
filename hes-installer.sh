@@ -33,6 +33,11 @@ PLUGIN_VERSION [2.4.4]
 LOGSTASH_VERSION [2.4.1]
 FOREIGN_MEMBERS []
 DISABLE_IPV6 []
+
+Note that FOREIGN_MEMBERS is a whitespace separated list of items in
+the format "IP" or "IP:TRANS_PORT" (default port 9300). These are 
+members that should be added to the cluster but won't be managed by
+this installer script.
 EOF
 fi
 
@@ -43,7 +48,7 @@ fi
 
 PRIMARY_IP=$(hostname --ip-address)
 SLAVES=$(ansible $CLUSTER -c local -m command -a "echo {{ inventory_hostname }}" | grep -v ">>" | sort -n )
-NUM_MASTERS=$[ $(echo $SLAVES | wc -w) / 2 + 1 ]
+NUM_MASTERS=$[ $(echo $SLAVES $FOREIGN_MEMBERS | wc -w) / 2 + 1 ]
 
 if [[ ! $ES_VERSION ]]; then
 	ES_VERSION=2.4.4
