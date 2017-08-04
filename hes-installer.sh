@@ -82,6 +82,7 @@ if [[ $RESCUE ]]; then
 	ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
 	
 	echo "Populate root's authorized_keys in each rescue OS"
+	echo "Enter a blank password if your pubkey is already installed"
 	# Ansible's password caching is unusable, so we roll our own
 	# Let's do some other housekeeping in this loop
 	declare -A SLAVE_PASSWDS
