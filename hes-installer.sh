@@ -117,6 +117,9 @@ if [[ $RESCUE ]]; then
 	for slave in $SLAVES; do
 		echo "${SLAVE_PASSWDS[$slave]}" | sshpass ssh-copy-id root@$slave
 	done
+	
+	echo "Disabling password authentication for root"
+	ansible $CLUSTER -u root -m command -a "passwd -l root"
 
 fi
 
