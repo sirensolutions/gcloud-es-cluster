@@ -70,6 +70,12 @@ if [[ $RESCUE ]]; then
 	# Make sure sshpass is installed
 	apt-get -y install sshpass
 
+	# Clean and repopulate known_hosts because the keys may have changed
+	for entry in $SLAVES ${SLAVE_IPS[@]}; do
+		ssh-keygen -f $HOME/.ssh/known_hosts -R $entry
+	done
+	ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
+	
 	echo "Populate root's authorized_keys in each rescue OS"
 	# Ansible's password caching is unusable, so we roll our own
 	# Let's do some other housekeeping in this loop
