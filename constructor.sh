@@ -159,6 +159,7 @@ LOGSTASH_URL="https://artifacts.elastic.co/downloads/logstash/$LOGSTASH_ZIPFILE"
 LOGSTASH_URL2="https://download.elastic.co/logstash/logstash/$LOGSTASH_ZIPFILE"
 
 # Make sure our workspace is clean
+SHOVE_BASE=1
 if [[ -d $BASE ]]; then
 	if [[ $SHOVE_BASE ]]; then
 		$OLD_BASE=$BASE.$(date --iso-8601=seconds)
