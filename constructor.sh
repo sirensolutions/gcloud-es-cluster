@@ -265,9 +265,9 @@ fi
 SSH_REMOTE_HOST=${SSH_CLIENT%% *}
 
 for ip in $SSH_REMOTE_HOST $CONTROLLER_IP $SLAVE_IPS; do
-  ufw allow to any port 22 from $ip
-  ufw allow to any port $ES_PORT from $ip
-  ufw allow to any port $ES_TRANS_PORT from $ip
+  ufw allow to any port 22 from ${ip%%:*}
+  ufw allow to any port $ES_PORT from ${ip%%:*}
+  ufw allow to any port $ES_TRANS_PORT from ${ip%%:*}
 done
 
 sudo ufw --force enable
