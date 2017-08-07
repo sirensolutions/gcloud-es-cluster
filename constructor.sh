@@ -2,6 +2,13 @@
 #
 # Constructor for setting up an elasticsearch cluster
 
+check_error() {
+  if [ $? -ne 0 ]; then
+    echo Failed on $1
+    exit 1
+  fi
+}
+
 ##### SETTINGS #####
 
 # Sysctl max_map_count (>=262144)
@@ -227,6 +234,7 @@ echo 'oracle-java8-installer shared/accepted-oracle-license-v1-1 boolean true' |
 # make sure the installer does not prompt; there's nobody listening
 DEBIAN_FRONTEND=noninteractive apt-get -y install unzip supervisor ufw oracle-java8-installer
 
+check_error "apt install"
 
 if ! curl $CURL_ARGS -o $TMP_DIR/$ES_ZIPFILE $ES_URL ; then
   echo "Warning: problem downloading $ES_URL, trying alternative download location..." 
