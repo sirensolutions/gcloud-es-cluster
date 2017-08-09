@@ -168,7 +168,7 @@ LOGSTASH_URL2="https://download.elastic.co/logstash/logstash/$LOGSTASH_ZIPFILE"
 # Make sure our workspace is clean
 if [[ -d $BASE ]]; then
 	if [[ $SHOVE_BASE ]]; then
-		$OLD_BASE=$BASE.$(date --iso-8601=seconds)
+		OLD_BASE=$BASE.$(date --iso-8601=seconds)
 		if ! mv $BASE $OLD_BASE; then
 		  echo "Could not move $BASE to $OLD_BASE. Aborting"
 		  exit 1
