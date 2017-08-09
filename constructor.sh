@@ -382,7 +382,7 @@ chmod +x /usr/local/bin/elastic-unlimiter.sh
 
 cat <<EOF > /usr/local/bin/elastic-launcher.sh
 #!/bin/bash
-export ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE $ES_JAVA_OPTS"
+export ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE $ES_JAVA_OPTS $CUSTOM_ES_JAVA_OPTS"
 $ES_BASE/bin/elasticsearch
 EOF
 chmod +x /usr/local/bin/elastic-launcher.sh
