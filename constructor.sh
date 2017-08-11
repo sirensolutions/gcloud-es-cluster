@@ -227,11 +227,14 @@ EOF
 # make sure it's readable by the 'apt' user
 chmod og=r /etc/apt/trusted.gpg.d/webupd8team-java.gpg
 
+export DEBIAN_FRONTEND=noninteractive
 apt-get update
+dpkg --configure -a
+apt-get -f install
 # preseed the debian installer with our Java license acceptance
 echo 'oracle-java8-installer shared/accepted-oracle-license-v1-1 boolean true' | debconf-set-selections
 # make sure the installer does not prompt; there's nobody listening
-DEBIAN_FRONTEND=noninteractive apt-get -y install unzip supervisor ufw oracle-java8-installer
+apt-get -y install unzip supervisor ufw oracle-java8-installer
 
 check_error "apt install"
 
@@ -382,7 +385,7 @@ chmod +x /usr/local/bin/elastic-unlimiter.sh
 
 cat <<EOF > /usr/local/bin/elastic-launcher.sh
 #!/bin/bash
-export ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE $ES_JAVA_OPTS"
+export ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE $ES_JAVA_OPTS $CUSTOM_ES_JAVA_OPTS"
 $ES_BASE/bin/elasticsearch
 EOF
 chmod +x /usr/local/bin/elastic-launcher.sh
