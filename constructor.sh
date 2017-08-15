@@ -65,6 +65,11 @@ if [[ $? && "$(echo $systemdstat | awk '{print $2}')" -gt 227 ]]; then
 	SYSTEMD=true
 fi
 
+DEPENDENCIES="unzip ufw oracle-java8-installer"
+if [[ !$SYSTEMD ]]; then
+	DEPENDENCIES="$DEPENDENCIES supervisor"
+fi
+
 # save our http_proxy configuration for future use
 cat <<EOF >/etc/profile.d/00-proxy.sh
 export http_proxy=$http_proxy
@@ -239,7 +244,7 @@ apt-get -f install
 # preseed the debian installer with our Java license acceptance
 echo 'oracle-java8-installer shared/accepted-oracle-license-v1-1 boolean true' | debconf-set-selections
 # make sure the installer does not prompt; there's nobody listening
-apt-get -y install unzip supervisor ufw oracle-java8-installer
+apt-get -y install $DEPENDENCIES
 
 check_error "apt install"
 
