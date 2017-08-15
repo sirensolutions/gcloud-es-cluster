@@ -60,6 +60,11 @@ popd >/dev/null
 
 echo DEBUG=$DEBUG 
 
+systemdstat=$(systemctl --version)
+if [[ $? && "$(echo $systemdstat | awk '{print $2}')" -gt 227 ]]; then
+	SYSTEMD=true
+fi
+
 # save our http_proxy configuration for future use
 cat <<EOF >/etc/profile.d/00-proxy.sh
 export http_proxy=$http_proxy
@@ -360,14 +365,49 @@ chown -R $USER $BASE
 chmod -R og=rx $BASE
 
 
+if [[ $SYSTEMD ]]; then
+
+##### SYSTEMD CONFIGURATION #####
+
+	cat <<EOF >$ES_BASE/.environment
+ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE $ES_JAVA_OPTS $CUSTOM_ES_JAVA_OPTS"
+EOF
+
+	cat <<EOF >/etc/systemd/system/elastic.service
+[Unit]
+Description=Elasticsearch (custom)
+After=network.target auditd.service
+
+[Service]
+WorkingDirectory=$ES_BASE
+EnvironmentFile=-$ES_BASE/.environment
+ExecStart=$ES_BASE/bin/elasticsearch
+KillMode=process
+Restart=on-failure
+RestartPreventExitStatus=255
+Type=simple
+User=$USER
+LimitMEMLOCK=infinity
+
+[Install]
+WantedBy=multi-user.target
+Alias=elastic.service
+EOF
+
+	systemctl start elastic.service
+
+##### END SYSTEMD CONFIGURATION #####
+
+else
+
 ##### SUPERVISOR CONFIGURATION #####
 
-# This is nasty. The only way we can get memlock to be unlimited from
-# supervisor without rebooting the machine is to run the service as
-# root, set the limit, and then sudo to the service account. But sudo
-# will throw away the environment, so...
+	# This is nasty. The only way we can get memlock to be unlimited from
+	# supervisor without rebooting the machine is to run the service as
+	# root, set the limit, and then sudo to the service account. But sudo
+	# will throw away the environment, so...
 
-cat > /etc/supervisor/conf.d/elastic.conf <<EOF
+	cat > /etc/supervisor/conf.d/elastic.conf <<EOF
 [program:elastic]
 user=root
 directory=$ES_BASE
@@ -375,25 +415,26 @@ command="/usr/local/bin/elastic-unlimiter.sh"
 autorestart=True
 EOF
 
-cat <<EOF > /usr/local/bin/elastic-unlimiter.sh
+	cat <<EOF > /usr/local/bin/elastic-unlimiter.sh
 #!/bin/bash
 ulimit -l unlimited
 ulimit -n 65536
 sudo -u $USER /usr/local/bin/elastic-launcher.sh
 EOF
-chmod +x /usr/local/bin/elastic-unlimiter.sh
+	chmod +x /usr/local/bin/elastic-unlimiter.sh
 
-cat <<EOF > /usr/local/bin/elastic-launcher.sh
+	cat <<EOF > /usr/local/bin/elastic-launcher.sh
 #!/bin/bash
 export ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE $ES_JAVA_OPTS $CUSTOM_ES_JAVA_OPTS"
 $ES_BASE/bin/elasticsearch
 EOF
-chmod +x /usr/local/bin/elastic-launcher.sh
+	chmod +x /usr/local/bin/elastic-launcher.sh
 
-supervisorctl update
+	supervisorctl update
 
 ##### END SUPERVISOR CONFIGURATION #####
 
+fi
 
 ##### STORE CONFIGURATION VARIABLES #####
 
