@@ -393,6 +393,7 @@ RestartPreventExitStatus=255
 Type=simple
 User=$USER
 LimitMEMLOCK=infinity
+LimitNOFILE=65536
 
 [Install]
 WantedBy=multi-user.target
