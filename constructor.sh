@@ -316,6 +316,7 @@ node.name: ${HOSTNAME}
 discovery.zen.ping.unicast.hosts: [ $SLAVE_IPS_QUOTED ]
 discovery.zen.minimum_master_nodes: $NUM_MASTERS
 ${M_LOCK_ALL_SETTING}: true
+$(echo $ES_NODE_CONFIG | tr ' ' '\n'| sed 's/:/: /g' )
 EOF
 
 # For ES 2, we set cache preferences here
