@@ -304,6 +304,12 @@ IFS=","
 SLAVE_IPS_QUOTED="${SLAVE_IPS_QUOTED_ARRAY[*]}"
 IFS=$IFS_SAVE
 
+# In DEBUG mode, set the logger level of Elasticsearch to DEBUG too
+if [[ $DEBUG ]]; then
+	cp $ES_BASE/config/log4j2.properties $ES_BASE/config/log4j2.properties.dist
+	sed -i 's/rootLogger\.level = info/rootLogger.level = debug/' $ES_BASE/config/log4j2.properties
+fi
+
 mv $ES_BASE/config/elasticsearch.yml $ES_BASE/config/elasticsearch.yml.dist
 cat > $ES_BASE/config/elasticsearch.yml <<EOF
 http.port: $ES_PORT
