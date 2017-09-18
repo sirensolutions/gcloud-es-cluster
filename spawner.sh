@@ -53,7 +53,7 @@ if [[ ! $BOOT_DISK_TYPE ]]; then
 fi
 
 if [[ ! $BOOT_DISK_SIZE ]]; then
-	BOOT_DISK_SIZE="64GB"
+	BOOT_DISK_SIZE="16GB"
 fi
 
 if [[ ! $CLUSTER_NAME ]]; then
