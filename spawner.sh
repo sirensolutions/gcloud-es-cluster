@@ -105,7 +105,7 @@ fi
 gcloud-es-cluster/constructor.sh "$SITE_CONFIG" |& logger -t es-constructor
 EOF
 
-gcloud compute instances create ${SLAVES[@]} --boot-disk-type $BOOT_DISK_TYPE --boot-disk-size $BOOT_DISK_SIZE --no-address --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
+gcloud beta compute instances create ${SLAVES[@]} --min-cpu-platform="Intel Skylake" --boot-disk-type $BOOT_DISK_TYPE --boot-disk-size $BOOT_DISK_SIZE --no-address --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
 
 if [[ ! $DEBUG ]]; then
   rm $PULLER
