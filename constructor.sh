@@ -47,7 +47,7 @@ ARTIFACTORY_HEADER_HOST=$ARTIFACTORY_HOST
 ARTIFACTORY_PORT=8081
 
 # Don't show progress bar, but do show errors
-CURL_ARGS="-sS -f"
+CURL_ARGS="-sS -f -L"
 	
 ##### END DEFAULT SETTINGS #####
 
