@@ -204,12 +204,15 @@ fi
 
 ##### DOWNLOAD SOFTWARE #####
 
+# TODO: in stretch and later, we should follow the procedure in
+# https://wiki.debian.org/DebianRepository/UseThirdParty instead.
+
 cat <<EOF >/etc/apt/sources.list.d/webupd8team-java-trusty.list
 deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main
 # deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main
 EOF
 
-cat <<EOF | gpg --no-default-keyring --keyring /etc/apt/trusted.gpg.d/webupd8team-java.gpg --import
+cat <<EOF | gpg --no-default-keyring --keyring $TMP_DIR/webupd8team-java.gpg --import
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: GnuPG v1
 
@@ -224,6 +227,7 @@ BmuKvUJ4
 =0Cp+
 -----END PGP PUBLIC KEY BLOCK-----
 EOF
+gpg --no-default-keyring --keyring $TMP_DIR/webupd8team-java.gpg --export C2518248EEA14886 > /etc/apt/trusted.gpg.d/webupd8team-java.gpg
 # make sure it's readable by the 'apt' user
 chmod og=r /etc/apt/trusted.gpg.d/webupd8team-java.gpg
 
