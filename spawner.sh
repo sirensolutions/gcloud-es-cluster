@@ -48,6 +48,14 @@ else
 	IMAGE_PROJECT=ubuntu-os-cloud
 fi
 
+if [[ ! $BOOT_DISK_TYPE ]]; then
+	BOOT_DISK_TYPE="pd-ssd"
+fi
+
+if [[ ! $BOOT_DISK_SIZE ]]; then
+	BOOT_DISK_SIZE="16GB"
+fi
+
 if [[ ! $CLUSTER_NAME ]]; then
 	CLUSTER_NAME=es-$(date +%s)
 fi
@@ -70,7 +78,8 @@ fi
 
 # Let's go
 
-PRIMARY_IP=$(hostname --ip-address)
+PRIMARY_INTERFACE=$(route -n | grep ^0.0.0.0 | head -1 | awk '{print $8}')
+PRIMARY_IP=$(ifconfig $PRIMARY_INTERFACE|perl -ne "print if s/^\s*inet addr:([0-9.]+)\s.*$/\1/")
 SUBNET=${PRIMARY_IP%.*}.0/24
 NUM_MASTERS=$[(NUM_SLAVES/2)+1]
 
@@ -96,7 +105,7 @@ fi
 gcloud-es-cluster/constructor.sh "$SITE_CONFIG" |& logger -t es-constructor
 EOF
 
-gcloud compute instances create ${SLAVES[@]} --no-address --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
+gcloud compute instances create ${SLAVES[@]} --boot-disk-type $BOOT_DISK_TYPE --boot-disk-size $BOOT_DISK_SIZE --no-address --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
 
 if [[ ! $DEBUG ]]; then
   rm $PULLER
@@ -116,7 +125,7 @@ echo "Pushing metadata..."
 for slave in ${SLAVES[@]}; do
 	# The constructors should spin on es_spinlock_1 to avoid race conditions
 	gcloud compute instances add-metadata $slave \
-	--metadata es_slave_ips="${SLAVE_IPS[*]}",es_num_masters="$NUM_MASTERS",es_debug="$DEBUG",es_cluster_name="$CLUSTER_NAME",es_controller_ip="${PRIMARY_IP}",es_version="${ES_VERSION}",es_plugin_dir_version="${PLUGIN_DIR_VERSION}",es_plugin_version="${PLUGIN_VERSION}",es_logstash_version="${LOGSTASH_VERSION}",es_spinlock_1=released
+	--metadata es_slave_ips="${SLAVE_IPS[*]}",es_num_masters="$NUM_MASTERS",es_debug="$DEBUG",es_cluster_name="$CLUSTER_NAME",es_controller_ip="${PRIMARY_IP}",es_version="${ES_VERSION}",es_plugin_dir_version="${PLUGIN_DIR_VERSION}",es_plugin_version="${PLUGIN_VERSION}",es_logstash_version="${LOGSTASH_VERSION}",es_node_config="$ES_NODE_CONFIG",es_spinlock_1=released
 done
 
 echo "Waiting for OS to come up on each slave..."

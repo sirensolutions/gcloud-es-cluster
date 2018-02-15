@@ -214,12 +214,15 @@ fi
 
 ##### DOWNLOAD SOFTWARE #####
 
+# TODO: in stretch and later, we should follow the procedure in
+# https://wiki.debian.org/DebianRepository/UseThirdParty instead.
+
 cat <<EOF >/etc/apt/sources.list.d/webupd8team-java-trusty.list
 deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main
 # deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main
 EOF
 
-cat <<EOF | gpg --no-default-keyring --keyring /etc/apt/trusted.gpg.d/webupd8team-java.gpg --import
+cat <<EOF | gpg --no-default-keyring --keyring $TMP_DIR/webupd8team-java.gpg --import
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: GnuPG v1
 
@@ -234,6 +237,7 @@ BmuKvUJ4
 =0Cp+
 -----END PGP PUBLIC KEY BLOCK-----
 EOF
+gpg --no-default-keyring --keyring $TMP_DIR/webupd8team-java.gpg --export C2518248EEA14886 > /etc/apt/trusted.gpg.d/webupd8team-java.gpg
 # make sure it's readable by the 'apt' user
 chmod og=r /etc/apt/trusted.gpg.d/webupd8team-java.gpg
 
@@ -314,6 +318,12 @@ IFS=","
 SLAVE_IPS_QUOTED="${SLAVE_IPS_QUOTED_ARRAY[*]}"
 IFS=$IFS_SAVE
 
+# In DEBUG mode, set the logger level of Elasticsearch to DEBUG too
+if [[ $DEBUG ]]; then
+	cp $ES_BASE/config/log4j2.properties $ES_BASE/config/log4j2.properties.dist
+	sed -i 's/rootLogger\.level = info/rootLogger.level = debug/' $ES_BASE/config/log4j2.properties
+fi
+
 mv $ES_BASE/config/elasticsearch.yml $ES_BASE/config/elasticsearch.yml.dist
 cat > $ES_BASE/config/elasticsearch.yml <<EOF
 http.port: $ES_PORT
@@ -326,6 +336,7 @@ node.name: ${HOSTNAME}
 discovery.zen.ping.unicast.hosts: [ $SLAVE_IPS_QUOTED ]
 discovery.zen.minimum_master_nodes: $NUM_MASTERS
 ${M_LOCK_ALL_SETTING}: true
+$(echo $ES_NODE_CONFIG | tr ' ' '\n'| sed 's/:/: /g' )
 EOF
 
 # For ES 2, we set cache preferences here
