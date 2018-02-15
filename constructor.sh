@@ -44,7 +44,6 @@ ES_TRANS_PORT=9300
 # We may not be able to access the artifactory directly
 ARTIFACTORY_HOST=artifactory.siren.io
 ARTIFACTORY_HEADER_HOST=$ARTIFACTORY_HOST
-ARTIFACTORY_PORT=8081
 
 # Don't show progress bar, but do show errors
 CURL_ARGS="-sS -f -L"
@@ -88,7 +87,7 @@ if [[ ${ES_MAJOR_VERSION} == "2" ]]; then
   M_LOCK_ALL_SETTING="bootstrap.mlockall"
 elif [[ ${ES_MAJOR_VERSION} == "5" ]]; then
   PLUGIN_TOOL=bin/elasticsearch-plugin
-  PLUGIN_NAME=platform-core
+  PLUGIN_NAME=siren-federate
   M_LOCK_ALL_SETTING="bootstrap.memory_lock"
 else
   echo "Elasticsearch version ${ES_VERSION} not supported by this script. Aborting!" 
@@ -152,7 +151,7 @@ if [[ $PLUGIN_VERSION ]]; then
   else
     PLUGIN_ZIPFILE="${PLUGIN_NAME}-${PLUGIN_VERSION}-plugin.zip"
   fi
-  PLUGIN_URL="http://${ARTIFACTORY_HOST}:${ARTIFACTORY_PORT}/artifactory/${ARTIFACTORY_PATH}/io/siren/${PLUGIN_NAME}/${PLUGIN_DIR_VERSION}/${PLUGIN_ZIPFILE}"
+  PLUGIN_URL="http://${ARTIFACTORY_HOST}/artifactory/${ARTIFACTORY_PATH}/io/siren/${PLUGIN_NAME}/${PLUGIN_DIR_VERSION}/${PLUGIN_ZIPFILE}"
 fi
 
 ES_BASE=$BASE/elasticsearch-$ES_VERSION

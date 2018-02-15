@@ -5,7 +5,6 @@ GIT_BRANCH=$(cd ${SCRIPT_LOCATION}; git status | head -1 | awk '{print $3}')
 
 ES_PORT=9200
 
-ARTIFACTORY_PORT=8081
 ARTIFACTORY_HOST=artifactory.siren.io
 ARTIFACTORY_REMOTE_PORT=18081
 
@@ -134,7 +133,6 @@ ES_VERSION=${ES_VERSION}
 LOGSTASH_VERSION=${LOGSTASH_VERSION}
 PLUGIN_VERSION=${PLUGIN_VERSION}
 ARTIFACTORY_HOST=localhost
-ARTIFACTORY_PORT=${ARTIFACTORY_REMOTE_PORT}
 BASE_PARENT=/data
 DISABLE_IPV6=${DISABLE_IPV6}
 SHOVE_BASE=${SHOVE_BASE}
@@ -148,7 +146,7 @@ PULLER_ARGS="APT_INSTALL_GIT=true DISABLE_IPV6=${DISABLE_IPV6} GIT_BRANCH=${GIT_
 for slave in $SLAVES; do
 	scp ${conffile} root@$slave:/tmp/baremetal.conf
 	scp baremetal-puller.sh root@$slave:/tmp/puller.sh
-	ssh -R${ARTIFACTORY_REMOTE_PORT}:${ARTIFACTORY_HOST}:${ARTIFACTORY_PORT} root@$slave /tmp/puller.sh ${PULLER_ARGS} &
+	ssh -R${ARTIFACTORY_REMOTE_PORT}:${ARTIFACTORY_HOST} root@$slave /tmp/puller.sh ${PULLER_ARGS} &
 done
 
 rm ${conffile}
