@@ -79,7 +79,8 @@ fi
 # Let's go
 
 PRIMARY_INTERFACE=$(route -n | grep ^0.0.0.0 | head -1 | awk '{print $8}')
-PRIMARY_IP=$(ifconfig $PRIMARY_INTERFACE|perl -ne "print if s/^\s*inet addr:([0-9.]+)\s.*$/\1/")
+PRIMARY_IP_CIDR=$(ip address list dev $PRIMARY_INTERFACE |grep "\binet\b"|awk '{print $2}')
+PRIMARY_IP=${PRIMARY_IP_CIDR%%/*}
 SUBNET=${PRIMARY_IP%.*}.0/24
 NUM_MASTERS=$[(NUM_SLAVES/2)+1]
 
