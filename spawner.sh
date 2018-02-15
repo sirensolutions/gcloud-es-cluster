@@ -78,7 +78,8 @@ fi
 
 # Let's go
 
-PRIMARY_IP=$(hostname --ip-address)
+PRIMARY_INTERFACE=$(route -n | grep ^0.0.0.0 | head -1 | awk '{print $8}')
+PRIMARY_IP=$(ifconfig $PRIMARY_INTERFACE|perl -ne "print if s/^\s*inet addr:([0-9.]+)\s.*$/\1/")
 SUBNET=${PRIMARY_IP%.*}.0/24
 NUM_MASTERS=$[(NUM_SLAVES/2)+1]
 
