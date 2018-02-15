@@ -152,7 +152,7 @@ if [[ $PLUGIN_VERSION ]]; then
   else
     PLUGIN_ZIPFILE="${PLUGIN_NAME}-${PLUGIN_VERSION}-plugin.zip"
   fi
-  PLUGIN_URL="http://${ARTIFACTORY_HOST}:${ARTIFACTORY_PORT}/artifactory/${ARTIFACTORY_PATH}/solutions/siren/${PLUGIN_NAME}/${PLUGIN_DIR_VERSION}/${PLUGIN_ZIPFILE}"
+  PLUGIN_URL="http://${ARTIFACTORY_HOST}:${ARTIFACTORY_PORT}/artifactory/${ARTIFACTORY_PATH}/io/siren/${PLUGIN_NAME}/${PLUGIN_DIR_VERSION}/${PLUGIN_ZIPFILE}"
 fi
 
 ES_BASE=$BASE/elasticsearch-$ES_VERSION
@@ -345,7 +345,7 @@ fi
 if [[ $PLUGIN_ZIPFILE ]]; then
   $ES_BASE/$PLUGIN_TOOL install file:$PLUGIN_ZIPFILE  || exit 3
 else
-  $ES_BASE/$PLUGIN_TOOL install solutions.siren/$PLUGIN_NAME/$ES_VERSION  || exit 2
+  $ES_BASE/$PLUGIN_TOOL install io.siren/$PLUGIN_NAME/$ES_VERSION  || exit 2
 fi
 
 # only need this if we are using enterprise edition v4
