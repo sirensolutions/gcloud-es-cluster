@@ -161,7 +161,7 @@ fi
 
 pushd $(dirname $(readlink -f $0))/.. >/dev/null
 
-git -c http.proxy=\$http_proxy clone -b ${GIT_DEMOS_BRANCH} https://github.com/sirensolutions/demos
+git -c http.proxy=$http_proxy clone -b ${GIT_DEMOS_BRANCH} https://github.com/sirensolutions/demos
 check_error "git clone demos"
 DEMO_SCRIPT_DIR=$PWD/demos
 
