@@ -28,6 +28,7 @@ if [[ $GITHUB_CREDENTIALS ]]; then
 https://${GITHUB_CREDENTIALS}@github.com
 EOF
 	chmod og= ~/.git-credentials
+	git config --global credential.helper store
 fi
 
 if ! git ${GIT_OPTIONS} clone -b ${GIT_BRANCH} https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then

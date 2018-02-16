@@ -109,6 +109,7 @@ if [[ -n "$GITHUB_CREDENTIALS" ]]; then
 https://${GITHUB_CREDENTIALS}@github.com
 FOO
 	chmod og= ~/.git-credentials
+	git config --global credential.helper store
 fi
 
 if ! git -c http.proxy=\$http_proxy clone -b ${GIT_BRANCH} https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
