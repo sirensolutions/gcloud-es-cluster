@@ -130,11 +130,11 @@ for slave in ${SLAVES[@]}; do
 done
 
 echo "Waiting for OS to come up on each slave..."
-for ip in ${SLAVES[@]}; do
-	while ! nc -w 5 $ip 22 </dev/null >/dev/null; do
+for slave in ${SLAVES[@]}; do
+	while ! nc -w 5 $slave 22 </dev/null >/dev/null; do
 		sleep 5
 	done
-	echo "$ip running"
+	echo "$slave running"
 done
 # Repopulate known_hosts
 ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
