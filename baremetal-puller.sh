@@ -23,6 +23,13 @@ if [[ $APT_INSTALL_GIT ]]; then
 	DEBIAN_FRONTEND=noninteractive apt-get install -y git |& logger -t es-puller
 fi
 
+if [[ $GITHUB_CREDENTIALS ]]; then
+	cat <<EOF >~/.git-credentials
+https://${GITHUB_CREDENTIALS}@github.com
+EOF
+	chmod og= ~/.git-credentials
+fi
+
 if ! git ${GIT_OPTIONS} clone -b ${GIT_BRANCH} https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
 	echo "Aborting; no git repository found" |& logger -t es-puller
 fi

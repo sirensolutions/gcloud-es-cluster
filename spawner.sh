@@ -25,6 +25,9 @@ SITE_CONFIG [gcloud.conf]
 ES_VERSION [2.4.4]
 PLUGIN_VERSION [2.4.4]
 LOGSTASH_VERSION [2.4.1]
+GITHUB_CREDENTIALS []
+
+Credentials are supplied in the form "<username>:<password>"
 EOF
 fi
 
@@ -100,6 +103,14 @@ cd \$(mktemp -d)
 CONTROLLER_IP="${PRIMARY_IP}"
 export http_proxy="http://\$CONTROLLER_IP:3128/"
 export https_proxy="\$http_proxy"
+
+if [[ -n "$GITHUB_CREDENTIALS" ]]; then
+	cat <<FOO >~/.git-credentials
+https://${GITHUB_CREDENTIALS}@github.com
+FOO
+	chmod og= ~/.git-credentials
+fi
+
 if ! git -c http.proxy=\$http_proxy clone -b ${GIT_BRANCH} https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
 	echo "Aborting; no git repository found" |& logger -t es-puller
 fi

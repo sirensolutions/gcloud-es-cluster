@@ -34,11 +34,14 @@ LOGSTASH_VERSION [2.4.1]
 FOREIGN_MEMBERS []
 DISABLE_IPV6 []
 HOSTS_FILE []
+GITHUB_CREDENTIALS []
 
 Note that FOREIGN_MEMBERS is a whitespace separated list of items in
 the format "IP" or "IP:TRANS_PORT" (default port 9300). These are 
 members that should be added to the cluster but won't be managed by
 this installer script.
+
+Credentials are supplied in the form "<username>:<password>"
 EOF
 fi
 
@@ -143,12 +146,13 @@ PLUGIN_VERSION=${PLUGIN_VERSION}
 BASE_PARENT=/data
 DISABLE_IPV6=${DISABLE_IPV6}
 SHOVE_BASE=${SHOVE_BASE}
+GITHUB_CREDENTIALS=${GITHUB_CREDENTIALS}
 EOF
 
 # Git is not installed on hetzner
 # IPv6 must be disabled on hetzner
 # Make sure the remote is using the same branch as us
-PULLER_ARGS="APT_INSTALL_GIT=true DISABLE_IPV6=${DISABLE_IPV6} GIT_BRANCH=${GIT_BRANCH}"
+PULLER_ARGS="APT_INSTALL_GIT=true DISABLE_IPV6=${DISABLE_IPV6} GIT_BRANCH=${GIT_BRANCH} GITHUB_CREDENTIALS=${GITHUB_CREDENTIALS}"
 
 for slave in $SLAVES; do
 	scp ${conffile} root@$slave:/tmp/baremetal.conf
