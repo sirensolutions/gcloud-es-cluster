@@ -162,4 +162,4 @@ rm ${conffile}
 
 export ES_VERSION
 export ES_PORT
-$SCRIPT_LOCATION/post-assembly.sh ${SLAVE_IPS[@]}
+$SCRIPT_LOCATION/post-assembly.sh ${SLAVES[@]}
