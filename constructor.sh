@@ -269,7 +269,6 @@ path.data: $BASE/elasticsearch-data
 path.logs: $BASE/elasticsearch-logs
 network.bind_host: "0"
 network.publish_host: "$PRIMARY_IP"
-path.repo: $BASE
 cluster.name: ${CLUSTER_NAME}
 node.name: ${HOSTNAME}
 discovery.zen.ping.unicast.hosts: [ $SLAVE_IPS_QUOTED ]
