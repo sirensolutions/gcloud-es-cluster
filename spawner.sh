@@ -130,7 +130,7 @@ for slave in ${SLAVES[@]}; do
 done
 
 echo "Waiting for OS to come up on each slave..."
-for ip in ${SLAVE_IPS[@]}; do
+for ip in ${SLAVES[@]}; do
 	while ! nc -w 5 $ip 22 </dev/null >/dev/null; do
 		sleep 5
 	done
@@ -143,4 +143,4 @@ ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
 
 export ES_VERSION
 export ES_PORT
-$SCRIPT_LOCATION/post-assembly.sh ${SLAVE_IPS[@]}
+$SCRIPT_LOCATION/post-assembly.sh ${SLAVES[@]}
