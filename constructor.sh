@@ -67,7 +67,7 @@ if [[ $? && "$(echo $systemdstat | awk '{print $2}')" -gt 227 ]]; then
 fi
 
 DEPENDENCIES="unzip ufw oracle-java8-installer"
-if [[ !$SYSTEMD ]]; then
+if [[ ! $SYSTEMD ]]; then
 	DEPENDENCIES="$DEPENDENCIES supervisor"
 fi
 
