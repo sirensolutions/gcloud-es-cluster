@@ -342,6 +342,8 @@ WantedBy=multi-user.target
 Alias=elastic.service
 EOF
 
+	ln -s ../elastic.service /etc/systemd/system/multi-user.target.wants/
+	systemctl daemon-reload
 	systemctl start elastic.service
 
 ##### END SYSTEMD CONFIGURATION #####
