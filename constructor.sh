@@ -61,7 +61,7 @@ popd >/dev/null
 
 echo DEBUG=$DEBUG 
 
-systemdstat=$(systemctl --version)
+systemdstat=$(systemctl --version | head -1)
 if [[ $? && "$(echo $systemdstat | awk '{print $2}')" -gt 227 ]]; then
 	SYSTEMD=true
 fi
