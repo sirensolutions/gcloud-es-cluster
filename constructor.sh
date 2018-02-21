@@ -28,10 +28,16 @@ bracketed_ip() {
 # Function to remove quote-brackets and :port from ip addresses
 bare_ip() {
   ip=$1
+  # We test for an ipv6 address by trying to remove two colons
   ip_noopenbracket="${ip#[}"
+  ip_removeonecolon="${ip%:*}"
+  ip_removetwocolons="${ip_removeonecolon%:*}"
   if [[ ${ip_noopenbracket} != ${ip} ]]; then
     # return bracketed-ipv6 to bare format without any trailing port
     echo "${ip_noopenbracket%]*}"
+  elif [[ ${ip_noopenbracket} == ${ip} && ${ip_removetwocolons} != ${ip_removeonecolon} ]]; then
+    # do nothing; we have a bare ipv6 (which can't have a :port in principle)
+    echo "$ip"
   else
     # remove any trailing port from ipv4
     echo "${ip%:*}"
