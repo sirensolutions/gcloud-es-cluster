@@ -40,6 +40,7 @@ else
 fi
 
 # Use default ports for simplicity
+SSH_PORT=22
 ES_PORT=9200
 ES_TRANS_PORT=9300
 
@@ -227,7 +228,7 @@ for ip in $SSH_REMOTE_HOST $CONTROLLER_IP $SLAVE_IPS; do
     # remove any trailing port from ipv4
     ip="${ip%:*}"
   fi
-  for port in 22 $ES_PORT $ES_TRANS_PORT; do
+  for port in $SSH_PORT $ES_PORT $ES_TRANS_PORT; do
     ufw allow to any port $port from $ip comment "es-constructor"
   done
 done
