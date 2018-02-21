@@ -26,6 +26,8 @@ BASE_PARENT=/opt
 # The user that will own the files and processes.
 USER=elastic
 
+ES_LINKNAME=elasticsearch
+
 # How much memory to allocate to elastic. We default this to half the
 # machine's total memory or 31GB (whichever is smaller)
 # but the spawner can override below.
@@ -41,24 +43,33 @@ fi
 ES_PORT=9200
 ES_TRANS_PORT=9300
 
-# We may not be able to access the artifactory directly
-ARTIFACTORY_HOST=artifactory.siren.io
-ARTIFACTORY_HEADER_HOST=$ARTIFACTORY_HOST
-ARTIFACTORY_PORT=8081
-
 # Don't show progress bar, but do show errors
 CURL_ARGS="-sS -f -L"
-	
+
+# We can optionally override the branches of our repo dependencies
+# But most of the time we probably just want "master"
+GIT_DEMOS_BRANCH=master
+
 ##### END DEFAULT SETTINGS #####
 
 echo Loading site config \"$1\"
 
 # Pushd/popd so we can handle both absolute and relative paths sensibly.
-pushd $(dirname $0) >/dev/null
+pushd $(dirname $(readlink -f $0)) >/dev/null
 . $1
 popd >/dev/null
 
 echo DEBUG=$DEBUG 
+
+systemdstat=$(systemctl --version | head -1)
+if [[ $? && "$(echo $systemdstat | awk '{print $2}')" -gt 227 ]]; then
+	SYSTEMD=true
+fi
+
+DEPENDENCIES="unzip ufw oracle-java8-installer"
+if [[ ! $SYSTEMD ]]; then
+	DEPENDENCIES="$DEPENDENCIES supervisor"
+fi
 
 # save our http_proxy configuration for future use
 cat <<EOF >/etc/profile.d/00-proxy.sh
@@ -75,20 +86,15 @@ http_proxy_port=${http_proxy##*:}
 http_proxy_port=${http_proxy_port%/}
 export ES_JAVA_OPTS="-Dhttp.proxyHost=$http_proxy_host -Dhttp.proxyPort=$http_proxy_port -Dhttps.proxyHost=$http_proxy_host -Dhttps.proxyPort=$http_proxy_port -DproxyHost=$http_proxy_host -DproxyPort=$http_proxy_port" 
 
+
 ES_MAJOR_VERSION=${ES_VERSION%%.*}
 if [[ $DEBUG ]]; then
 	echo ES_MAJOR_VERSION=$ES_MAJOR_VERSION 
 fi
 
 if [[ ${ES_MAJOR_VERSION} == "2" ]]; then
-  # The plugin tool does not read the envar ES_JAVA_OPTS in 2.x
-  # https://github.com/elastic/elasticsearch/issues/21824
-  PLUGIN_TOOL="bin/plugin $ES_JAVA_OPTS"
-  PLUGIN_NAME=siren-join
   M_LOCK_ALL_SETTING="bootstrap.mlockall"
 elif [[ ${ES_MAJOR_VERSION} == "5" ]]; then
-  PLUGIN_TOOL=bin/elasticsearch-plugin
-  PLUGIN_NAME=platform-core
   M_LOCK_ALL_SETTING="bootstrap.memory_lock"
 else
   echo "Elasticsearch version ${ES_VERSION} not supported by this script. Aborting!" 
@@ -97,22 +103,6 @@ fi
 if [[ $DEBUG ]]; then
 	echo ES_MAJOR_VERSION=$ES_MAJOR_VERSION 
 fi
-
-PLUGIN_MINOR_VERSION=${PLUGIN_VERSION%%-*}
-if [[ ${PLUGIN_MINOR_VERSION} != ${PLUGIN_VERSION} ]]; then
-  echo "This is a snapshot build."
-  SNAPSHOT=true
-  if [[ ! $PLUGIN_DIR_VERSION ]]; then
-    PLUGIN_DIR_VERSION=${PLUGIN_MINOR_VERSION}-SNAPSHOT
-  fi
-  ARTIFACTORY_PATH=libs-snapshot-local
-else
-  if [[ ! $PLUGIN_DIR_VERSION ]]; then
-    PLUGIN_DIR_VERSION=${PLUGIN_MINOR_VERSION}
-  fi
-  ARTIFACTORY_PATH=libs-release-local
-fi
-
 
 
 # Check that the user exists
@@ -145,25 +135,6 @@ if [[ $DEBUG ]]; then
 	echo TMP_DIR=$TMP_DIR
 	echo BASE=$BASE
 fi
-	
-if [[ $PLUGIN_VERSION ]]; then
-  if [[ $PLUGIN_NAME == "siren-join" ]]; then
-    PLUGIN_ZIPFILE="siren-join-${PLUGIN_VERSION}.zip"
-  else
-    PLUGIN_ZIPFILE="${PLUGIN_NAME}-${PLUGIN_VERSION}-plugin.zip"
-  fi
-  PLUGIN_URL="http://${ARTIFACTORY_HOST}:${ARTIFACTORY_PORT}/artifactory/${ARTIFACTORY_PATH}/solutions/siren/${PLUGIN_NAME}/${PLUGIN_DIR_VERSION}/${PLUGIN_ZIPFILE}"
-fi
-
-ES_BASE=$BASE/elasticsearch-$ES_VERSION
-ES_ZIPFILE="elasticsearch-$ES_VERSION.zip"
-ES_URL="https://artifacts.elastic.co/downloads/elasticsearch/$ES_ZIPFILE"
-ES_URL2="https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/zip/elasticsearch/$ES_VERSION/$ES_ZIPFILE"
-
-LOGSTASH_BASE=$BASE/logstash-$LOGSTASH_VERSION
-LOGSTASH_ZIPFILE="logstash-$LOGSTASH_VERSION.zip"
-LOGSTASH_URL="https://artifacts.elastic.co/downloads/logstash/$LOGSTASH_ZIPFILE"
-LOGSTASH_URL2="https://download.elastic.co/logstash/logstash/$LOGSTASH_ZIPFILE"
 
 # Make sure our workspace is clean
 if [[ -d $BASE ]]; then
@@ -185,21 +156,18 @@ else
   cd $BASE
 fi
 
-if [[ $DEBUG ]]; then
-	echo PLUGIN_NAME=$PLUGIN_NAME 
-	echo PLUGIN_URL=$PLUGIN_URL 
-	echo PLUGIN_VERSION=$PLUGIN_VERSION 
-	echo PLUGIN_ZIPFILE=$PLUGIN_ZIPFILE 
-	echo ES_BASE=$ES_BASE 
-	echo ES_ZIPFILE=$ES_ZIPFILE 
-	echo ES_URL=$ES_URL 
-	echo ES_URL2=$ES_URL2 
-	echo LOGSTASH_BASE=$LOGSTASH_BASE 
-	echo LOGSTASH_ZIPFILE=$LOGSTASH_ZIPFILE 
-	echo LOGSTASH_URL=$LOGSTASH_URL 
-	echo LOGSTASH_URL2=$LOGSTASH_URL2 
-fi
 
+##### PULL OTHER GIT REPOS #####
+
+pushd $(dirname $(readlink -f $0))/.. >/dev/null
+
+git -c http.proxy=$http_proxy clone -b ${GIT_DEMOS_BRANCH} https://github.com/sirensolutions/demos
+check_error "git clone demos"
+DEMO_SCRIPT_DIR=$PWD/demos
+
+popd >/dev/null
+
+##### END PULL OTHER GIT REPOS #####
 
 
 ##### DOWNLOAD SOFTWARE #####
@@ -238,42 +206,9 @@ apt-get -f install
 # preseed the debian installer with our Java license acceptance
 echo 'oracle-java8-installer shared/accepted-oracle-license-v1-1 boolean true' | debconf-set-selections
 # make sure the installer does not prompt; there's nobody listening
-apt-get -y install unzip supervisor ufw oracle-java8-installer
+apt-get -y install $DEPENDENCIES
 
 check_error "apt install"
-
-if ! curl $CURL_ARGS -o $TMP_DIR/$ES_ZIPFILE $ES_URL ; then
-  echo "Warning: problem downloading $ES_URL, trying alternative download location..." 
-  if ! curl $CURL_ARGS -o $TMP_DIR/$ES_ZIPFILE $ES_URL2 ; then
-    echo "Error downloading $ES_URL2" 
-    exit 3
-  else
-    echo "Success" 
-  fi
-fi
-unzip $TMP_DIR/$ES_ZIPFILE >/dev/null
-
-
-if ! curl $CURL_ARGS -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL ; then
-  echo "Warning: problem downloading $LOGSTASH_URL, trying alternative download location..." 
-  if ! curl $CURL_ARGS -o $TMP_DIR/$LOGSTASH_ZIPFILE $LOGSTASH_URL2 ; then
-    echo "Error downloading $LOGSTASH_URL2" 
-    exit 3
-  else
-    echo "Success" 
-  fi
-fi
-unzip $TMP_DIR/$LOGSTASH_ZIPFILE >/dev/null
-
-
-if [[ $PLUGIN_URL ]]; then
-  # We will also need to download a snapshot plugin from the artifactory
-  if ! curl $CURL_ARGS -o $TMP_DIR/$PLUGIN_ZIPFILE -H "Host: $ARTIFACTORY_HEADER_HOST" $PLUGIN_URL ; then
-    echo "Error downloading $PLUGIN_URL" 
-    exit 3
-  fi
-  PLUGIN_ZIPFILE=$TMP_DIR/$PLUGIN_ZIPFILE
-fi
 
 ##### END DOWNLOAD SOFTWARE #####
 
@@ -294,7 +229,18 @@ sudo ufw --force enable
 ##### END FIREWALL CONFIGURATION #####
 
 
+
 ##### ELASTICSEARCH CONFIGURATION #####
+
+# Use modular scripts
+ES_BASE=$BASE/$ES_LINKNAME
+${DEMO_SCRIPT_DIR}/install-elastic.sh "${ES_VERSION}" "${BASE}" "${ES_LINKNAME}" || exit 99
+${DEMO_SCRIPT_DIR}/install-vanguard.sh "${PLUGIN_VERSION}" "${ES_BASE}" || exit 99
+
+# we put the persistent data in separate subdirs for ease of upgrades
+mkdir $BASE/elasticsearch-snapshots
+mkdir $BASE/elasticsearch-data
+mkdir $BASE/elasticsearch-logs
 
 # We configure the node name to be the hostname
 
@@ -318,9 +264,11 @@ mv $ES_BASE/config/elasticsearch.yml $ES_BASE/config/elasticsearch.yml.dist
 cat > $ES_BASE/config/elasticsearch.yml <<EOF
 http.port: $ES_PORT
 transport.tcp.port: $ES_TRANS_PORT
+path.repo: $BASE/elasticsearch-snapshots
+path.data: $BASE/elasticsearch-data
+path.logs: $BASE/elasticsearch-logs
 network.bind_host: "0"
 network.publish_host: "$PRIMARY_IP"
-path.repo: $BASE
 cluster.name: ${CLUSTER_NAME}
 node.name: ${HOSTNAME}
 discovery.zen.ping.unicast.hosts: [ $SLAVE_IPS_QUOTED ]
@@ -330,7 +278,7 @@ $(echo $ES_NODE_CONFIG | tr ' ' '\n'| sed 's/:/: /g' )
 EOF
 
 # For ES 2, we set cache preferences here
-# For ES 5, we set it elsewhere AFTER the cluster is assembled.
+# For ES 5, these are not required with the latest plugin
 if [[ ${ES_MAJOR_VERSION} -lt 5 ]]; then
 	cat >> $ES_BASE/config/elasticsearch.yml <<EOF
 
@@ -339,13 +287,6 @@ index.queries.cache.enabled: true
 index.queries.cache.everything: true
 indices.queries.cache.all_segments: true
 EOF
-fi
-
-# Now install the elasticsearch plugins
-if [[ $PLUGIN_ZIPFILE ]]; then
-  $ES_BASE/$PLUGIN_TOOL install file:$PLUGIN_ZIPFILE  || exit 3
-else
-  $ES_BASE/$PLUGIN_TOOL install solutions.siren/$PLUGIN_NAME/$ES_VERSION  || exit 2
 fi
 
 # only need this if we are using enterprise edition v4
@@ -371,14 +312,52 @@ chown -R $USER $BASE
 chmod -R og=rx $BASE
 
 
+if [[ $SYSTEMD ]]; then
+
+##### SYSTEMD CONFIGURATION #####
+
+	cat <<EOF >${ES_BASE}.environment
+ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE $ES_JAVA_OPTS $CUSTOM_ES_JAVA_OPTS"
+EOF
+
+	cat <<EOF >/etc/systemd/system/elastic.service
+[Unit]
+Description=Elasticsearch (custom)
+After=network.target auditd.service
+
+[Service]
+WorkingDirectory=$ES_BASE
+EnvironmentFile=-${ES_BASE}.environment
+ExecStart=$ES_BASE/bin/elasticsearch
+KillMode=process
+Restart=on-failure
+RestartPreventExitStatus=255
+Type=simple
+User=$USER
+LimitMEMLOCK=infinity
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+Alias=elastic.service
+EOF
+
+	ln -s ../elastic.service /etc/systemd/system/multi-user.target.wants/
+	systemctl daemon-reload
+	systemctl start elastic.service
+
+##### END SYSTEMD CONFIGURATION #####
+
+else
+
 ##### SUPERVISOR CONFIGURATION #####
 
-# This is nasty. The only way we can get memlock to be unlimited from
-# supervisor without rebooting the machine is to run the service as
-# root, set the limit, and then sudo to the service account. But sudo
-# will throw away the environment, so...
+	# This is nasty. The only way we can get memlock to be unlimited from
+	# supervisor without rebooting the machine is to run the service as
+	# root, set the limit, and then sudo to the service account. But sudo
+	# will throw away the environment, so...
 
-cat > /etc/supervisor/conf.d/elastic.conf <<EOF
+	cat > /etc/supervisor/conf.d/elastic.conf <<EOF
 [program:elastic]
 user=root
 directory=$ES_BASE
@@ -386,25 +365,26 @@ command="/usr/local/bin/elastic-unlimiter.sh"
 autorestart=True
 EOF
 
-cat <<EOF > /usr/local/bin/elastic-unlimiter.sh
+	cat <<EOF > /usr/local/bin/elastic-unlimiter.sh
 #!/bin/bash
 ulimit -l unlimited
 ulimit -n 65536
 sudo -u $USER /usr/local/bin/elastic-launcher.sh
 EOF
-chmod +x /usr/local/bin/elastic-unlimiter.sh
+	chmod +x /usr/local/bin/elastic-unlimiter.sh
 
-cat <<EOF > /usr/local/bin/elastic-launcher.sh
+	cat <<EOF > /usr/local/bin/elastic-launcher.sh
 #!/bin/bash
 export ES_JAVA_OPTS="-Xms$ES_HEAP_SIZE -Xmx$ES_HEAP_SIZE $ES_JAVA_OPTS $CUSTOM_ES_JAVA_OPTS"
 $ES_BASE/bin/elasticsearch
 EOF
-chmod +x /usr/local/bin/elastic-launcher.sh
+	chmod +x /usr/local/bin/elastic-launcher.sh
 
-supervisorctl update
+	supervisorctl update
 
 ##### END SUPERVISOR CONFIGURATION #####
 
+fi
 
 ##### STORE CONFIGURATION VARIABLES #####
 

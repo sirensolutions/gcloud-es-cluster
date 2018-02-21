@@ -5,10 +5,6 @@ GIT_BRANCH=$(cd ${SCRIPT_LOCATION}; git status | head -1 | awk '{print $3}')
 
 ES_PORT=9200
 
-ARTIFACTORY_PORT=8081
-ARTIFACTORY_HOST=artifactory.siren.io
-ARTIFACTORY_REMOTE_PORT=18081
-
 if [[ ! $1 || $1 = "-h" || $1 = "--help" ]]; then
 cat <<EOF
 Usage: $0 CLUSTER_NAME [rescue]
@@ -18,7 +14,11 @@ physical machines.
 
 CLUSTER_NAME is the name of the cluster as defined as a group in
 /etc/ansible/hosts. Machines will take their names from
-/etc/ansible/hosts and their IPs must be defined in /etc/hosts
+/etc/ansible/hosts and their IPs must be defined in /etc/hosts .
+If the connection between the controller and the members should use
+different IPs than the members should use to connect to each other,
+then the inter-member IPs should be defined in a separate hosts file,
+and the name of the file passed in the HOSTS_FILE envar.
 
 The optional argument "rescue" causes the script to first install a
 base OS using the Hetzner rescue installer. Currently only Xenial is
@@ -33,11 +33,15 @@ PLUGIN_VERSION [2.4.4]
 LOGSTASH_VERSION [2.4.1]
 FOREIGN_MEMBERS []
 DISABLE_IPV6 []
+HOSTS_FILE []
+GITHUB_CREDENTIALS []
 
 Note that FOREIGN_MEMBERS is a whitespace separated list of items in
 the format "IP" or "IP:TRANS_PORT" (default port 9300). These are 
 members that should be added to the cluster but won't be managed by
 this installer script.
+
+Credentials are supplied in the form "<username>:<password>"
 EOF
 fi
 
@@ -63,11 +67,17 @@ if [[ ! $LOGSTASH_VERSION ]]; then
 fi
 
 
-# get our slave IPs from /etc/hosts
+# get our slave IPs from $HOSTS_FILE
 declare -A SLAVE_IPS
-for slave in $SLAVES; do
-	SLAVE_IPS[$slave]=$(grep "\b${slave}\b" /etc/hosts|awk '{print $1}')
-done
+if [[ $HOSTS_FILE ]]; then
+  for slave in $SLAVES; do
+	SLAVE_IPS[$slave]=$(grep "\b${slave}\b" $HOSTS_FILE | grep -v '^\s*#' | awk '{print $1}' | head -1)
+  done
+else
+  for slave in $SLAVES; do
+	SLAVE_IPS[$slave]=$(getent hosts ${slave} | awk '{print $1}' | head -1)
+  done
+fi
 
 if [[ $RESCUE ]]; then
 	# We need to install the OS from the hetzner rescue OS
@@ -133,22 +143,21 @@ CLUSTER_NAME=${CLUSTER}
 ES_VERSION=${ES_VERSION}
 LOGSTASH_VERSION=${LOGSTASH_VERSION}
 PLUGIN_VERSION=${PLUGIN_VERSION}
-ARTIFACTORY_HOST=localhost
-ARTIFACTORY_PORT=${ARTIFACTORY_REMOTE_PORT}
 BASE_PARENT=/data
 DISABLE_IPV6=${DISABLE_IPV6}
 SHOVE_BASE=${SHOVE_BASE}
+GITHUB_CREDENTIALS=${GITHUB_CREDENTIALS}
 EOF
 
 # Git is not installed on hetzner
 # IPv6 must be disabled on hetzner
 # Make sure the remote is using the same branch as us
-PULLER_ARGS="APT_INSTALL_GIT=true DISABLE_IPV6=${DISABLE_IPV6} GIT_BRANCH=${GIT_BRANCH}"
+PULLER_ARGS="APT_INSTALL_GIT=true DISABLE_IPV6=${DISABLE_IPV6} GIT_BRANCH=${GIT_BRANCH} GITHUB_CREDENTIALS=${GITHUB_CREDENTIALS}"
 
 for slave in $SLAVES; do
 	scp ${conffile} root@$slave:/tmp/baremetal.conf
 	scp baremetal-puller.sh root@$slave:/tmp/puller.sh
-	ssh -R${ARTIFACTORY_REMOTE_PORT}:${ARTIFACTORY_HOST}:${ARTIFACTORY_PORT} root@$slave /tmp/puller.sh ${PULLER_ARGS} &
+	ssh root@$slave /tmp/puller.sh ${PULLER_ARGS} &
 done
 
 rm ${conffile}
@@ -157,4 +166,4 @@ rm ${conffile}
 
 export ES_VERSION
 export ES_PORT
-$SCRIPT_LOCATION/post-assembly.sh ${SLAVE_IPS[@]}
+$SCRIPT_LOCATION/post-assembly.sh ${SLAVES[@]}

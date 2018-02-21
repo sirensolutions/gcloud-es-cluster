@@ -25,6 +25,9 @@ SITE_CONFIG [gcloud.conf]
 ES_VERSION [2.4.4]
 PLUGIN_VERSION [2.4.4]
 LOGSTASH_VERSION [2.4.1]
+GITHUB_CREDENTIALS []
+
+Credentials are supplied in the form "<username>:<password>"
 EOF
 fi
 
@@ -79,7 +82,8 @@ fi
 # Let's go
 
 PRIMARY_INTERFACE=$(route -n | grep ^0.0.0.0 | head -1 | awk '{print $8}')
-PRIMARY_IP=$(ifconfig $PRIMARY_INTERFACE|perl -ne "print if s/^\s*inet addr:([0-9.]+)\s.*$/\1/")
+PRIMARY_IP_CIDR=$(ip address list dev $PRIMARY_INTERFACE |grep "\binet\b"|awk '{print $2}')
+PRIMARY_IP=${PRIMARY_IP_CIDR%%/*}
 SUBNET=${PRIMARY_IP%.*}.0/24
 NUM_MASTERS=$[(NUM_SLAVES/2)+1]
 
@@ -99,6 +103,15 @@ cd \$(mktemp -d)
 CONTROLLER_IP="${PRIMARY_IP}"
 export http_proxy="http://\$CONTROLLER_IP:3128/"
 export https_proxy="\$http_proxy"
+
+if [[ -n "$GITHUB_CREDENTIALS" ]]; then
+	cat <<FOO >~/.git-credentials
+https://${GITHUB_CREDENTIALS}@github.com
+FOO
+	chmod og= ~/.git-credentials
+	git config --global credential.helper store
+fi
+
 if ! git -c http.proxy=\$http_proxy clone -b ${GIT_BRANCH} https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
 	echo "Aborting; no git repository found" |& logger -t es-puller
 fi
@@ -129,11 +142,11 @@ for slave in ${SLAVES[@]}; do
 done
 
 echo "Waiting for OS to come up on each slave..."
-for ip in ${SLAVE_IPS[@]}; do
-	while ! nc -w 5 $ip 22 </dev/null >/dev/null; do
+for slave in ${SLAVES[@]}; do
+	while ! nc -w 5 $slave 22 </dev/null >/dev/null; do
 		sleep 5
 	done
-	echo "$ip running"
+	echo "$slave running"
 done
 # Repopulate known_hosts
 ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
@@ -142,4 +155,4 @@ ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
 
 export ES_VERSION
 export ES_PORT
-$SCRIPT_LOCATION/post-assembly.sh ${SLAVE_IPS[@]}
+$SCRIPT_LOCATION/post-assembly.sh ${SLAVES[@]}
