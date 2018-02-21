@@ -219,9 +219,9 @@ check_error "apt install"
 SSH_REMOTE_HOST=${SSH_CLIENT%% *}
 
 for ip in $SSH_REMOTE_HOST $CONTROLLER_IP $SLAVE_IPS; do
-  ufw allow to any port 22 from ${ip%%:*}
-  ufw allow to any port $ES_PORT from ${ip%%:*}
-  ufw allow to any port $ES_TRANS_PORT from ${ip%%:*}
+ for port in 22 $ES_PORT $ES_TRANS_PORT; do
+  ufw allow to any port $port from ${ip%%:*} comment "es-constructor"
+ done
 done
 
 sudo ufw --force enable
