@@ -24,10 +24,11 @@ if [[ $APT_INSTALL_GIT ]]; then
 fi
 
 if [[ $GITHUB_CREDENTIALS ]]; then
+	touch ~/.git-credentials
+	chmod og= ~/.git-credentials
 	cat <<EOF >~/.git-credentials
 https://${GITHUB_CREDENTIALS}@github.com
 EOF
-	chmod og= ~/.git-credentials
 	git config --global credential.helper store
 fi
 
