@@ -40,6 +40,7 @@ else
 fi
 
 # Use default ports for simplicity
+SSH_PORT=22
 ES_PORT=9200
 ES_TRANS_PORT=9300
 
@@ -219,9 +220,17 @@ check_error "apt install"
 SSH_REMOTE_HOST=${SSH_CLIENT%% *}
 
 for ip in $SSH_REMOTE_HOST $CONTROLLER_IP $SLAVE_IPS; do
- for port in 22 $ES_PORT $ES_TRANS_PORT; do
-  ufw allow to any port $port from ${ip%%:*} comment "es-constructor"
- done
+  ip_noopenbracket="${ip#[}"
+  if [[ ${ip_noopenbracket} != ${ip} ]]; then
+    # return bracketed-ipv6 to bare format without any trailing port
+    ip="${ip_noopenbracket%]*}"
+  else
+    # remove any trailing port from ipv4
+    ip="${ip%:*}"
+  fi
+  for port in $SSH_PORT $ES_PORT $ES_TRANS_PORT; do
+    ufw allow to any port $port from $ip comment "es-constructor"
+  done
 done
 
 sudo ufw --force enable
@@ -246,9 +255,18 @@ mkdir $BASE/elasticsearch-logs
 
 # first put our slave ip list into json format (QAD)
 SLAVE_IPS_QUOTED_ARRAY=()
-for i in $SLAVE_IPS; do
-	SLAVE_IPS_QUOTED_ARRAY=(${SLAVE_IPS_QUOTED_ARRAY[@]} \"$i\")
+for ip in $SLAVE_IPS; do
+  # We test for an ipv6 address by trying to remove two colons
+  ip_noopenbracket="${ip#[}"
+  ip_removeonecolon="${ip%:*}"
+  ip_removetwocolons="${ip_removeonecolon%:*}"
+  if [[ ${ip_noopenbracket} == ${ip} && ${ip_removetwocolons} != ${ip_removeonecolon} ]]; then
+    # promote bare-ipv6 to bracketed format
+    ip="[${ip}]"
+  fi
+  SLAVE_IPS_QUOTED_ARRAY=(${SLAVE_IPS_QUOTED_ARRAY[@]} \"$ip\")
 done
+
 IFS_SAVE=$IFS
 IFS=","
 SLAVE_IPS_QUOTED="${SLAVE_IPS_QUOTED_ARRAY[*]}"
