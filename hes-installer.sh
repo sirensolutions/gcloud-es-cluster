@@ -110,7 +110,7 @@ if [[ $RESCUE ]]; then
 	done
 	
 	echo "Configure the OS"
-	ansible $CLUSTER -u root -m template -a "src=hes-autosetup.template dest=/autosetup"
+	ansible $CLUSTER -u root -m template -a "src=${SCRIPT_LOCATION}/hes-autosetup.template dest=/autosetup"
 	# we use cat to make ansible wait for the connection to drop
 	ansible $CLUSTER -u root -m command -a "bash -c '/root/.oldroot/nfs/install/installimage && reboot && cat'"
 	
@@ -161,7 +161,7 @@ PULLER_ARGS="APT_INSTALL_GIT=true DISABLE_IPV6=${DISABLE_IPV6} GIT_BRANCH=${GIT_
 
 for slave in $SLAVES; do
 	scp ${conffile} root@$slave:/tmp/baremetal.conf
-	scp baremetal-puller.sh root@$slave:/tmp/puller.sh
+	scp ${SCRIPT_LOCATION}/baremetal-puller.sh root@$slave:/tmp/puller.sh
 	ssh root@$slave /tmp/puller.sh ${PULLER_ARGS} &
 done
 
