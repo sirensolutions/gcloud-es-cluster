@@ -31,6 +31,11 @@ Credentials are supplied in the form "<username>:<password>"
 EOF
 fi
 
+if [[ ! $GITHUB_CREDENTIALS ]]; then
+    echo "No github credentials found; this script will not work. Aborting"
+    exit 666
+fi
+
 if [[ $1 ]]; then
 	NUM_SLAVES=$1
 else

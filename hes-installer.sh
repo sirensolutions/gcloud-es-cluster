@@ -45,6 +45,11 @@ Credentials are supplied in the form "<username>:<password>"
 EOF
 fi
 
+if [[ ! $GITHUB_CREDENTIALS ]]; then
+    echo "No github credentials found; this script will not work. Aborting"
+    exit 666
+fi
+
 CLUSTER=$1
 if [[ $2 == "rescue" ]]; then
 	RESCUE=true
