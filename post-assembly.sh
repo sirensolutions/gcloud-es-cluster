@@ -20,15 +20,7 @@ for slave in ${SLAVES[@]}; do
 	echo "$slave running"
 done
 
-# For ES 5, we set cache preferences here
-# For ES 2, we set it elsewhere using the constructor
-if [[ ${ES_VERSION%%.*} -ge 5 ]]; then
-	curl $CURL_ARGS -XPUT http://${SLAVES[0]}:$ES_PORT/_all/_settings?preserve_existing=true -d '{
-		"index.queries.cache.enabled" : "true",
-		"index.queries.cache.everything" : "true",
-		"indices.queries.cache.all_segments" : "true"
-	}'
-fi
+# We no longer need to set index caching preferences in ES v5
 
 # Now get the status of the cluster from the first node
 curl $CURL_ARGS -XGET http://${SLAVES[0]}:$ES_PORT/_cluster/state?pretty

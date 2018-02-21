@@ -278,7 +278,7 @@ $(echo $ES_NODE_CONFIG | tr ' ' '\n'| sed 's/:/: /g' )
 EOF
 
 # For ES 2, we set cache preferences here
-# For ES 5, we set it elsewhere AFTER the cluster is assembled.
+# For ES 5, these are not required with the latest plugin
 if [[ ${ES_MAJOR_VERSION} -lt 5 ]]; then
 	cat >> $ES_BASE/config/elasticsearch.yml <<EOF
 
