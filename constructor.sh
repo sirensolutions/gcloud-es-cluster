@@ -9,6 +9,41 @@ check_error() {
   fi
 }
 
+# Function to add quote-brackets to bare ipv6 addresses only
+# Use this before appending ":port" to ensure ipv6 sanity
+bracketed_ip() {
+  ip=$1
+  # We test for an ipv6 address by trying to remove two colons
+  ip_noopenbracket="${ip#[}"
+  ip_removeonecolon="${ip%:*}"
+  ip_removetwocolons="${ip_removeonecolon%:*}"
+  if [[ ${ip_noopenbracket} == ${ip} && ${ip_removetwocolons} != ${ip_removeonecolon} ]]; then
+    # promote bare-ipv6 to bracketed format
+    echo "[${ip}]"
+  else
+    echo "$ip"
+  fi
+}
+
+# Function to remove quote-brackets and :port from ip addresses
+bare_ip() {
+  ip=$1
+  # We test for an ipv6 address by trying to remove two colons
+  ip_noopenbracket="${ip#[}"
+  ip_removeonecolon="${ip%:*}"
+  ip_removetwocolons="${ip_removeonecolon%:*}"
+  if [[ ${ip_noopenbracket} != ${ip} ]]; then
+    # return bracketed-ipv6 to bare format without any trailing port
+    echo "${ip_noopenbracket%]*}"
+  elif [[ ${ip_noopenbracket} == ${ip} && ${ip_removetwocolons} != ${ip_removeonecolon} ]]; then
+    # do nothing; we have a bare ipv6 (which can't have a :port in principle)
+    echo "$ip"
+  else
+    # remove any trailing port from ipv4
+    echo "${ip%:*}"
+  fi
+}
+
 ##### SETTINGS #####
 
 # Sysctl max_map_count (>=262144)
@@ -118,18 +153,30 @@ SRC_DIR=/root
 TMP_DIR=$(mktemp -d)
 BASE=$BASE_PARENT/elastic
 
-PRIMARY_INTERFACE=$(route -n | grep ^0.0.0.0 | head -1 | awk '{print $8}')
-PRIMARY_IP_CIDR=$(ip address list dev $PRIMARY_INTERFACE |grep "\binet\b"|awk '{print $2}')
-PRIMARY_IP=${PRIMARY_IP_CIDR%%/*}
-
 # sometimes (I'm looking at you, Hetzner) we can find ourselves with a
-# bad IPv6 configuration. If so, we can disable it here.
+# bad IPv6 configuration. If so, disable it here.
 if [[ $DISABLE_IPV6 ]]; then
 	echo "net.ipv6.conf.all.disable_ipv6 = 1" > /etc/sysctl.d/99-disable-ipv6-all.conf
 	sysctl -w "net.ipv6.conf.all.disable_ipv6=1" 
 EOF
 	sysctl --system
 fi
+
+# Find a fallback listening ip for now; probably won't use it
+PRIMARY_INTERFACE=$(route -n | grep ^0.0.0.0 | head -1 | awk '{print $8}')
+PRIMARY_IP_CIDR=$(ip address list dev $PRIMARY_INTERFACE |grep "\binet\b"|awk '{print $2}')
+PRIMARY_IP=${PRIMARY_IP_CIDR%%/*}
+
+# Find the common member of (slave ip list, our ip list) to listen on
+MY_IPS=( $(ip address list |grep inet|awk '{print $2}'|awk -F/ '{print $1}') )
+for ip in $SLAVE_IPS; do
+  ip=$(bare_ip $ip)
+  for my_ip in $MY_IPS; do
+    if [[ $my_ip == $ip ]]; then
+      PRIMARY_IP=$(bracketed_ip $ip)
+    fi
+  done
+done
 
 if [[ $DEBUG ]]; then
 	echo SRC_DIR=$SRC_DIR
@@ -220,14 +267,7 @@ check_error "apt install"
 SSH_REMOTE_HOST=${SSH_CLIENT%% *}
 
 for ip in $SSH_REMOTE_HOST $CONTROLLER_IP $SLAVE_IPS; do
-  ip_noopenbracket="${ip#[}"
-  if [[ ${ip_noopenbracket} != ${ip} ]]; then
-    # return bracketed-ipv6 to bare format without any trailing port
-    ip="${ip_noopenbracket%]*}"
-  else
-    # remove any trailing port from ipv4
-    ip="${ip%:*}"
-  fi
+  ip=$(bare_ip $ip)
   for port in $SSH_PORT $ES_PORT $ES_TRANS_PORT; do
     ufw allow to any port $port from $ip comment "es-constructor"
   done
@@ -256,14 +296,7 @@ mkdir $BASE/elasticsearch-logs
 # first put our slave ip list into json format (QAD)
 SLAVE_IPS_QUOTED_ARRAY=()
 for ip in $SLAVE_IPS; do
-  # We test for an ipv6 address by trying to remove two colons
-  ip_noopenbracket="${ip#[}"
-  ip_removeonecolon="${ip%:*}"
-  ip_removetwocolons="${ip_removeonecolon%:*}"
-  if [[ ${ip_noopenbracket} == ${ip} && ${ip_removetwocolons} != ${ip_removeonecolon} ]]; then
-    # promote bare-ipv6 to bracketed format
-    ip="[${ip}]"
-  fi
+  ip="$(bracketed_ip $ip)"
   SLAVE_IPS_QUOTED_ARRAY=(${SLAVE_IPS_QUOTED_ARRAY[@]} \"$ip\")
 done
 
