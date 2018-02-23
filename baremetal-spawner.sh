@@ -7,7 +7,7 @@ ES_PORT=9200
 
 if [[ ! $1 || $1 = "-h" || $1 = "--help" ]]; then
 cat <<EOF
-Usage: $0 CLUSTER_NAME [rescue]
+Usage: $0 CLUSTER_NAME
 
 This script is invoked on the controller node to spawn a cluster on
 physical machines. 
@@ -19,11 +19,6 @@ If the connection between the controller and the members should use
 different IPs than the members should use to connect to each other,
 then the inter-member IPs should be defined in a separate hosts file,
 and the name of the file passed in the HOSTS_FILE envar.
-
-The optional argument "rescue" causes the script to first install a
-base OS using the Hetzner rescue installer. Currently only Xenial is
-supported, and the machines must already have been booted into rescue
-mode (this can be selected in the Hetzner provisioner).
 
 For advanced use, you can set the following envars [defaults]:
 
@@ -51,10 +46,6 @@ if [[ ! $GITHUB_CREDENTIALS ]]; then
 fi
 
 CLUSTER=$1
-if [[ $2 == "rescue" ]]; then
-	RESCUE=true
-fi
-
 PRIMARY_IP=$(hostname --ip-address)
 SLAVES=$(ansible $CLUSTER -c local -m command -a "echo {{ inventory_hostname }}" | grep -v ">>" | sort -n )
 NUM_MASTERS=$[ $(echo $SLAVES $FOREIGN_MEMBERS | wc -w) / 2 + 1 ]
@@ -82,60 +73,6 @@ else
   for slave in $SLAVES; do
 	SLAVE_IPS[$slave]=$(getent hosts ${slave} | awk '{print $1}' | head -1)
   done
-fi
-
-if [[ $RESCUE ]]; then
-	# We need to install the OS from the hetzner rescue OS
-	
-	# Make sure sshpass is installed
-	apt-get -y install sshpass
-
-	# Clean and repopulate known_hosts because the keys may have changed
-	for entry in $SLAVES ${SLAVE_IPS[@]}; do
-		ssh-keygen -f $HOME/.ssh/known_hosts -R $entry
-	done
-	ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
-	
-	echo "Populate root's authorized_keys in each rescue OS"
-	# Ansible's password caching is unusable, so we roll our own
-	# Let's do some other housekeeping in this loop
-	declare -A SLAVE_PASSWDS
-	for slave in $SLAVES; do
-		echo "Enter a blank password if your pubkey is already installed"
-		echo -n "Root password for ${slave}: "
-		read -s passwd
-		SLAVE_PASSWDS[$slave]="$passwd"
-		echo
-		echo "${SLAVE_PASSWDS[$slave]}" | sshpass ssh-copy-id root@$slave
-	done
-	
-	echo "Configure the OS"
-	ansible $CLUSTER -u root -m template -a "src=${SCRIPT_LOCATION}/hes-autosetup.template dest=/autosetup"
-	# we use cat to make ansible wait for the connection to drop
-	ansible $CLUSTER -u root -m command -a "bash -c '/root/.oldroot/nfs/install/installimage && reboot && cat'"
-	
-	echo "Waiting for each slave to come back up..."
-	for ip in ${SLAVE_IPS[@]}; do
-		while ! nc -w 5 $ip 22 </dev/null >/dev/null; do
-			sleep 5
-		done
-		echo "$ip running"
-	done
-	
-	# Clean and repopulate known_hosts because the keys will have changed
-	for entry in $SLAVES ${SLAVE_IPS[@]}; do
-		ssh-keygen -f $HOME/.ssh/known_hosts -R $entry
-	done
-	ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
-	
-	echo "Repopulate root's authorized_keys in the new base OS"
-	for slave in $SLAVES; do
-		echo "${SLAVE_PASSWDS[$slave]}" | sshpass ssh-copy-id root@$slave
-	done
-	
-	echo "Disabling password authentication for root"
-	ansible $CLUSTER -u root -m command -a "passwd -l root"
-
 fi
 
 echo "Push cluster configuration and invoke the puller"
