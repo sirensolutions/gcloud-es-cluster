@@ -141,17 +141,16 @@ if [[ $DEBUG ]]; then
 fi
 
 
-# Check that the user exists
-if ! grep -q "^${USER}:" /etc/passwd; then
-	adduser --disabled-login --system $USER 
-fi
- 
-
 ### Shouldn't need to change any of these
 
 SRC_DIR=/root
 TMP_DIR=$(mktemp -d)
 BASE=$BASE_PARENT/elastic
+
+# Check that the user exists
+if ! grep -q "^${USER}:" /etc/passwd; then
+	adduser --disabled-login --system --home $BASE $USER
+fi
 
 # sometimes (I'm looking at you, Hetzner) we can find ourselves with a
 # bad IPv6 configuration. If so, disable it here.
