@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 #
 # Constructor for setting up an elasticsearch cluster
 
@@ -130,7 +130,7 @@ fi
 
 if [[ ${ES_MAJOR_VERSION} == "2" ]]; then
   M_LOCK_ALL_SETTING="bootstrap.mlockall"
-elif [[ ${ES_MAJOR_VERSION} == "5" ]]; then
+elif [[ ${ES_MAJOR_VERSION} -ge 5 ]]; then
   M_LOCK_ALL_SETTING="bootstrap.memory_lock"
 else
   echo "Elasticsearch version ${ES_VERSION} not supported by this script. Aborting!" 
