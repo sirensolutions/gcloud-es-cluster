@@ -85,7 +85,7 @@ if [[ ${ES_MAJOR_VERSION} == "2" ]]; then
   PLUGIN_TOOL="bin/plugin $ES_JAVA_OPTS"
   PLUGIN_NAME=siren-join
   M_LOCK_ALL_SETTING="bootstrap.mlockall"
-elif [[ ${ES_MAJOR_VERSION} == "5" ]]; then
+elif [[ ${ES_MAJOR_VERSION} -ge 5 ]]; then
   PLUGIN_TOOL=bin/elasticsearch-plugin
   PLUGIN_NAME=siren-federate
   M_LOCK_ALL_SETTING="bootstrap.memory_lock"
