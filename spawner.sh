@@ -31,9 +31,14 @@ GITHUB_CREDENTIALS []
 NUM_SLAVES [1]
 SLAVE_TYPE [f1-micro]
 CPU_PLATFORM []
+ES_NODE_CONFIG []
 
 Credentials are supplied in the form "<username>:<password>".
 Command line arguments will override the NUM_SLAVES and SLAVE_TYPE envars.
+
+ES_NODE_CONFIG contains config parameters that should be added to the default
+elasticsearch.yml file. All whitespace should be stripped from each line, and
+newlines converted to whitespace.
 EOF
 fi
 
