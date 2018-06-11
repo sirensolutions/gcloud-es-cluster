@@ -281,7 +281,9 @@ sudo ufw --force enable
 # Use modular scripts
 ES_BASE=$BASE/$ES_LINKNAME
 ${DEMO_SCRIPT_DIR}/install-elastic.sh "${ES_VERSION}" "${BASE}" "${ES_LINKNAME}" || exit 99
-${DEMO_SCRIPT_DIR}/install-vanguard.sh "${PLUGIN_VERSION}" "${ES_BASE}" || exit 99
+if [[ $PLUGIN_VERSION ]]; then
+  ${DEMO_SCRIPT_DIR}/install-vanguard.sh "${PLUGIN_VERSION}" "${ES_BASE}" || exit 99
+fi
 
 # we put the persistent data in separate subdirs for ease of upgrades
 mkdir $BASE/elasticsearch-snapshots
