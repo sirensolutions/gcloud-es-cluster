@@ -11,8 +11,8 @@ Usage: $0 [NUM_SLAVES [SLAVE_TYPE]]
 
 This script is invoked on the controller node to spawn a cluster.
 
-In normal operation, the only values you should have to provide are 
-the number and type of slaves, and these are given on the command line.
+In normal operation, the only values you should have to provide are
+the number and type of slaves, and these can be given on the command line.
 They default to 1 and 'f1-micro' respectively, but note that f1-micro
 is unlikely to be useful for real applications.
 
@@ -26,8 +26,12 @@ ES_VERSION [2.4.4]
 PLUGIN_VERSION [2.4.4]
 LOGSTASH_VERSION [2.4.1]
 GITHUB_CREDENTIALS []
+NUM_SLAVES [1]
+SLAVE_TYPE [f1-micro]
+CPU_PLATFORM []
 
-Credentials are supplied in the form "<username>:<password>"
+Credentials are supplied in the form "<username>:<password>".
+Command line arguments will override the NUM_SLAVES and SLAVE_TYPE envars.
 EOF
 fi
 
@@ -38,13 +42,13 @@ fi
 
 if [[ $1 ]]; then
 	NUM_SLAVES=$1
-else
+elif [[ ! $NUM_SLAVES ]]; then
 	NUM_SLAVES=1
 fi
 
 if [[ $2 ]]; then
 	SLAVE_TYPE=$2
-else
+elif [[ ! $SLAVE_TYPE ]]; then
 	SLAVE_TYPE=f1-micro
 fi
 
@@ -82,6 +86,10 @@ fi
 
 if [[ ! $LOGSTASH_VERSION ]]; then
 	LOGSTASH_VERSION=2.4.4
+fi
+
+if [[ $CPU_PLATFORM ]]; then
+    CPU_PLATFORM_PARAMETER="--min-cpu-platform=${CPU_PLATFORM}"
 fi
 
 # Let's go
@@ -123,7 +131,10 @@ fi
 gcloud-es-cluster/constructor.sh "$SITE_CONFIG" |& logger -t es-constructor
 EOF
 
-gcloud compute instances create ${SLAVES[@]} --boot-disk-type $BOOT_DISK_TYPE --boot-disk-size $BOOT_DISK_SIZE --no-address --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
+gcloud compute instances create ${SLAVES[@]} ${CPU_PLATFORM_PARAMETER}\
+    --boot-disk-type $BOOT_DISK_TYPE --boot-disk-size $BOOT_DISK_SIZE \
+    --no-address --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT \
+    --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
 
 if [[ ! $DEBUG ]]; then
   rm $PULLER
