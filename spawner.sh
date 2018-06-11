@@ -19,6 +19,8 @@ is unlikely to be useful for real applications.
 For advanced use, you can set the following envars [defaults]:
 
 IMAGE [ubuntu-os-cloud/ubuntu-1604-lts]
+BOOT_DISK_TYPE [pd-ssd]
+BOOT_DISK_SIZE [16GB]
 CLUSTER_NAME [es-<timestamp>]
 DEBUG []
 SITE_CONFIG [gcloud.conf]
