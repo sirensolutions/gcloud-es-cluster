@@ -39,6 +39,8 @@ Command line arguments will override the NUM_SLAVES and SLAVE_TYPE envars.
 ES_NODE_CONFIG contains config parameters that should be added to the default
 elasticsearch.yml file. All whitespace should be stripped from each line, and
 newlines converted to whitespace.
+
+The special value "none" will cause all plugin installation to be skipped.
 EOF
 fi
 
