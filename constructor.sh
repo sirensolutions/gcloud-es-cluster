@@ -56,7 +56,7 @@ ES_VERSION=2.4.4
 LOGSTASH_VERSION=2.4.1
 PLUGIN_VERSION=2.4.4
 
-# The parent directory under which we create our data subdirectory. 
+# The parent directory under which we create our data subdirectory.
 BASE_PARENT=/opt
 # The user that will own the files and processes.
 USER=elastic
@@ -95,7 +95,7 @@ pushd $(dirname $(readlink -f $0)) >/dev/null
 . $1
 popd >/dev/null
 
-echo DEBUG=$DEBUG 
+echo DEBUG=$DEBUG
 
 systemdstat=$(systemctl --version | head -1)
 if [[ $? && "$(echo $systemdstat | awk '{print $2}')" -gt 227 ]]; then
@@ -120,12 +120,12 @@ http_proxy_host=${http_proxy%:*}
 http_proxy_host=${http_proxy_host#http://}
 http_proxy_port=${http_proxy##*:}
 http_proxy_port=${http_proxy_port%/}
-export ES_JAVA_OPTS="-Dhttp.proxyHost=$http_proxy_host -Dhttp.proxyPort=$http_proxy_port -Dhttps.proxyHost=$http_proxy_host -Dhttps.proxyPort=$http_proxy_port -DproxyHost=$http_proxy_host -DproxyPort=$http_proxy_port" 
+export ES_JAVA_OPTS="-Dhttp.proxyHost=$http_proxy_host -Dhttp.proxyPort=$http_proxy_port -Dhttps.proxyHost=$http_proxy_host -Dhttps.proxyPort=$http_proxy_port -DproxyHost=$http_proxy_host -DproxyPort=$http_proxy_port"
 
 
 ES_MAJOR_VERSION=${ES_VERSION%%.*}
 if [[ $DEBUG ]]; then
-	echo ES_MAJOR_VERSION=$ES_MAJOR_VERSION 
+	echo ES_MAJOR_VERSION=$ES_MAJOR_VERSION
 fi
 
 if [[ ${ES_MAJOR_VERSION} == "2" ]]; then
@@ -133,11 +133,11 @@ if [[ ${ES_MAJOR_VERSION} == "2" ]]; then
 elif [[ ${ES_MAJOR_VERSION} -ge 5 ]]; then
   M_LOCK_ALL_SETTING="bootstrap.memory_lock"
 else
-  echo "Elasticsearch version ${ES_VERSION} not supported by this script. Aborting!" 
+  echo "Elasticsearch version ${ES_VERSION} not supported by this script. Aborting!"
   exit 1
 fi
 if [[ $DEBUG ]]; then
-	echo ES_MAJOR_VERSION=$ES_MAJOR_VERSION 
+	echo ES_MAJOR_VERSION=$ES_MAJOR_VERSION
 fi
 
 
@@ -156,9 +156,7 @@ fi
 # bad IPv6 configuration. If so, disable it here.
 if [[ $DISABLE_IPV6 ]]; then
 	echo "net.ipv6.conf.all.disable_ipv6 = 1" > /etc/sysctl.d/99-disable-ipv6-all.conf
-	sysctl -w "net.ipv6.conf.all.disable_ipv6=1" 
-EOF
-	sysctl --system
+	sysctl -p /etc/sysctl.d/99-disable-ipv6-all.conf
 fi
 
 # Find a fallback listening ip for now; probably won't use it
@@ -351,7 +349,7 @@ fi
 current_max_map_count=$(sysctl -n vm.max_map_count)
 if [[ $current_max_map_count -lt $MAX_MAP_COUNT ]]; then
   echo "vm.max_map_count = $MAX_MAP_COUNT" > /etc/sysctl.d/99-elasticsearch.conf
-  sysctl -w "vm.max_map_count=$MAX_MAP_COUNT" 
+  sysctl -w "vm.max_map_count=$MAX_MAP_COUNT"
 fi
 
 ##### END ELASTICSEARCH CONFIGURATION #####
