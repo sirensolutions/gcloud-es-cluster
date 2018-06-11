@@ -154,7 +154,7 @@ echo "Pushing metadata..."
 for slave in ${SLAVES[@]}; do
 	# The constructors should spin on es_spinlock_1 to avoid race conditions
 	gcloud compute instances add-metadata $slave \
-	--metadata es_slave_ips="${SLAVE_IPS[*]}",es_num_masters="$NUM_MASTERS",es_debug="$DEBUG",es_cluster_name="$CLUSTER_NAME",es_controller_ip="${PRIMARY_IP}",es_version="${ES_VERSION}",es_plugin_dir_version="${PLUGIN_DIR_VERSION}",es_plugin_version="${PLUGIN_VERSION}",es_logstash_version="${LOGSTASH_VERSION}",es_node_config="$ES_NODE_CONFIG",es_spinlock_1=released
+	--metadata es_slave_ips="${SLAVE_IPS[*]}",es_num_masters="$NUM_MASTERS",es_debug="$DEBUG",es_cluster_name="$CLUSTER_NAME",es_controller_ip="${PRIMARY_IP}",es_version="${ES_VERSION}",es_plugin_version="${PLUGIN_VERSION}",es_logstash_version="${LOGSTASH_VERSION}",es_node_config="$ES_NODE_CONFIG",es_spinlock_1=released
 done
 
 echo "Waiting for OS to come up on each slave..."
