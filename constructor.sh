@@ -281,7 +281,7 @@ sudo ufw --force enable
 # Use modular scripts
 ES_BASE=$BASE/$ES_LINKNAME
 ${DEMO_SCRIPT_DIR}/install-elastic.sh "${ES_VERSION}" "${BASE}" "${ES_LINKNAME}" || exit 99
-if [[ $PLUGIN_VERSION ]]; then
+if [[ $PLUGIN_VERSION != "none" ]]; then
   ${DEMO_SCRIPT_DIR}/install-vanguard.sh "${PLUGIN_VERSION}" "${ES_BASE}" || exit 99
 fi
 
