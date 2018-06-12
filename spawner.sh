@@ -40,7 +40,7 @@ ES_NODE_CONFIG contains config parameters that should be added to the default
 elasticsearch.yml file. These are comma-separated and should not contain any
 other commas or leading whitespace (no JSON-style arrays, no indentation).
 
-The special value "none" will cause all plugin installation to be skipped.
+The special value PLUGIN_VERSION="none" will disable plugin configuration.
 EOF
 fi
 
