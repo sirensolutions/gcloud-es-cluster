@@ -32,6 +32,7 @@ NUM_SLAVES [1]
 SLAVE_TYPE [f1-micro]
 CPU_PLATFORM []
 ES_NODE_CONFIG []
+ES_DOWNLOAD_URL []
 
 Credentials are supplied in the form "<username>:<password>".
 Command line arguments will override the NUM_SLAVES and SLAVE_TYPE envars.
@@ -41,6 +42,10 @@ elasticsearch.yml file. These are comma-separated and should not contain any
 other commas or leading whitespace (no JSON-style arrays, no indentation).
 
 The special value PLUGIN_VERSION="none" will disable plugin configuration.
+
+ES_DOWNLOAD_URL is used to force a particular URL for downloading the
+elasticsearch package. Note that ES_VERSION must still be given, as a hint to
+the automatic configurator.
 EOF
 fi
 
@@ -162,8 +167,19 @@ done
 echo "Pushing metadata..."
 for slave in ${SLAVES[@]}; do
 	# The constructors should spin on es_spinlock_1 to avoid race conditions
-	gcloud compute instances add-metadata $slave \
-	--metadata es_slave_ips="${SLAVE_IPS[*]}",es_num_masters="$NUM_MASTERS",es_debug="$DEBUG",es_cluster_name="$CLUSTER_NAME",es_controller_ip="${PRIMARY_IP}",es_version="${ES_VERSION}",es_plugin_version="${PLUGIN_VERSION}",es_logstash_version="${LOGSTASH_VERSION}",es_node_config="$ES_NODE_CONFIG",es_spinlock_1=released
+    # NB there must be NO WHITESPACE in the metadata string!
+	gcloud compute instances add-metadata $slave --metadata \
+es_slave_ips="${SLAVE_IPS[*]}",\
+es_num_masters="$NUM_MASTERS",\
+es_debug="$DEBUG",\
+es_cluster_name="$CLUSTER_NAME",\
+es_controller_ip="${PRIMARY_IP}",\
+es_version="${ES_VERSION}",\
+es_plugin_version="${PLUGIN_VERSION}",\
+es_logstash_version="${LOGSTASH_VERSION}",\
+es_node_config="${ES_NODE_CONFIG}",\
+es_download_url="${ES_DOWNLOAD_URL}",\
+es_spinlock_1=released
 done
 
 echo "Waiting for OS to come up on each slave..."
