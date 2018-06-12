@@ -107,21 +107,22 @@ if [[ ! $SYSTEMD ]]; then
 	DEPENDENCIES="$DEPENDENCIES supervisor"
 fi
 
-# save our http_proxy configuration for future use
-cat <<EOF >/etc/profile.d/00-proxy.sh
-export http_proxy=$http_proxy
+if [[ $http_proxy ]]; then
+    # save our http_proxy configuration for future use
+    cat <<EOF >/etc/profile.d/00-proxy.sh
+    export http_proxy=$http_proxy
 EOF
 
-# elasticsearch does not parse proxy envars, so define java properties
-# note that elasticsearch is inconsistent, so we need to cover MANY options
-# https://github.com/elastic/puppet-elasticsearch/issues/152
-# we assume here that http and https proxies will be the same
-http_proxy_host=${http_proxy%:*}
-http_proxy_host=${http_proxy_host#http://}
-http_proxy_port=${http_proxy##*:}
-http_proxy_port=${http_proxy_port%/}
-export ES_JAVA_OPTS="-Dhttp.proxyHost=$http_proxy_host -Dhttp.proxyPort=$http_proxy_port -Dhttps.proxyHost=$http_proxy_host -Dhttps.proxyPort=$http_proxy_port -DproxyHost=$http_proxy_host -DproxyPort=$http_proxy_port"
-
+    # elasticsearch does not parse proxy envars, so define java properties
+    # note that elasticsearch is inconsistent, so we need to cover MANY options
+    # https://github.com/elastic/puppet-elasticsearch/issues/152
+    # we assume here that http and https proxies will be the same
+    http_proxy_host=${http_proxy%:*}
+    http_proxy_host=${http_proxy_host#http://}
+    http_proxy_port=${http_proxy##*:}
+    http_proxy_port=${http_proxy_port%/}
+    export ES_JAVA_OPTS="-Dhttp.proxyHost=$http_proxy_host -Dhttp.proxyPort=$http_proxy_port -Dhttps.proxyHost=$http_proxy_host -Dhttps.proxyPort=$http_proxy_port -DproxyHost=$http_proxy_host -DproxyPort=$http_proxy_port"
+fi
 
 ES_MAJOR_VERSION=${ES_VERSION%%.*}
 if [[ $DEBUG ]]; then
