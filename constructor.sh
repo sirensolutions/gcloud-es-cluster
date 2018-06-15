@@ -205,7 +205,7 @@ fi
 
 ##### PULL OTHER GIT REPOS #####
 
-echo script=$0
+echo script=$0 pwd=$PWD pwd=$(pwd)
 pushd $(dirname $(readlink -fv $0))/.. >/dev/null
 
 git -c http.proxy=$http_proxy clone -b ${GIT_DEMOS_BRANCH} https://github.com/sirensolutions/demos
