@@ -59,7 +59,7 @@ PLUGIN_VERSION=2.4.4
 # The parent directory under which we create our data subdirectory.
 BASE_PARENT=/opt
 # The user that will own the files and processes.
-USER=elastic
+ES_USER=elastic
 
 ES_LINKNAME=elasticsearch
 
@@ -151,8 +151,8 @@ TMP_DIR=$(mktemp -d)
 BASE=$BASE_PARENT/elastic
 
 # Check that the user exists
-if ! grep -q "^${USER}:" /etc/passwd; then
-	adduser --disabled-login --system --home $BASE $USER
+if ! grep -q "^${ES_USER}:" /etc/passwd; then
+	adduser --disabled-login --system --home $BASE $ES_USER
 fi
 
 # sometimes (I'm looking at you, Hetzner) we can find ourselves with a
@@ -367,7 +367,7 @@ fi
 
 
 # Fix permissions
-chown -R $USER $BASE
+chown -R $ES_USER $BASE
 chmod -R og=rx $BASE
 
 
@@ -392,7 +392,7 @@ KillMode=process
 Restart=on-failure
 RestartPreventExitStatus=255
 Type=simple
-User=$USER
+User=$ES_USER
 LimitMEMLOCK=infinity
 LimitNOFILE=65536
 
@@ -428,7 +428,7 @@ EOF
 #!/bin/bash
 ulimit -l unlimited
 ulimit -n 65536
-sudo -u $USER /usr/local/bin/elastic-launcher.sh
+sudo -u $ES_USER /usr/local/bin/elastic-launcher.sh
 EOF
 	chmod +x /usr/local/bin/elastic-unlimiter.sh
 
@@ -463,7 +463,7 @@ ES_JAVA_OPTS=$ES_JAVA_OPTS
 CONTROLLER_IP=$CONTROLLER_IP
 PRIMARY_IP=$PRIMARY_IP
 SLAVE_IPS=$SLAVE_IPS
-USER=$USER
+ES_USER=$ES_USER
 EOF
 
 ##### END STORE CONFIGURATION VARIABLES #####
