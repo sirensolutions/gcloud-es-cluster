@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 #
 # Constructor for setting up an elasticsearch cluster
 
@@ -205,7 +205,8 @@ fi
 
 ##### PULL OTHER GIT REPOS #####
 
-pushd $(dirname $(readlink -f $0))/.. >/dev/null
+echo script=$0 pwd=$PWD pwd=$(pwd)
+pushd $(dirname $(readlink -fv $0))/.. >/dev/null
 
 git -c http.proxy=$http_proxy clone -b ${GIT_DEMOS_BRANCH} https://github.com/sirensolutions/demos
 check_error "git clone demos"
