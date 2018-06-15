@@ -112,7 +112,7 @@ PRIMARY_INTERFACE=$(route -n | grep ^0.0.0.0 | head -1 | awk '{print $8}')
 PRIMARY_IP_CIDR=$(ip address list dev $PRIMARY_INTERFACE |grep "\binet\b"|awk '{print $2}')
 PRIMARY_IP=${PRIMARY_IP_CIDR%%/*}
 SUBNET=${PRIMARY_IP%.*}.0/24
-NUM_MASTERS=$[(NUM_SLAVES/2)+1]
+NUM_MASTERS=$((NUM_SLAVES/2+1))
 
 SLAVES=()
 for i in $(seq 1 $NUM_SLAVES); do
@@ -145,7 +145,7 @@ fi
 gcloud-es-cluster/constructor.sh "$SITE_CONFIG" |& logger -t es-constructor
 EOF
 
-gcloud compute instances create ${SLAVES[@]} ${CPU_PLATFORM_PARAMETER}\
+gcloud compute instances create ${SLAVES[@]} "${CPU_PLATFORM_PARAMETER}" \
     --boot-disk-type $BOOT_DISK_TYPE --boot-disk-size $BOOT_DISK_SIZE \
     --no-address --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT \
     --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
