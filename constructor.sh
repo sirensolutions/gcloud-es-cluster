@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 #
 # Constructor for setting up an elasticsearch cluster
 
