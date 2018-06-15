@@ -205,7 +205,8 @@ fi
 
 ##### PULL OTHER GIT REPOS #####
 
-pushd $(dirname $(readlink -f $0))/.. >/dev/null
+echo script=$0
+pushd $(dirname $(readlink -fv $0))/.. >/dev/null
 
 git -c http.proxy=$http_proxy clone -b ${GIT_DEMOS_BRANCH} https://github.com/sirensolutions/demos
 check_error "git clone demos"
