@@ -17,7 +17,7 @@ for slave in ${SLAVES[@]}; do
 	while ! nc -w 5 $slave $ES_PORT </dev/null >/dev/null; do
 		sleep 5
 	done
-	echo "$slave running"
+	echo "elasticsearch running on $slave"
 done
 
 # We no longer need to set index caching preferences in ES v5

@@ -183,17 +183,17 @@ es_spinlock_1=released
 done
 
 echo "Waiting for OS to come up on each slave..."
-for slave in ${SLAVES[@]}; do
+for slave in ${SLAVE_IPS[@]}; do
 	while ! nc -w 5 $slave 22 </dev/null >/dev/null; do
 		sleep 5
 	done
-	echo "$slave running"
+	echo "ssh running on $slave"
 done
 # Repopulate known_hosts
-ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
+ssh-keyscan $SLAVE_IPS >> $HOME/.ssh/known_hosts
 
 ### Perform post-assembly tasks (common)
 
 export ES_VERSION
 export ES_PORT
-$SCRIPT_LOCATION/post-assembly.sh ${SLAVES[@]}
+$SCRIPT_LOCATION/post-assembly.sh ${SLAVE_IPS[@]}
