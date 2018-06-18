@@ -113,6 +113,7 @@ if [[ $http_proxy ]]; then
     # save our http_proxy configuration for future use
     cat <<EOF >/etc/profile.d/00-proxy.sh
     export http_proxy=$http_proxy
+    export https_proxy=$http_proxy
 EOF
 
     # elasticsearch does not parse proxy envars, so define java properties
