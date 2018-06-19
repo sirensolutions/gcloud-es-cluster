@@ -210,8 +210,6 @@ fi
 
 pushd ${SCRIPT_DIR}/.. >/dev/null
 
-# Force credential.helper setting (AGAIN!)
-git config --global credential.helper store
 git -c http.proxy=$http_proxy clone -b ${GIT_DEMOS_BRANCH} https://github.com/sirensolutions/demos
 check_error "git clone demos"
 DEMO_SCRIPT_DIR=$PWD/demos
