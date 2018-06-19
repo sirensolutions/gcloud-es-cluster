@@ -15,6 +15,9 @@ SLAVES=("$@")
 echo "Waiting for elasticsearch to come up on each slave..."
 for slave in ${SLAVES[@]}; do
 	while ! nc -w 5 $slave $ES_PORT </dev/null >/dev/null; do
+        if ! nc -w 5 $slave 22 </dev/null >/dev/null; then
+            echo "$slave not responding on ssh port; dead?"
+        fi
 		sleep 5
 	done
 	echo "elasticsearch running on $slave"
