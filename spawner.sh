@@ -49,6 +49,8 @@ the automatic configurator.
 EOF
 fi
 
+GCLOUD_PARAMS=()
+
 if [[ ! $GITHUB_CREDENTIALS ]]; then
     echo "No github credentials found; this script will not work. Aborting"
     exit 666
@@ -103,7 +105,8 @@ if [[ ! $LOGSTASH_VERSION ]]; then
 fi
 
 if [[ $CPU_PLATFORM ]]; then
-    CPU_PLATFORM_PARAMETER=\""--min-cpu-platform=${CPU_PLATFORM}"\"
+    # https://unix.stackexchange.com/questions/333548/how-to-prevent-word-splitting-without-preventing-empty-string-removal
+    GCLOUD_PARAMS=(${GCLOUD_PARAMS[@]} "--min-cpu-platform=${CPU_PLATFORM}")
 fi
 
 # Let's go
@@ -145,7 +148,7 @@ fi
 gcloud-es-cluster/constructor.sh "$SITE_CONFIG" |& logger -t es-constructor
 EOF
 
-gcloud compute instances create ${SLAVES[@]} ${CPU_PLATFORM_PARAMETER} \
+gcloud compute instances create ${SLAVES[@]} "${GCLOUD_PARAMS[@]}" \
     --boot-disk-type $BOOT_DISK_TYPE --boot-disk-size $BOOT_DISK_SIZE \
     --no-address --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT \
     --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
