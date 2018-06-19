@@ -134,13 +134,15 @@ CONTROLLER_IP="${PRIMARY_IP}"
 export http_proxy="http://\$CONTROLLER_IP:3128/"
 export https_proxy="\$http_proxy"
 
+# For some reason, HOME is not set at this stage. Fix it.
+export HOME=/root
+
 if [[ -n "$GITHUB_CREDENTIALS" ]]; then
 	cat <<FOO >~/.git-credentials
 https://${GITHUB_CREDENTIALS}@github.com
 FOO
 	chmod og= ~/.git-credentials
-    # For some reason, HOME is not set at this stage. Fix it.
-	HOME=/root git config --global credential.helper store
+	git config --global credential.helper store
 fi
 
 if ! git -c http.proxy=\$http_proxy clone -b ${GIT_BRANCH} https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
