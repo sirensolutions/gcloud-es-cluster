@@ -353,7 +353,7 @@ fi
 if [[ $ES_MAJOR_VERSION -lt 5 ]]; then
   $ES_BASE/$PLUGIN_TOOL install lmenezes/elasticsearch-kopf  || exit 2
   if [[ -f $SRC_DIR/license-siren-$ES_VERSION.zip ]]; then
-	$ES_BASE/$PLUGIN_TOOL install file:$SRC_DIR/license-siren-$ES_VERSION.zip  || exit 3
+	$ES_BASE/$PLUGIN_TOOL $ES_JAVA_OPTS install file:$SRC_DIR/license-siren-$ES_VERSION.zip  || exit 3
   fi
 fi
 
