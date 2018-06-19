@@ -103,7 +103,7 @@ if [[ ! $LOGSTASH_VERSION ]]; then
 fi
 
 if [[ $CPU_PLATFORM ]]; then
-    CPU_PLATFORM_PARAMETER="--min-cpu-platform=${CPU_PLATFORM}"
+    CPU_PLATFORM_PARAMETER="--min-cpu-platform=$(printf %q \"${CPU_PLATFORM}\")"
 fi
 
 # Let's go
@@ -145,7 +145,7 @@ fi
 gcloud-es-cluster/constructor.sh "$SITE_CONFIG" |& logger -t es-constructor
 EOF
 
-gcloud compute instances create ${SLAVES[@]} "${CPU_PLATFORM_PARAMETER}" \
+gcloud compute instances create ${SLAVES[@]} ${CPU_PLATFORM_PARAMETER} \
     --boot-disk-type $BOOT_DISK_TYPE --boot-disk-size $BOOT_DISK_SIZE \
     --no-address --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT \
     --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
