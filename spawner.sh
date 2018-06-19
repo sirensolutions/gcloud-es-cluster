@@ -118,6 +118,8 @@ PRIMARY_IP=${PRIMARY_IP_CIDR%%/*}
 SUBNET=${PRIMARY_IP%.*}.0/24
 NUM_MASTERS=$((NUM_SLAVES/2+1))
 
+echo creating cluster $CLUSTER_NAME with $NUM_MASTERS masters of $NUM_SLAVES slaves
+
 SLAVES=()
 for i in $(seq 1 $NUM_SLAVES); do
 	SLAVES=(${SLAVES[@]} $CLUSTER_NAME-node$i)
