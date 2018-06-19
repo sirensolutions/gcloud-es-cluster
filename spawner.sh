@@ -33,6 +33,7 @@ SLAVE_TYPE [f1-micro]
 CPU_PLATFORM []
 ES_NODE_CONFIG []
 ES_DOWNLOAD_URL []
+CUSTOM_ES_JAVA_OPTS []
 
 Credentials are supplied in the form "<username>:<password>".
 Command line arguments will override the NUM_SLAVES and SLAVE_TYPE envars.
@@ -185,6 +186,7 @@ es_plugin_version="${PLUGIN_VERSION}",\
 es_logstash_version="${LOGSTASH_VERSION}",\
 es_node_config="${ES_NODE_CONFIG}",\
 es_download_url="${ES_DOWNLOAD_URL}",\
+custom_es_java_opts="${CUSTOM_ES_JAVA_OPTS}",\
 es_spinlock_1=released
 done
 
