@@ -103,7 +103,7 @@ if [[ ! $LOGSTASH_VERSION ]]; then
 fi
 
 if [[ $CPU_PLATFORM ]]; then
-    CPU_PLATFORM_PARAMETER="--min-cpu-platform=$(printf %q \"${CPU_PLATFORM}\")"
+    CPU_PLATFORM_PARAMETER=--min-cpu-platform=$(printf %q "${CPU_PLATFORM}")
 fi
 
 # Let's go
