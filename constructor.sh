@@ -124,7 +124,7 @@ EOF
     http_proxy_host=${http_proxy_host#http://}
     http_proxy_port=${http_proxy##*:}
     http_proxy_port=${http_proxy_port%/}
-    ES_JAVA_OPTS="-Dhttp.proxyHost=$http_proxy_host -Dhttp.proxyPort=$http_proxy_port -Dhttps.proxyHost=$http_proxy_host -Dhttps.proxyPort=$http_proxy_port -DproxyHost=$http_proxy_host -DproxyPort=$http_proxy_port"
+    export ES_JAVA_OPTS="-Dhttp.proxyHost=$http_proxy_host -Dhttp.proxyPort=$http_proxy_port -Dhttps.proxyHost=$http_proxy_host -Dhttps.proxyPort=$http_proxy_port -DproxyHost=$http_proxy_host -DproxyPort=$http_proxy_port"
 fi
 
 ES_MAJOR_VERSION=${ES_VERSION%%.*}
@@ -353,7 +353,7 @@ fi
 if [[ $ES_MAJOR_VERSION -lt 5 ]]; then
   $ES_BASE/$PLUGIN_TOOL install lmenezes/elasticsearch-kopf  || exit 2
   if [[ -f $SRC_DIR/license-siren-$ES_VERSION.zip ]]; then
-	$ES_BASE/$PLUGIN_TOOL $ES_JAVA_OPTS install file:$SRC_DIR/license-siren-$ES_VERSION.zip  || exit 3
+	$ES_BASE/$PLUGIN_TOOL install file:$SRC_DIR/license-siren-$ES_VERSION.zip  || exit 3
   fi
 fi
 
@@ -461,6 +461,7 @@ ES_PORT=$ES_PORT
 ES_TRANS_PORT=$ES_TRANS_PORT
 ES_HEAP_SIZE=$ES_HEAP_SIZE
 ES_JAVA_OPTS=$ES_JAVA_OPTS
+CUSTOM_ES_JAVA_OPTS=$CUSTOM_ES_JAVA_OPTS
 CONTROLLER_IP=$CONTROLLER_IP
 PRIMARY_IP=$PRIMARY_IP
 SLAVE_IPS=$SLAVE_IPS
