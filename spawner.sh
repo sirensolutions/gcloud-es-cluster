@@ -53,6 +53,7 @@ fi
 
 # https://unix.stackexchange.com/questions/333548/how-to-prevent-word-splitting-without-preventing-empty-string-removal
 GCLOUD_PARAMS=()
+GCLOUD_CREATE_PARAMS=()
 
 if [[ ! $GITHUB_CREDENTIALS ]]; then
     echo "No github credentials found; this script will not work. Aborting"
@@ -108,7 +109,7 @@ if [[ ! $LOGSTASH_VERSION ]]; then
 fi
 
 if [[ $CPU_PLATFORM ]]; then
-    GCLOUD_PARAMS=(${GCLOUD_PARAMS[@]} "--min-cpu-platform=${CPU_PLATFORM}")
+    GCLOUD_CREATE_PARAMS=(${GCLOUD_CREATE_PARAMS[@]} "--min-cpu-platform=${CPU_PLATFORM}")
 fi
 
 if [[ $ZONE ]]; then
@@ -160,7 +161,7 @@ fi
 gcloud-es-cluster/constructor.sh "$SITE_CONFIG" |& logger -t es-constructor
 EOF
 
-gcloud compute instances create ${SLAVES[@]} "${GCLOUD_PARAMS[@]}" \
+gcloud compute instances create ${SLAVES[@]} "${GCLOUD_PARAMS[@]}" "${GCLOUD_CREATE_PARAMS[@]}" \
     --boot-disk-type $BOOT_DISK_TYPE --boot-disk-size $BOOT_DISK_SIZE \
     --no-address --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT \
     --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
@@ -172,7 +173,8 @@ fi
 # Do all the housekeeping first, get it over with
 SLAVE_IPS=()
 for slave in ${SLAVES[@]}; do
-	ip=$(gcloud compute instances describe $slave|grep networkIP|awk '{print $2}')
+	ip=$(gcloud compute instances describe "${GCLOUD_PARAMS[@]}" $slave \
+        | grep networkIP | awk '{print $2}')
 	SLAVE_IPS=(${SLAVE_IPS[@]} $ip)
 	# Delete this IP from our known_hosts because we know it has been changed
 	ssh-keygen -f "$HOME/.ssh/known_hosts" -R $ip >& /dev/null
@@ -183,7 +185,7 @@ echo "Pushing metadata..."
 for slave in ${SLAVES[@]}; do
 	# The constructors should spin on es_spinlock_1 to avoid race conditions
     # NB there must be NO WHITESPACE in the metadata string!
-	gcloud compute instances add-metadata $slave --metadata \
+	gcloud compute instances add-metadata "${GCLOUD_PARAMS[@]}" $slave --metadata \
 es_slave_ips="${SLAVE_IPS[*]}",\
 es_num_masters="$NUM_MASTERS",\
 es_debug="$DEBUG",\
