@@ -34,6 +34,7 @@ CPU_PLATFORM []
 ES_NODE_CONFIG []
 ES_DOWNLOAD_URL []
 CUSTOM_ES_JAVA_OPTS []
+ZONE []
 
 Credentials are supplied in the form "<username>:<password>".
 Command line arguments will override the NUM_SLAVES and SLAVE_TYPE envars.
@@ -50,6 +51,7 @@ the automatic configurator.
 EOF
 fi
 
+# https://unix.stackexchange.com/questions/333548/how-to-prevent-word-splitting-without-preventing-empty-string-removal
 GCLOUD_PARAMS=()
 
 if [[ ! $GITHUB_CREDENTIALS ]]; then
@@ -106,9 +108,13 @@ if [[ ! $LOGSTASH_VERSION ]]; then
 fi
 
 if [[ $CPU_PLATFORM ]]; then
-    # https://unix.stackexchange.com/questions/333548/how-to-prevent-word-splitting-without-preventing-empty-string-removal
     GCLOUD_PARAMS=(${GCLOUD_PARAMS[@]} "--min-cpu-platform=${CPU_PLATFORM}")
 fi
+
+if [[ $ZONE ]]; then
+    GCLOUD_PARAMS=(${GCLOUD_PARAMS[@]} "--zone=${ZONE}")
+fi
+
 
 # Let's go
 
