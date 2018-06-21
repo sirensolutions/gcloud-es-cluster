@@ -104,6 +104,7 @@ pushd ${SCRIPT_DIR} >/dev/null
 . $1
 popd >/dev/null
 
+proxy_log "loaded site config $1"
 echo DEBUG=$DEBUG
 
 systemdstat=$(systemctl --version | head -1)
@@ -137,7 +138,6 @@ EOF
 -DproxyHost=$http_proxy_host -DproxyPort=$http_proxy_port \
 "
 fi
-proxy_log running
 
 ES_MAJOR_VERSION=${ES_VERSION%%.*}
 if [[ $DEBUG ]]; then
