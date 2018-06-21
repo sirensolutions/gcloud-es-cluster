@@ -44,6 +44,13 @@ bare_ip() {
   fi
 }
 
+# Function to send a nonsense request to the http_proxy for debugging purposes
+proxy_log() {
+    [[ $DEBUG ]] || return
+    [[ $http_proxy ]] || return
+    curl -s "http://$HOSTNAME/$1" | true
+}
+
 ##### SETTINGS #####
 
 # Sysctl max_map_count (>=262144)
@@ -126,6 +133,7 @@ EOF
     http_proxy_port=${http_proxy_port%/}
     export ES_JAVA_OPTS="-Dhttp.proxyHost=$http_proxy_host -Dhttp.proxyPort=$http_proxy_port -Dhttps.proxyHost=$http_proxy_host -Dhttps.proxyPort=$http_proxy_port -DproxyHost=$http_proxy_host -DproxyPort=$http_proxy_port"
 fi
+proxy_log running
 
 ES_MAJOR_VERSION=${ES_VERSION%%.*}
 if [[ $DEBUG ]]; then
@@ -153,12 +161,14 @@ BASE=$BASE_PARENT/elastic
 
 # Check that the user exists
 if ! grep -q "^${ES_USER}:" /etc/passwd; then
+    proxy_log "adding user $ES_USER"
 	adduser --disabled-login --system --home $BASE $ES_USER
 fi
 
 # sometimes (I'm looking at you, Hetzner) we can find ourselves with a
 # bad IPv6 configuration. If so, disable it here.
 if [[ $DISABLE_IPV6 ]]; then
+    proxy_log "disabling ipv6"
 	echo "net.ipv6.conf.all.disable_ipv6 = 1" > /etc/sysctl.d/99-disable-ipv6-all.conf
 	sysctl -p /etc/sysctl.d/99-disable-ipv6-all.conf
 fi
@@ -189,6 +199,7 @@ fi
 if [[ -d $BASE ]]; then
 	if [[ $SHOVE_BASE ]]; then
 		OLD_BASE=$BASE.$(date --iso-8601=seconds)
+        proxy_log "shove_base"
 		if ! mv $BASE $OLD_BASE; then
 		  echo "Could not move $BASE to $OLD_BASE. Aborting"
 		  exit 1
@@ -198,6 +209,7 @@ if [[ -d $BASE ]]; then
 		exit 1
 	fi
 fi
+proxy_log "mkdir $BASE"
 if ! mkdir -p $BASE; then
   echo "Could not create directory $BASE. Aborting"
   exit 1
@@ -210,6 +222,7 @@ fi
 
 pushd ${SCRIPT_DIR}/.. >/dev/null
 
+proxy_log "git clone demos"
 git -c http.proxy=$http_proxy clone -b ${GIT_DEMOS_BRANCH} https://github.com/sirensolutions/demos
 check_error "git clone demos"
 DEMO_SCRIPT_DIR=$PWD/demos
@@ -248,6 +261,7 @@ gpg --no-default-keyring --keyring $TMP_DIR/webupd8team-java.gpg --export C25182
 # make sure it's readable by the 'apt' user
 chmod og=r /etc/apt/trusted.gpg.d/webupd8team-java.gpg
 
+proxy_log "apt"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 dpkg --configure -a
@@ -270,15 +284,18 @@ SSH_REMOTE_HOST=${SSH_CLIENT%% *}
 for ip in $SSH_REMOTE_HOST $CONTROLLER_IP $SLAVE_IPS; do
   ip=$(bare_ip $ip)
   for port in $SSH_PORT $ES_PORT $ES_TRANS_PORT; do
+    proxy_log "ufw allow to any port $port from $ip"
     ufw allow to any port $port from $ip comment "es-constructor"
   done
 done
 
+proxy_log "ufw enable"
 sudo ufw --force enable
 
 ##### END FIREWALL CONFIGURATION #####
 
 
+proxy_log "start elastic config"
 
 ##### ELASTICSEARCH CONFIGURATION #####
 
@@ -292,7 +309,7 @@ fi
 
 ${DEMO_SCRIPT_DIR}/install-elastic.sh "${ES_SOURCE}" "${BASE}" "${ES_LINKNAME}" || exit 99
 if [[ $PLUGIN_VERSION != "none" ]]; then
-  ${DEMO_SCRIPT_DIR}/install-vanguard.sh "${PLUGIN_VERSION}" "${ES_BASE}" || exit 99
+    ${DEMO_SCRIPT_DIR}/install-vanguard.sh "${PLUGIN_VERSION}" "${ES_BASE}" || exit 99
 fi
 
 # we put the persistent data in separate subdirs for ease of upgrades
@@ -445,6 +462,8 @@ EOF
 ##### END SUPERVISOR CONFIGURATION #####
 
 fi
+
+proxy_log "cleanup"
 
 ##### STORE CONFIGURATION VARIABLES #####
 
