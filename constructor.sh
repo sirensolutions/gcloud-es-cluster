@@ -131,7 +131,11 @@ EOF
     http_proxy_host=${http_proxy_host#http://}
     http_proxy_port=${http_proxy##*:}
     http_proxy_port=${http_proxy_port%/}
-    export ES_JAVA_OPTS="-Dhttp.proxyHost=$http_proxy_host -Dhttp.proxyPort=$http_proxy_port -Dhttps.proxyHost=$http_proxy_host -Dhttps.proxyPort=$http_proxy_port -DproxyHost=$http_proxy_host -DproxyPort=$http_proxy_port"
+    export ES_JAVA_OPTS="\
+-Dhttp.proxyHost=$http_proxy_host -Dhttp.proxyPort=$http_proxy_port \
+-Dhttps.proxyHost=$http_proxy_host -Dhttps.proxyPort=$http_proxy_port \
+-DproxyHost=$http_proxy_host -DproxyPort=$http_proxy_port \
+"
 fi
 proxy_log running
 
