@@ -2,9 +2,6 @@
 #
 # Constructor for setting up an elasticsearch cluster
 
-# DELETE THIS!
-exit 0
-
 check_error() {
   if [ $? -ne 0 ]; then
     echo Failed on $1
