@@ -8,6 +8,7 @@ Usage: $0 <cluster-name>
 
 Deletes every node of the form <cluster-name>-node*
 EOF
+    exit 1
 fi
 
 nodes=$(gcloud compute instances list | grep ^$1-node | awk '{ print $1 }')
