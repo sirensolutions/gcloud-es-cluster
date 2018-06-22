@@ -30,6 +30,12 @@ gcloud config set compute/region europe-west1
 gcloud config set compute/zone europe-west1-b
 ```
 
+The default zone can be overridden by setting an envar, e.g.:
+
+```
+export CLOUDSDK_COMPUTE_ZONE=europe-west1-c
+```
+
 To create a machine, invoke e.g. the following:
 
 ```
@@ -71,7 +77,7 @@ Proxy
 To allow slaves to download stuff without having a routable IP, we install squid on the controller and add the following to /etc/squid/squid.conf:
 
 ```
-acl localnet src 10.132.0.0/24
+acl localnet src 10.0.0.0/16
 http_access allow localnet
 ```
 
