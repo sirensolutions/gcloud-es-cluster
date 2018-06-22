@@ -201,7 +201,7 @@ for slave in ${SLAVE_IPS[@]}; do
 	echo "ssh running on $slave"
 done
 # Repopulate known_hosts
-ssh-keyscan ${SLAVE_IPS[@]} >> $HOME/.ssh/known_hosts
+#ssh-keyscan ${SLAVE_IPS[@]} >> $HOME/.ssh/known_hosts
 
 ### Perform post-assembly tasks (common)
 

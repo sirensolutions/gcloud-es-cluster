@@ -37,17 +37,17 @@ while ! check_status; do
                 echo "$slave has stopped responding on $ES_PORT"
                 status[$slave]=unknown
             fi
-            if ! nc -w 5 $slave 22 </dev/null >/dev/null; then
-                if [[ ${status[$slave]} != dead ]]; then
-                    echo "$slave not responding on ssh port; dead?"
-                    status[$slave]=dead
-                fi
-            else
-                if [[ ${status[$slave]} == dead ]]; then
-                    echo "$slave is responding again on ssh port"
-                    status[$slave]=unknown
-                fi
-            fi
+            # if ! nc -w 5 $slave 22 </dev/null >/dev/null; then
+            #     if [[ ${status[$slave]} != dead ]]; then
+            #         echo "$slave not responding on ssh port; dead?"
+            #         status[$slave]=dead
+            #     fi
+            # else
+            #     if [[ ${status[$slave]} == dead ]]; then
+            #         echo "$slave is responding again on ssh port"
+            #         status[$slave]=unknown
+            #     fi
+            # fi
         fi
     done
     sleep 10
