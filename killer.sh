@@ -11,4 +11,8 @@ EOF
 fi
 
 nodes=$(gcloud compute instances list | grep ^$1-node | awk '{ print $1 }')
+if [[ ! $nodes ]]; then
+    echo "Could not find cluster $1"
+    exit 1
+fi
 gcloud compute instances delete -q $nodes
