@@ -77,7 +77,7 @@ Proxy
 To allow slaves to download stuff without having a routable IP, we install squid on the controller and add the following to /etc/squid/squid.conf:
 
 ```
-acl localnet src 10.0.0.0/16
+acl localnet src 10.0.0.0/8
 http_access allow localnet
 ```
 
