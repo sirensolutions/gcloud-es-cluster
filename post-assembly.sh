@@ -18,7 +18,7 @@ done
 
 check_status() {
     for slave in ${SLAVES[@]}; do
-        if [[ status[$slave] != "alive" ]]; then
+        if [[ ${status[$slave]} != "alive" ]]; then
             return 1
         fi
     done
