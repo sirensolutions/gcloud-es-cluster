@@ -34,6 +34,7 @@ CPU_PLATFORM []
 ES_NODE_CONFIG []
 ES_DOWNLOAD_URL []
 CUSTOM_ES_JAVA_OPTS []
+SCOPES []
 
 Credentials are supplied in the form "<username>:<password>".
 Command line arguments will override the NUM_SLAVES and SLAVE_TYPE envars.
@@ -108,6 +109,10 @@ fi
 
 if [[ $CPU_PLATFORM ]]; then
     GCLOUD_PARAMS=(${GCLOUD_PARAMS[@]} "--min-cpu-platform=${CPU_PLATFORM}")
+fi
+
+if [[ $SCOPES ]]; then
+    GCLOUD_PARAMS=(${GCLOUD_PARAMS[@]} "--scopes=${SCOPES}")
 fi
 
 # Let's go
