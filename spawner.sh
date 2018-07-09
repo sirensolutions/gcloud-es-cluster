@@ -19,21 +19,43 @@ is unlikely to be useful for real applications.
 For advanced use, you can set the following envars [defaults]:
 
 IMAGE [ubuntu-os-cloud/ubuntu-1604-lts]
+BOOT_DISK_TYPE [pd-ssd]
+BOOT_DISK_SIZE [16GB]
 CLUSTER_NAME [es-<timestamp>]
 DEBUG []
 SITE_CONFIG [gcloud.conf]
-ES_VERSION [2.4.4]
-PLUGIN_VERSION [2.4.4]
-LOGSTASH_VERSION [2.4.1]
+ES_VERSION [5.6.9]
+PLUGIN_VERSION [5.6.9-10.0.0]
+LOGSTASH_VERSION [5.6.6]
 GITHUB_CREDENTIALS []
 NUM_SLAVES [1]
 SLAVE_TYPE [f1-micro]
 CPU_PLATFORM []
+ES_NODE_CONFIG []
+ES_DOWNLOAD_URL []
+CUSTOM_ES_JAVA_OPTS []
+SCOPES []
 
 Credentials are supplied in the form "<username>:<password>".
 Command line arguments will override the NUM_SLAVES and SLAVE_TYPE envars.
+
+ES_NODE_CONFIG contains config parameters that should be added to the default
+elasticsearch.yml file. These are comma-separated and should not contain any
+other commas or leading whitespace (no JSON-style arrays, no indentation).
+
+The special value PLUGIN_VERSION="none" will disable plugin configuration.
+
+ES_DOWNLOAD_URL is used to force a particular URL for downloading the
+elasticsearch package. Note that ES_VERSION must still be given, as a hint to
+the automatic configurator.
 EOF
 fi
+
+IFS_SAVE=$IFS
+IFS=$'\n'
+
+# https://unix.stackexchange.com/questions/333548/how-to-prevent-word-splitting-without-preventing-empty-string-removal
+GCLOUD_PARAMS=()
 
 if [[ ! $GITHUB_CREDENTIALS ]]; then
     echo "No github credentials found; this script will not work. Aborting"
@@ -77,19 +99,23 @@ if [[ ! $SITE_CONFIG ]]; then
 fi
 
 if [[ ! $ES_VERSION ]]; then
-	ES_VERSION=2.4.4
+	ES_VERSION=5.6.9
 fi
 
 if [[ ! $PLUGIN_VERSION ]]; then
-	PLUGIN_VERSION=2.4.4
+	PLUGIN_VERSION=5.6.9-10.0.0
 fi
 
 if [[ ! $LOGSTASH_VERSION ]]; then
-	LOGSTASH_VERSION=2.4.4
+	LOGSTASH_VERSION=5.6.6
 fi
 
 if [[ $CPU_PLATFORM ]]; then
-    CPU_PLATFORM_PARAMETER="--min-cpu-platform=${CPU_PLATFORM}"
+    GCLOUD_PARAMS=(${GCLOUD_PARAMS[@]} "--min-cpu-platform=${CPU_PLATFORM}")
+fi
+
+if [[ $SCOPES ]]; then
+    GCLOUD_PARAMS=(${GCLOUD_PARAMS[@]} "--scopes=${SCOPES}")
 fi
 
 # Let's go
@@ -98,7 +124,9 @@ PRIMARY_INTERFACE=$(route -n | grep ^0.0.0.0 | head -1 | awk '{print $8}')
 PRIMARY_IP_CIDR=$(ip address list dev $PRIMARY_INTERFACE |grep "\binet\b"|awk '{print $2}')
 PRIMARY_IP=${PRIMARY_IP_CIDR%%/*}
 SUBNET=${PRIMARY_IP%.*}.0/24
-NUM_MASTERS=$[(NUM_SLAVES/2)+1]
+NUM_MASTERS=$((NUM_SLAVES/2+1))
+
+echo creating cluster $CLUSTER_NAME with $NUM_MASTERS masters of $NUM_SLAVES slaves
 
 SLAVES=()
 for i in $(seq 1 $NUM_SLAVES); do
@@ -117,6 +145,9 @@ CONTROLLER_IP="${PRIMARY_IP}"
 export http_proxy="http://\$CONTROLLER_IP:3128/"
 export https_proxy="\$http_proxy"
 
+# For some reason, HOME is not set at this stage. Fix it.
+export HOME=/root
+
 if [[ -n "$GITHUB_CREDENTIALS" ]]; then
 	cat <<FOO >~/.git-credentials
 https://${GITHUB_CREDENTIALS}@github.com
@@ -131,7 +162,7 @@ fi
 gcloud-es-cluster/constructor.sh "$SITE_CONFIG" |& logger -t es-constructor
 EOF
 
-gcloud compute instances create ${SLAVES[@]} ${CPU_PLATFORM_PARAMETER}\
+gcloud compute instances create ${SLAVES[@]} "${GCLOUD_PARAMS[@]}" \
     --boot-disk-type $BOOT_DISK_TYPE --boot-disk-size $BOOT_DISK_SIZE \
     --no-address --image-family=$IMAGE_FAMILY --image-project=$IMAGE_PROJECT \
     --machine-type=$SLAVE_TYPE --metadata-from-file startup-script=$PULLER || exit $?
@@ -139,11 +170,13 @@ gcloud compute instances create ${SLAVES[@]} ${CPU_PLATFORM_PARAMETER}\
 if [[ ! $DEBUG ]]; then
   rm $PULLER
 fi
+IFS=$IFS_SAVE
 
 # Do all the housekeeping first, get it over with
 SLAVE_IPS=()
 for slave in ${SLAVES[@]}; do
-	ip=$(gcloud compute instances describe $slave|grep networkIP|awk '{print $2}')
+	ip=$(gcloud compute instances describe $slave \
+        | grep networkIP | awk '{print $2}')
 	SLAVE_IPS=(${SLAVE_IPS[@]} $ip)
 	# Delete this IP from our known_hosts because we know it has been changed
 	ssh-keygen -f "$HOME/.ssh/known_hosts" -R $ip >& /dev/null
@@ -153,22 +186,34 @@ done
 echo "Pushing metadata..."
 for slave in ${SLAVES[@]}; do
 	# The constructors should spin on es_spinlock_1 to avoid race conditions
-	gcloud compute instances add-metadata $slave \
-	--metadata es_slave_ips="${SLAVE_IPS[*]}",es_num_masters="$NUM_MASTERS",es_debug="$DEBUG",es_cluster_name="$CLUSTER_NAME",es_controller_ip="${PRIMARY_IP}",es_version="${ES_VERSION}",es_plugin_dir_version="${PLUGIN_DIR_VERSION}",es_plugin_version="${PLUGIN_VERSION}",es_logstash_version="${LOGSTASH_VERSION}",es_node_config="$ES_NODE_CONFIG",es_spinlock_1=released
+    # NB there must be NO WHITESPACE in the metadata string!
+	gcloud compute instances add-metadata $slave --metadata \
+es_slave_ips="${SLAVE_IPS[*]}",\
+es_num_masters="$NUM_MASTERS",\
+es_debug="$DEBUG",\
+es_cluster_name="$CLUSTER_NAME",\
+es_controller_ip="${PRIMARY_IP}",\
+es_version="${ES_VERSION}",\
+es_plugin_version="${PLUGIN_VERSION}",\
+es_logstash_version="${LOGSTASH_VERSION}",\
+es_node_config="${ES_NODE_CONFIG}",\
+es_download_url="${ES_DOWNLOAD_URL}",\
+custom_es_java_opts="${CUSTOM_ES_JAVA_OPTS}",\
+es_spinlock_1=released
 done
 
 echo "Waiting for OS to come up on each slave..."
-for slave in ${SLAVES[@]}; do
+for slave in ${SLAVE_IPS[@]}; do
 	while ! nc -w 5 $slave 22 </dev/null >/dev/null; do
 		sleep 5
 	done
-	echo "$slave running"
+	echo "ssh running on $slave"
 done
 # Repopulate known_hosts
-ssh-keyscan $SLAVES >> $HOME/.ssh/known_hosts
+#ssh-keyscan ${SLAVE_IPS[@]} >> $HOME/.ssh/known_hosts
 
 ### Perform post-assembly tasks (common)
 
 export ES_VERSION
 export ES_PORT
-$SCRIPT_LOCATION/post-assembly.sh ${SLAVES[@]}
+$SCRIPT_LOCATION/post-assembly.sh ${SLAVE_IPS[@]}

@@ -11,13 +11,35 @@
 CURL_ARGS="-sS -f -L"
 
 SLAVES=("$@")
+declare -A status
+for slave in ${SLAVES[@]}; do
+    status[$slave]="unknown"
+done
+
+check_status() {
+    for slave in ${SLAVES[@]}; do
+        if [[ ${status[$slave]} != "alive" ]]; then
+            return 1
+        fi
+    done
+}
 
 echo "Waiting for elasticsearch to come up on each slave..."
-for slave in ${SLAVES[@]}; do
-	while ! nc -w 5 $slave $ES_PORT </dev/null >/dev/null; do
-		sleep 5
-	done
-	echo "$slave running"
+while ! check_status; do
+    for slave in ${SLAVES[@]}; do
+        if nc -w 5 $slave $ES_PORT </dev/null >/dev/null; then
+            if [[ ${status[$slave]} != alive ]]; then
+                echo "$slave is up on port $ES_PORT"
+                status[$slave]=alive
+            fi
+        else
+            if [[ ${status[$slave]} == alive ]]; then
+                echo "$slave has stopped responding on $ES_PORT"
+                status[$slave]=unknown
+            fi
+        fi
+    done
+    sleep 10
 done
 
 # We no longer need to set index caching preferences in ES v5
