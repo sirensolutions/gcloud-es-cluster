@@ -151,7 +151,7 @@ BASE=$BASE_PARENT/elastic
 # Check that the user exists
 if ! grep -q "^${ES_USER}:" /etc/passwd; then
     proxy_log "adding user $ES_USER"
-    adduser --disabled-login --system --home $BASE $ES_USER
+    adduser --disabled-login --system --home $BASE --no-create-home $ES_USER
 fi
 
 # sometimes (I'm looking at you, Hetzner) we can find ourselves with a
