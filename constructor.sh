@@ -168,7 +168,7 @@ PRIMARY_IP_CIDR=$(ip address list dev $PRIMARY_INTERFACE |grep "\binet\b"|awk '{
 PRIMARY_IP=${PRIMARY_IP_CIDR%%/*}
 
 # Find the common member of (slave ip list, our ip list) to listen on
-MY_IPS=( $(ip address list |grep inet|awk '{print $2}'|awk -F/ '{print $1}') )
+MY_IPS=$(ip address list |grep inet|awk '{print $2}'|awk -F/ '{print $1}')
 for ip in $SLAVE_IPS; do
     ip=$(bare_ip $ip)
     for my_ip in $MY_IPS; do
