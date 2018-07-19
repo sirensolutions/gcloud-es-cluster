@@ -187,7 +187,7 @@ fi
 # Make sure our workspace is clean
 if [[ -d $BASE ]]; then
     if [[ $SHOVE_BASE ]]; then
-        OLD_BASE=$BASE.$(date --iso-8601=seconds)
+        OLD_BASE=$BASE.$(date +%s)
         proxy_log "shove_base"
         if ! mv $BASE $OLD_BASE; then
             echo "Could not move $BASE to $OLD_BASE. Aborting"
