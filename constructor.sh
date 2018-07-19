@@ -114,7 +114,7 @@ else
     SYSTEMD=false
 fi
 
-DEPENDENCIES="unzip ufw oracle-java8-installer"
+DEPENDENCIES="unzip ufw oracle-java8-installer tar jq acl"
 if [[ ! $SYSTEMD ]]; then
     DEPENDENCIES="$DEPENDENCIES supervisor"
 fi
@@ -182,6 +182,7 @@ if [[ $DEBUG ]]; then
     echo SRC_DIR=$SRC_DIR
     echo TMP_DIR=$TMP_DIR
     echo BASE=$BASE
+    echo PRIMARY_IP=$PRIMARY_IP
 fi
 
 # Make sure our workspace is clean
