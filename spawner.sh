@@ -33,6 +33,7 @@ SLAVE_TYPE [f1-micro]
 CPU_PLATFORM []
 ES_NODE_CONFIG []
 ES_DOWNLOAD_URL []
+CONTROLLER_IP [<primary ip of local machine>]
 CUSTOM_ES_JAVA_OPTS []
 SCOPES []
 
@@ -126,6 +127,10 @@ PRIMARY_IP=${PRIMARY_IP_CIDR%%/*}
 SUBNET=${PRIMARY_IP%.*}.0/24
 NUM_MASTERS=$((NUM_SLAVES/2+1))
 
+if [[ ! $CONTROLLER_IP ]]; then
+    CONTROLLER_IP="${PRIMARY_IP}"
+fi
+
 echo creating cluster $CLUSTER_NAME with $NUM_MASTERS masters of $NUM_SLAVES slaves
 
 SLAVES=()
@@ -141,8 +146,7 @@ PULLER=$(tempfile)
 cat <<EOF > $PULLER
 #!/bin/bash
 cd \$(mktemp -d)
-CONTROLLER_IP="${PRIMARY_IP}"
-export http_proxy="http://\$CONTROLLER_IP:3128/"
+export http_proxy="http://${CONTROLLER_IP}:3128/"
 export https_proxy="\$http_proxy"
 
 # For some reason, HOME is not set at this stage. Fix it.
@@ -192,7 +196,7 @@ es_slave_ips="${SLAVE_IPS[*]}",\
 es_num_masters="$NUM_MASTERS",\
 es_debug="$DEBUG",\
 es_cluster_name="$CLUSTER_NAME",\
-es_controller_ip="${PRIMARY_IP}",\
+es_controller_ip="${CONTROLLER_IP}",\
 es_version="${ES_VERSION}",\
 es_plugin_version="${PLUGIN_VERSION}",\
 es_logstash_version="${LOGSTASH_VERSION}",\
