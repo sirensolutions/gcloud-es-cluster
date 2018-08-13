@@ -114,7 +114,7 @@ else
     SYSTEMD=false
 fi
 
-DEPENDENCIES="unzip ufw oracle-java8-installer tar jq acl"
+DEPENDENCIES="unzip ufw oracle-java8-installer tar jq acl iperf"
 if [[ ! $SYSTEMD ]]; then
     DEPENDENCIES="$DEPENDENCIES supervisor"
 fi
