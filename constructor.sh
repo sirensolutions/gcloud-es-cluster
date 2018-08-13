@@ -94,6 +94,7 @@ SCRIPT_DIR="$(dirname $(readlink -f $0))"
 # We can optionally override the branches of our repo dependencies
 # But most of the time we probably just want "master"
 GIT_DEMOS_BRANCH=master
+ADMIN_TOOLS_BRANCH=master
 
 ##### END DEFAULT SETTINGS #####
 
@@ -114,7 +115,11 @@ else
     SYSTEMD=false
 fi
 
-DEPENDENCIES="unzip ufw oracle-java8-installer tar jq acl iperf"
+# Use apt-repo to add the elastic beats repo
+git clone -b ${ADMIN_TOOLS_BRANCH} https://github.com/andrewgdotcom/admin-tools
+admin-tools/apt-repo add beats "https://artifacts.elastic.co/packages/6.x/apt stable main" https://artifacts.elastic.co/GPG-KEY-elasticsearch
+
+DEPENDENCIES="unzip ufw oracle-java8-installer tar jq acl iperf metricbeat"
 if [[ ! $SYSTEMD ]]; then
     DEPENDENCIES="$DEPENDENCIES supervisor"
 fi
