@@ -115,10 +115,6 @@ else
     SYSTEMD=false
 fi
 
-# Use apt-repo to add the elastic beats repo
-git clone -b ${ADMIN_TOOLS_BRANCH} https://github.com/andrewgdotcom/admin-tools
-admin-tools/apt-repo add beats "https://artifacts.elastic.co/packages/6.x/apt stable main" https://artifacts.elastic.co/GPG-KEY-elasticsearch
-
 DEPENDENCIES="unzip ufw oracle-java8-installer tar jq acl iperf metricbeat"
 if [[ ! $SYSTEMD ]]; then
     DEPENDENCIES="$DEPENDENCIES supervisor"
@@ -222,6 +218,11 @@ git -c http.proxy=$http_proxy clone -b ${GIT_DEMOS_BRANCH} https://github.com/si
 check_error "git clone demos"
 DEMO_SCRIPT_DIR=$PWD/demos
 
+proxy_log "git clone admin-tools"
+git -c http.proxy=$http_proxy clone -b ${ADMIN_TOOLS_BRANCH} https://github.com/andrewgdotcom/admin-tools
+check_error "git clone admin-tools"
+ADMIN_TOOLS_DIR=$PWD/admin-tools
+
 popd >/dev/null
 
 ##### END PULL OTHER GIT REPOS #####
@@ -229,32 +230,8 @@ popd >/dev/null
 
 ##### DOWNLOAD SOFTWARE #####
 
-# TODO: in stretch and later, we should follow the procedure in
-# https://wiki.debian.org/DebianRepository/UseThirdParty instead.
-
-cat <<EOF >/etc/apt/sources.list.d/webupd8team-java-trusty.list
-deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main
-# deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main
-EOF
-
-cat <<EOF | gpg --no-default-keyring --keyring $TMP_DIR/webupd8team-java.gpg --import
------BEGIN PGP PUBLIC KEY BLOCK-----
-Version: GnuPG v1
-
-mI0ES9/P3AEEAPbI+9BwCbJucuC78iUeOPKl/HjAXGV49FGat0PcwfDd69MVp6zU
-tIMbLgkUOxIlhiEkDmlYkwWVS8qy276hNg9YKZP37ut5+GPObuS6ZWLpwwNus5Ph
-LvqeGawVJ/obu7d7gM8mBWTgvk0ErnZDaqaU2OZtHataxbdeW8qH/9FJABEBAAG0
-DUxhdW5jaHBhZCBWTEOItgQTAQIAIAUCS9/P3AIbAwYLCQgHAwIEFQIIAwQWAgMB
-Ah4BAheAAAoJEMJRgkjuoUiG5wYEANCdjhXXEpPUbP7cRGXL6cFvrUFKpHHopSC9
-NIQ9qxJVlUK2NjkzCCFhTxPSHU8LHapKKvie3e+lkvWW5bbFN3IuQUKttsgBkQe2
-aNdGBC7dVRxKSAcx2fjqP/s32q1lRxdDRM6xlQlEA1j94ewG9SDVwGbdGcJ43gLx
-BmuKvUJ4
-=0Cp+
------END PGP PUBLIC KEY BLOCK-----
-EOF
-gpg --no-default-keyring --keyring $TMP_DIR/webupd8team-java.gpg --export C2518248EEA14886 > /etc/apt/trusted.gpg.d/webupd8team-java.gpg
-# make sure it's readable by the 'apt' user
-chmod og=r /etc/apt/trusted.gpg.d/webupd8team-java.gpg
+add-apt-repository ppa:webupd8team/java
+${ADMIN_TOOLS_DIR}/apt-repo add beats "https://artifacts.elastic.co/packages/6.x/apt stable main" https://artifacts.elastic.co/GPG-KEY-elasticsearch
 
 proxy_log "apt"
 export DEBIAN_FRONTEND=noninteractive
