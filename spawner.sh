@@ -16,26 +16,26 @@ the number and type of slaves, and these can be given on the command line.
 They default to 1 and 'f1-micro' respectively, but note that f1-micro
 is unlikely to be useful for real applications.
 
-For advanced use, you can set the following envars [defaults]:
+For advanced use, you can set the following envars / cmdline flags [defaults]:
 
-IMAGE [ubuntu-os-cloud/ubuntu-1604-lts]
-BOOT_DISK_TYPE [pd-ssd]
-BOOT_DISK_SIZE [16GB]
-CLUSTER_NAME [es-<timestamp>]
-DEBUG []
-SITE_CONFIG [gcloud.conf]
-ES_VERSION [5.6.9]
-PLUGIN_VERSION [5.6.9-10.0.0]
-LOGSTASH_VERSION [5.6.6]
-GITHUB_CREDENTIALS []
 NUM_SLAVES [1]
 SLAVE_TYPE [f1-micro]
-CPU_PLATFORM []
-ES_NODE_CONFIG []
-ES_DOWNLOAD_URL []
-CONTROLLER_IP [<primary ip of local machine>]
-CUSTOM_ES_JAVA_OPTS []
-SCOPES []
+DEBUG / -d []
+IMAGE / --image [ubuntu-os-cloud/ubuntu-1604-lts]
+BOOT_DISK_TYPE / --boot-disk-type [pd-ssd]
+BOOT_DISK_SIZE / --boot-disk-size [16GB]
+CLUSTER_NAME / --cluster-name [es-<timestamp>]
+SITE_CONFIG / --site-config [gcloud.conf]
+ES_VERSION / --es-version [5.6.9]
+PLUGIN_VERSION / --plugin-version [5.6.9-10.0.0]
+LOGSTASH_VERSION / --logstash-version [5.6.6]
+GITHUB_CREDENTIALS / --github-credentials []
+CPU_PLATFORM / --cpu-platform []
+ES_NODE_CONFIG / --es-node-config []
+ES_DOWNLOAD_URL / --es-download-url []
+CONTROLLER_IP / --controller-ip [<primary ip of local machine>]
+CUSTOM_ES_JAVA_OPTS / --custom-es-java-opts []
+SCOPES / --scopes []
 
 Credentials are supplied in the form "<username>:<password>".
 Command line arguments will override the NUM_SLAVES and SLAVE_TYPE envars.
@@ -51,6 +51,23 @@ elasticsearch package. Note that ES_VERSION must still be given, as a hint to
 the automatic configurator.
 EOF
 fi
+
+# No short arguments
+declare -A PO_SHORT_MAP
+PO_SHORT_MAP["-d"]="DEBUG"
+
+# All long arguments are lowercase versions of their corresponding envars
+declare -A PO_LONG_MAP
+for envar in IMAGE BOOT_DISK_TYPE BOOT_DISK_SIZE CLUSTER_NAME SITE_CONFIG \
+    ES_VERSION PLUGIN_VERSION LOGSTASH_VERSION GITHUB_CREDENTIALS \
+    CPU_PLATFORM ES_NODE_CONFIG ES_DOWNLOAD_URL CONTROLLER_IP \
+    CUSTOM_ES_JAVA_OPTS SCOPES; do
+    PO_LONG_MAP["$(echo $envar | tr A-Z_ a-z-):"]="$envar"
+done
+
+# parse command line options
+. /opt/git/admin-tools/parse-opt.sh
+
 
 IFS_SAVE=$IFS
 IFS=$'\n'
@@ -118,6 +135,7 @@ fi
 if [[ $SCOPES ]]; then
     GCLOUD_PARAMS=(${GCLOUD_PARAMS[@]} "--scopes=${SCOPES}")
 fi
+
 
 # Let's go
 
