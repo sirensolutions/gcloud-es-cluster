@@ -20,7 +20,7 @@ For advanced use, you can set the following envars / cmdline flags [defaults]:
 
 NUM_SLAVES [1]
 SLAVE_TYPE [f1-micro]
-DEBUG / -d []
+DEBUG / --debug []
 IMAGE / --image [ubuntu-os-cloud/ubuntu-1604-lts]
 BOOT_DISK_TYPE / --boot-disk-type [pd-ssd]
 BOOT_DISK_SIZE / --boot-disk-size [16GB]
@@ -54,14 +54,13 @@ fi
 
 # No short arguments
 declare -A PO_SHORT_MAP
-PO_SHORT_MAP["-d"]="DEBUG"
 
 # All long arguments are lowercase versions of their corresponding envars
 declare -A PO_LONG_MAP
 for envar in IMAGE BOOT_DISK_TYPE BOOT_DISK_SIZE CLUSTER_NAME SITE_CONFIG \
     ES_VERSION PLUGIN_VERSION LOGSTASH_VERSION GITHUB_CREDENTIALS \
     CPU_PLATFORM ES_NODE_CONFIG ES_DOWNLOAD_URL CONTROLLER_IP \
-    CUSTOM_ES_JAVA_OPTS SCOPES; do
+    CUSTOM_ES_JAVA_OPTS SCOPES DEBUG; do
     PO_LONG_MAP["$(echo $envar | tr A-Z_ a-z-):"]="$envar"
 done
 
