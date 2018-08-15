@@ -52,21 +52,22 @@ the automatic configurator.
 EOF
 fi
 
-# No short arguments
-declare -A PO_SHORT_MAP
+if [[ -f /opt/git/admin-tools/parse-opt.sh ]]; then
+    # No short arguments
+    declare -A PO_SHORT_MAP
 
-# All long arguments are lowercase versions of their corresponding envars
-declare -A PO_LONG_MAP
-for envar in IMAGE BOOT_DISK_TYPE BOOT_DISK_SIZE CLUSTER_NAME SITE_CONFIG \
-    ES_VERSION PLUGIN_VERSION LOGSTASH_VERSION GITHUB_CREDENTIALS \
-    CPU_PLATFORM ES_NODE_CONFIG ES_DOWNLOAD_URL CONTROLLER_IP \
-    CUSTOM_ES_JAVA_OPTS SCOPES DEBUG; do
-    PO_LONG_MAP["$(echo $envar | tr A-Z_ a-z-):"]="$envar"
-done
+    # All long arguments are lowercase versions of their corresponding envars
+    declare -A PO_LONG_MAP
+    for envar in IMAGE BOOT_DISK_TYPE BOOT_DISK_SIZE CLUSTER_NAME SITE_CONFIG \
+        ES_VERSION PLUGIN_VERSION LOGSTASH_VERSION GITHUB_CREDENTIALS \
+        CPU_PLATFORM ES_NODE_CONFIG ES_DOWNLOAD_URL CONTROLLER_IP \
+        CUSTOM_ES_JAVA_OPTS SCOPES DEBUG; do
+        PO_LONG_MAP["$(echo $envar | tr A-Z_ a-z-):"]="$envar"
+    done
 
-# parse command line options
-. /opt/git/admin-tools/parse-opt.sh
-
+    # parse command line options
+    . /opt/git/admin-tools/parse-opt.sh
+fi
 
 IFS_SAVE=$IFS
 IFS=$'\n'
