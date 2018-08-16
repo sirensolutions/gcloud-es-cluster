@@ -15,13 +15,13 @@ This script is invoked on the controller node to spawn a cluster.
 
 In normal operation, the only values you should have to provide are
 the number and type of slaves, and these can be given on the command line.
-They default to 1 and 'f1-micro' respectively, but note that f1-micro
+They default to 1 and 'g1-small' respectively, but note that g1-small
 is unlikely to be useful for real applications.
 
 For advanced use, you can set the following envars / cmdline flags [defaults]:
 
 NUM_SLAVES / --num-slaves [1]
-SLAVE_TYPE / --slave-type [f1-micro]
+SLAVE_TYPE / --slave-type [g1-small]
 DEBUG / --debug []
 IMAGE / --image [ubuntu-os-cloud/ubuntu-1604-lts]
 BOOT_DISK_TYPE / --boot-disk-type [pd-ssd]
@@ -91,7 +91,7 @@ fi
 if [[ $2 ]]; then
 	SLAVE_TYPE=$2
 elif [[ ! $SLAVE_TYPE ]]; then
-	SLAVE_TYPE=f1-micro
+	SLAVE_TYPE=g1-small
 fi
 
 if [[ $IMAGE ]]; then
