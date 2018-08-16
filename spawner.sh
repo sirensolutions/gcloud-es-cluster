@@ -18,8 +18,8 @@ is unlikely to be useful for real applications.
 
 For advanced use, you can set the following envars / cmdline flags [defaults]:
 
-NUM_SLAVES [1]
-SLAVE_TYPE [f1-micro]
+NUM_SLAVES / --num-slaves [1]
+SLAVE_TYPE / --slave-type [f1-micro]
 DEBUG / --debug []
 IMAGE / --image [ubuntu-os-cloud/ubuntu-1604-lts]
 BOOT_DISK_TYPE / --boot-disk-type [pd-ssd]
@@ -61,7 +61,7 @@ if [[ -f /opt/git/admin-tools/parse-opt.sh ]]; then
     for envar in IMAGE BOOT_DISK_TYPE BOOT_DISK_SIZE CLUSTER_NAME SITE_CONFIG \
         ES_VERSION PLUGIN_VERSION LOGSTASH_VERSION GITHUB_CREDENTIALS \
         CPU_PLATFORM ES_NODE_CONFIG ES_DOWNLOAD_URL CONTROLLER_IP \
-        CUSTOM_ES_JAVA_OPTS SCOPES DEBUG; do
+        CUSTOM_ES_JAVA_OPTS SCOPES DEBUG NUM_SLAVES SLAVE_TYPE; do
         PO_LONG_MAP["$(echo $envar | tr A-Z_ a-z-):"]="$envar"
     done
 
