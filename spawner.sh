@@ -202,10 +202,10 @@ for slave in ${SLAVES[@]}; do
 	ip=$(gcloud compute instances describe $slave \
         | grep networkIP | awk '{print $2}')
 	SLAVE_IPS=(${SLAVE_IPS[@]} $ip)
-	# make sure .ssh folder exists
-	mkdir -p "$HOME/.ssh"
 	# Delete this IP from our known_hosts because we know it has been changed
-	ssh-keygen -f "$HOME/.ssh/known_hosts" -R $ip >& /dev/null
+	if [ -f "$HOME/.ssh/known_hosts" ]; then
+		ssh-keygen -f "$HOME/.ssh/known_hosts" -R $ip >& /dev/null
+	fi
 done
 
 # Now that we know all the slave IPs, we can tell the slaves themselves.
