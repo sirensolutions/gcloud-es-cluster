@@ -203,7 +203,9 @@ for slave in ${SLAVES[@]}; do
         | grep networkIP | awk '{print $2}')
 	SLAVE_IPS=(${SLAVE_IPS[@]} $ip)
 	# Delete this IP from our known_hosts because we know it has been changed
-	ssh-keygen -f "$HOME/.ssh/known_hosts" -R $ip >& /dev/null
+	if [ -f "$HOME/.ssh/known_hosts" ]; then
+		ssh-keygen -f "$HOME/.ssh/known_hosts" -R $ip >& /dev/null
+	fi
 done
 
 # Now that we know all the slave IPs, we can tell the slaves themselves.
