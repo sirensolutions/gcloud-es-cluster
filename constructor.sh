@@ -210,7 +210,7 @@ fi
 
 ##### PULL OTHER GIT REPOS #####
 
-pushd ${SCRIPT_DIR}/.. >/dev/null
+pushd ${TMP_DIR} >/dev/null
 
 proxy_log "git clone demos"
 git -c http.proxy=$http_proxy clone -b ${GIT_DEMOS_BRANCH} https://github.com/sirensolutions/demos
