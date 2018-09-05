@@ -151,6 +151,9 @@ if [[ ! $CONTROLLER_IP ]]; then
     CONTROLLER_IP="${PRIMARY_IP}"
 fi
 
+TIMEZONE=$(readlink /etc/localtime)
+TIMEZONE=${TIMEZONE#*zoneinfo/}
+
 echo creating cluster $CLUSTER_NAME with $NUM_MASTERS masters of $NUM_SLAVES slaves
 
 SLAVES=()
@@ -171,6 +174,9 @@ export https_proxy="\$http_proxy"
 
 # For some reason, HOME is not set at this stage. Fix it.
 export HOME=/root
+
+# Set the slave timezone to match ourselves
+timedatectl set-timezone $TIMEZONE
 
 if [[ -n "$GITHUB_CREDENTIALS" ]]; then
 	cat <<FOO >~/.git-credentials
