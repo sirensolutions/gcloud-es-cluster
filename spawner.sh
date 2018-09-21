@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 SCRIPT_LOCATION=$(dirname $(readlink -f $0))
 GIT_BRANCH=$(cd ${SCRIPT_LOCATION}; git status | head -1 | awk '{print $3}')
 
@@ -13,28 +15,29 @@ This script is invoked on the controller node to spawn a cluster.
 
 In normal operation, the only values you should have to provide are
 the number and type of slaves, and these can be given on the command line.
-They default to 1 and 'f1-micro' respectively, but note that f1-micro
+They default to 1 and 'g1-small' respectively, but note that g1-small
 is unlikely to be useful for real applications.
 
-For advanced use, you can set the following envars [defaults]:
+For advanced use, you can set the following envars / cmdline flags [defaults]:
 
-IMAGE [ubuntu-os-cloud/ubuntu-1604-lts]
-BOOT_DISK_TYPE [pd-ssd]
-BOOT_DISK_SIZE [16GB]
-CLUSTER_NAME [es-<timestamp>]
-DEBUG []
-SITE_CONFIG [gcloud.conf]
-ES_VERSION [5.6.9]
-PLUGIN_VERSION [5.6.9-10.0.0]
-LOGSTASH_VERSION [5.6.6]
-GITHUB_CREDENTIALS []
-NUM_SLAVES [1]
-SLAVE_TYPE [f1-micro]
-CPU_PLATFORM []
-ES_NODE_CONFIG []
-ES_DOWNLOAD_URL []
-CUSTOM_ES_JAVA_OPTS []
-SCOPES []
+NUM_SLAVES / --num-slaves [1]
+SLAVE_TYPE / --slave-type [g1-small]
+DEBUG / --debug []
+IMAGE / --image [ubuntu-os-cloud/ubuntu-1604-lts]
+BOOT_DISK_TYPE / --boot-disk-type [pd-ssd]
+BOOT_DISK_SIZE / --boot-disk-size [16GB]
+CLUSTER_NAME / --cluster-name [es-<timestamp>]
+SITE_CONFIG / --site-config [gcloud.conf]
+ES_VERSION / --es-version [5.6.9]
+PLUGIN_VERSION / --plugin-version [5.6.9-10.0.0]
+LOGSTASH_VERSION / --logstash-version [5.6.6]
+GITHUB_CREDENTIALS / --github-credentials []
+CPU_PLATFORM / --cpu-platform []
+ES_NODE_CONFIG / --es-node-config []
+ES_DOWNLOAD_URL / --es-download-url []
+CONTROLLER_IP / --controller-ip [<primary ip of local machine>]
+CUSTOM_ES_JAVA_OPTS / --custom-es-java-opts []
+SCOPES / --scopes []
 
 Credentials are supplied in the form "<username>:<password>".
 Command line arguments will override the NUM_SLAVES and SLAVE_TYPE envars.
@@ -49,6 +52,23 @@ ES_DOWNLOAD_URL is used to force a particular URL for downloading the
 elasticsearch package. Note that ES_VERSION must still be given, as a hint to
 the automatic configurator.
 EOF
+fi
+
+if [[ -f /opt/git/admin-tools/parse-opt.sh ]]; then
+    # No short arguments
+    declare -A PO_SHORT_MAP
+
+    # All long arguments are lowercase versions of their corresponding envars
+    declare -A PO_LONG_MAP
+    for envar in IMAGE BOOT_DISK_TYPE BOOT_DISK_SIZE CLUSTER_NAME SITE_CONFIG \
+        ES_VERSION PLUGIN_VERSION LOGSTASH_VERSION GITHUB_CREDENTIALS \
+        CPU_PLATFORM ES_NODE_CONFIG ES_DOWNLOAD_URL CONTROLLER_IP \
+        CUSTOM_ES_JAVA_OPTS SCOPES DEBUG NUM_SLAVES SLAVE_TYPE; do
+        PO_LONG_MAP["$(echo $envar | tr A-Z_ a-z-):"]="$envar"
+    done
+
+    # parse command line options
+    . /opt/git/admin-tools/parse-opt.sh
 fi
 
 IFS_SAVE=$IFS
@@ -71,7 +91,7 @@ fi
 if [[ $2 ]]; then
 	SLAVE_TYPE=$2
 elif [[ ! $SLAVE_TYPE ]]; then
-	SLAVE_TYPE=f1-micro
+	SLAVE_TYPE=g1-small
 fi
 
 if [[ $IMAGE ]]; then
@@ -118,6 +138,7 @@ if [[ $SCOPES ]]; then
     GCLOUD_PARAMS=(${GCLOUD_PARAMS[@]} "--scopes=${SCOPES}")
 fi
 
+
 # Let's go
 
 PRIMARY_INTERFACE=$(route -n | grep ^0.0.0.0 | head -1 | awk '{print $8}')
@@ -125,6 +146,13 @@ PRIMARY_IP_CIDR=$(ip address list dev $PRIMARY_INTERFACE |grep "\binet\b"|awk '{
 PRIMARY_IP=${PRIMARY_IP_CIDR%%/*}
 SUBNET=${PRIMARY_IP%.*}.0/24
 NUM_MASTERS=$((NUM_SLAVES/2+1))
+
+if [[ ! $CONTROLLER_IP ]]; then
+    CONTROLLER_IP="${PRIMARY_IP}"
+fi
+
+TIMEZONE=$(readlink /etc/localtime)
+TIMEZONE=${TIMEZONE#*zoneinfo/}
 
 echo creating cluster $CLUSTER_NAME with $NUM_MASTERS masters of $NUM_SLAVES slaves
 
@@ -141,12 +169,14 @@ PULLER=$(tempfile)
 cat <<EOF > $PULLER
 #!/bin/bash
 cd \$(mktemp -d)
-CONTROLLER_IP="${PRIMARY_IP}"
-export http_proxy="http://\$CONTROLLER_IP:3128/"
+export http_proxy="http://${CONTROLLER_IP}:3128/"
 export https_proxy="\$http_proxy"
 
 # For some reason, HOME is not set at this stage. Fix it.
 export HOME=/root
+
+# Set the slave timezone to match ourselves
+timedatectl set-timezone $TIMEZONE
 
 if [[ -n "$GITHUB_CREDENTIALS" ]]; then
 	cat <<FOO >~/.git-credentials
@@ -179,7 +209,9 @@ for slave in ${SLAVES[@]}; do
         | grep networkIP | awk '{print $2}')
 	SLAVE_IPS=(${SLAVE_IPS[@]} $ip)
 	# Delete this IP from our known_hosts because we know it has been changed
-	ssh-keygen -f "$HOME/.ssh/known_hosts" -R $ip >& /dev/null
+	if [ -f "$HOME/.ssh/known_hosts" ]; then
+		ssh-keygen -f "$HOME/.ssh/known_hosts" -R $ip >& /dev/null
+	fi
 done
 
 # Now that we know all the slave IPs, we can tell the slaves themselves.
@@ -192,7 +224,7 @@ es_slave_ips="${SLAVE_IPS[*]}",\
 es_num_masters="$NUM_MASTERS",\
 es_debug="$DEBUG",\
 es_cluster_name="$CLUSTER_NAME",\
-es_controller_ip="${PRIMARY_IP}",\
+es_controller_ip="${CONTROLLER_IP}",\
 es_version="${ES_VERSION}",\
 es_plugin_version="${PLUGIN_VERSION}",\
 es_logstash_version="${LOGSTASH_VERSION}",\
