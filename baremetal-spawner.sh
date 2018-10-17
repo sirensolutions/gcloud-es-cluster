@@ -109,7 +109,7 @@ if [[ $HOSTS_FILE ]]; then
         while [[ $slave_name ]]; do
             ip=$(grep "\s${slave_name}\b" $HOSTS_FILE | grep -v '^\s*#' | awk '{print $1}' | head -1)
             if [[ $ip ]]; then
-                SLAVE_IPS[$slave_name]="$ip"
+                SLAVE_IPS[$slave]="$ip"
                 continue
             fi
             if [[ ${slave_name%.*} == ${slave_name} ]]; then
