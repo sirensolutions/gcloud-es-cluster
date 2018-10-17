@@ -25,7 +25,6 @@ and the name of the file passed in the HOSTS_FILE envar.
 For advanced use, you can set the following envars / cmdline flags [defaults]:
 
 DEBUG / --debug []
-CLUSTER_NAME / --cluster-name [es-<timestamp>]
 ES_VERSION / --es-version [5.6.10]
 PLUGIN_VERSION / --plugin-version [5.6.10-10.0.0]
 LOGSTASH_VERSION / --logstash-version [5.6.6]
@@ -64,7 +63,7 @@ if [[ -f /opt/git/admin-tools/parse-opt.sh ]]; then
 
     # All long arguments are lowercase versions of their corresponding envars
     declare -A PO_LONG_MAP
-    for envar in HOSTS_FILE CLUSTER_NAME FOREIGN_MEMBERS \
+    for envar in HOSTS_FILE FOREIGN_MEMBERS \
         ES_VERSION PLUGIN_VERSION LOGSTASH_VERSION GITHUB_CREDENTIALS \
         ES_NODE_CONFIG ES_DOWNLOAD_URL CONTROLLER_IP \
         CUSTOM_ES_JAVA_OPTS DEBUG; do
