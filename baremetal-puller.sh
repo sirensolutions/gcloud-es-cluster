@@ -7,7 +7,7 @@ for arg in $@; do
 	eval $arg
 done
 
-if [[ "$DISABLE_IPV6" && "$DISABLE_IPV6" !="false" ]]; then
+if [[ $DISABLE_IPV6 && "$DISABLE_IPV6" !="false" ]]; then
 	# This is temporary, we'll fix it permanently in the constructor
 	sysctl -w "net.ipv6.conf.all.disable_ipv6=1" |& logger -t es-puller
 fi
