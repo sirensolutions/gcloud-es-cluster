@@ -112,8 +112,11 @@ if [[ $HOSTS_FILE ]]; then
                 SLAVE_IPS[$slave_name]="$ip"
                 continue
             fi
-            slave_name="${slave_name%.*}"
-            [[ ${slave_name} == ${slave} ]] && slave_name=""
+            if [[ ${slave_name%.*} == ${slave_name} ]]; then
+                slave_name=""
+            else
+                slave_name="${slave_name%.*}"
+            fi
         done
         echo "Could not find slave ${slave} in ${HOSTS_FILE}; aborting"
         exit 77
