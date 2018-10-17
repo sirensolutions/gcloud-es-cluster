@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 SCRIPT_LOCATION=$(dirname $(readlink -f $0))
 GIT_BRANCH=$(cd ${SCRIPT_LOCATION}; git status | head -1 | awk '{print $3}')
 
