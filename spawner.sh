@@ -28,8 +28,8 @@ BOOT_DISK_TYPE / --boot-disk-type [pd-ssd]
 BOOT_DISK_SIZE / --boot-disk-size [16GB]
 CLUSTER_NAME / --cluster-name [es-<timestamp>]
 SITE_CONFIG / --site-config [gcloud.conf]
-ES_VERSION / --es-version [5.6.9]
-PLUGIN_VERSION / --plugin-version [5.6.9-10.0.0]
+ES_VERSION / --es-version [5.6.10]
+PLUGIN_VERSION / --plugin-version [5.6.10-10.0.0]
 LOGSTASH_VERSION / --logstash-version [5.6.6]
 GITHUB_CREDENTIALS / --github-credentials []
 CPU_PLATFORM / --cpu-platform []
@@ -119,11 +119,11 @@ if [[ ! $SITE_CONFIG ]]; then
 fi
 
 if [[ ! $ES_VERSION ]]; then
-	ES_VERSION=5.6.9
+	ES_VERSION=5.6.10
 fi
 
 if [[ ! $PLUGIN_VERSION ]]; then
-	PLUGIN_VERSION=5.6.9-10.0.0
+	PLUGIN_VERSION=5.6.10-10.0.0
 fi
 
 if [[ ! $LOGSTASH_VERSION ]]; then

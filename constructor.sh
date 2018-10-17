@@ -157,7 +157,7 @@ fi
 
 # sometimes (I'm looking at you, Hetzner) we can find ourselves with a
 # bad IPv6 configuration. If so, disable it here.
-if [[ $DISABLE_IPV6 ]]; then
+if [[ $DISABLE_IPV6 && "$DISABLE_IPV6" !="false" ]]; then
     proxy_log "disabling ipv6"
     echo "net.ipv6.conf.all.disable_ipv6 = 1" > /etc/sysctl.d/99-disable-ipv6-all.conf
     sysctl -p /etc/sysctl.d/99-disable-ipv6-all.conf
@@ -188,7 +188,7 @@ fi
 
 # Make sure our workspace is clean
 if [[ -d $BASE ]]; then
-    if [[ $SHOVE_BASE ]]; then
+    if [[ $SHOVE_BASE && "$SHOVE_BASE" != "false" ]]; then
         OLD_BASE=$BASE.$(date +%s)
         proxy_log "shove_base"
         if ! mv $BASE $OLD_BASE; then
