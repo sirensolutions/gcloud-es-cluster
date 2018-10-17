@@ -105,7 +105,19 @@ fi
 declare -A SLAVE_IPS
 if [[ $HOSTS_FILE ]]; then
   for slave in $SLAVES; do
-	SLAVE_IPS[$slave]=$(grep "\b${slave}\b" $HOSTS_FILE | grep -v '^\s*#' | awk '{print $1}' | head -1)
+    ip=$(grep "\s${slave}\b" $HOSTS_FILE | grep -v '^\s*#' | awk '{print $1}' | head -1)
+    if [[ $ip ]]; then
+        SLAVE_IPS[$slave]="$ip"
+        continue
+    fi
+    slave="${slave%.*}"
+    ip=$(grep "\s${slave}\b" $HOSTS_FILE | grep -v '^\s*#' | awk '{print $1}' | head -1)
+    if [[ $ip ]]; then
+        SLAVE_IPS[$slave]="$ip"
+        continue
+    fi
+    echo "Could not find slave ${slave} in ${HOSTS_FILE}; aborting"
+    exit 77
   done
 else
   for slave in $SLAVES; do
