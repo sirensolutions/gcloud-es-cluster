@@ -188,7 +188,7 @@ fi
 
 # Make sure our workspace is clean
 if [[ -d $BASE ]]; then
-    if [[ $SHOVE_BASE && "$SHOVE_BASE" != "false" ]]; then
+    if [[ "$SHOVE_BASE" == "true" ]]; then
         OLD_BASE=$BASE.$(date +%s)
         proxy_log "shove_base"
         if ! mv $BASE $OLD_BASE; then
