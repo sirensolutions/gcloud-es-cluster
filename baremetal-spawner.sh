@@ -105,13 +105,15 @@ fi
 declare -A SLAVE_IPS
 if [[ $HOSTS_FILE ]]; then
     for slave in $SLAVES; do
-        while [[ $slave ]]; do
-            ip=$(grep "\s${slave}\b" $HOSTS_FILE | grep -v '^\s*#' | awk '{print $1}' | head -1)
+        slave_name=$slave
+        while [[ $slave_name ]]; do
+            ip=$(grep "\s${slave_name}\b" $HOSTS_FILE | grep -v '^\s*#' | awk '{print $1}' | head -1)
             if [[ $ip ]]; then
-                SLAVE_IPS[$slave]="$ip"
+                SLAVE_IPS[$slave_name]="$ip"
                 continue
             fi
-            slave="${slave%.*}"
+            slave_name="${slave_name%.*}"
+            [[ ${slave_name} == ${slave} ]] && slave_name=""
         done
         echo "Could not find slave ${slave} in ${HOSTS_FILE}; aborting"
         exit 77
