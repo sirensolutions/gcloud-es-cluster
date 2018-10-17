@@ -26,7 +26,7 @@ For advanced use, you can set the following envars / cmdline flags [defaults]:
 
 DEBUG / --debug []
 ES_VERSION / --es-version [5.6.10]
-PLUGIN_VERSION / --plugin-version [5.6.10-10.0.0]
+PLUGIN_VERSION / --plugin-version [5.6.10-10.0.2]
 LOGSTASH_VERSION / --logstash-version [5.6.6]
 FOREIGN_MEMBERS / --foreign-members []
 GITHUB_CREDENTIALS / --github-credentials []
@@ -93,7 +93,7 @@ if [[ ! $ES_VERSION ]]; then
 fi
 
 if [[ ! $PLUGIN_VERSION ]]; then
-	PLUGIN_VERSION=10.0.0-5.6.10
+	PLUGIN_VERSION=5.6.10-10.0.2
 fi
 
 if [[ ! $LOGSTASH_VERSION ]]; then
