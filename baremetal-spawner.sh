@@ -110,16 +110,17 @@ if [[ $HOSTS_FILE ]]; then
             ip=$(grep "\s${slave_name}\b" $HOSTS_FILE | grep -v '^\s*#' | awk '{print $1}' | head -1)
             if [[ $ip ]]; then
                 SLAVE_IPS[$slave]="$ip"
-                continue
-            fi
-            if [[ ${slave_name%.*} == ${slave_name} ]]; then
+                break
+            elif [[ ${slave_name%.*} == ${slave_name} ]]; then
                 slave_name=""
             else
                 slave_name="${slave_name%.*}"
             fi
         done
-        echo "Could not find slave ${slave} in ${HOSTS_FILE}; aborting"
-        exit 77
+        if [[ ! "${SLAVE_IPS[$slave]}" ]]; then
+            echo "Could not find slave ${slave} in ${HOSTS_FILE}; aborting"
+            exit 77
+        fi
     done
 else
   for slave in $SLAVES; do
