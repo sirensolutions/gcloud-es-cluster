@@ -164,7 +164,7 @@ if [[ "$DISABLE_IPV6" == "true" ]]; then
 fi
 
 # Find a fallback listening ip for now; probably won't use it
-PRIMARY_INTERFACE=$(route -n | awk '/^0.0.0.0/ {print $8}' | head -1 )
+PRIMARY_INTERFACE=$(route -n | awk '/^0.0.0.0/ {print $8; exit}')
 PRIMARY_IP_CIDR=$(ip address list dev $PRIMARY_INTERFACE | awk '/\s*inet[^6]/ {print $2}')
 PRIMARY_IP=${PRIMARY_IP_CIDR%%/*}
 

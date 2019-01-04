@@ -3,7 +3,7 @@
 set -e
 
 SCRIPT_LOCATION=$(dirname $(readlink -f $0))
-GIT_BRANCH=$(cd ${SCRIPT_LOCATION}; git status | head -1 | awk '{print $3}')
+GIT_BRANCH=$(cd ${SCRIPT_LOCATION}; git status | awk '{print $3; exit}')
 
 ES_PORT=9200
 
@@ -138,7 +138,7 @@ fi
 
 # Let's go
 
-PRIMARY_INTERFACE=$(route -n | awk '/^0.0.0.0/ {print $8}' | head -1)
+PRIMARY_INTERFACE=$(route -n | awk '/^0.0.0.0/ {print $8; exit}')
 PRIMARY_IP_CIDR=$(ip address list dev $PRIMARY_INTERFACE | awk '/\s*inet[^6]/ {print $2}')
 PRIMARY_IP="${PRIMARY_IP_CIDR%%/*}"
 SUBNET="${PRIMARY_IP%.*}.0/24"
