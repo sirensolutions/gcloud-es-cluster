@@ -5,7 +5,7 @@
 
 ES_PORT=9200
 
-all_nodes=$(gcloud compute instances list | egrep ^\\\S+-node | awk '{ print $1 }')
+all_nodes=$(gcloud compute instances list | awk '/^[^ \t]+-node/ { print $1 }')
 
 cluster_list=()
 for node in $all_nodes; do
@@ -18,11 +18,11 @@ for cluster in $unique_clusters; do
 	# get the slave ip from 'describe' rather than 'list' because 'list'
 	# returns empty columns sometimes, making parsing difficult
 	# the extra "echo" normalises the output to space-separated
-	slaves=$(echo $(gcloud compute instances list | egrep ^${cluster}-node | awk '{ print $1 }') )
+	slaves=$(echo $(gcloud compute instances list | awk "/^${cluster}-node/ { print \$1 }") )
 	echo "Found cluster: $cluster ($(echo $slaves|wc -w) nodes)"
 	if [[ $1 == "-v" ]]; then
 		first_slave=${slaves%% *}
-		ip=$(gcloud compute instances describe $first_slave|grep networkIP|awk '{print $2}')
+		ip=$(gcloud compute instances describe $first_slave | awk '/networkIP/ {print $2}')
 		curl -XGET http://$ip:$ES_PORT/_cluster/state?pretty
 	fi
 done
