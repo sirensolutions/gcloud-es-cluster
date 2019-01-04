@@ -177,7 +177,7 @@ timedatectl set-timezone $TIMEZONE
 
 if [[ -n "$GITHUB_CREDENTIALS" ]]; then
 	cat <<FOO >~/.git-credentials
-https://"${GITHUB_CREDENTIALS}"@github.com
+https://${GITHUB_CREDENTIALS}@github.com
 FOO
 	chmod og= ~/.git-credentials
 	git config --global credential.helper store
