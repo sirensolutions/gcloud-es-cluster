@@ -71,9 +71,6 @@ if [[ -f /opt/git/admin-tools/parse-opt.sh ]]; then
     . /opt/git/admin-tools/parse-opt.sh
 fi
 
-IFS_SAVE=$IFS
-IFS=$'\n'
-
 # https://unix.stackexchange.com/questions/333548/how-to-prevent-word-splitting-without-preventing-empty-string-removal
 GCLOUD_PARAMS=()
 
@@ -200,7 +197,6 @@ gcloud compute instances create "${SLAVES[@]}" "${GCLOUD_PARAMS[@]}" \
 if [[ ! $DEBUG ]]; then
   rm "$PULLER"
 fi
-IFS=$IFS_SAVE
 
 # Do all the housekeeping first, get it over with
 SLAVE_IPS=()
