@@ -3,7 +3,7 @@
 set -e
 
 SCRIPT_LOCATION=$(dirname $(readlink -f $0))
-GIT_BRANCH=$(cd ${SCRIPT_LOCATION}; git status | head -1 | awk '{print $3}')
+GIT_BRANCH=$(cd ${SCRIPT_LOCATION}; git status | awk '{print $3; exit}')
 
 ES_PORT=9200
 
@@ -107,7 +107,7 @@ if [[ $HOSTS_FILE ]]; then
     for slave in $SLAVES; do
         slave_name=$slave
         while [[ $slave_name ]]; do
-            ip=$(grep "\s${slave_name}\b" $HOSTS_FILE | grep -v '^\s*#' | awk '{print $1}' | head -1)
+            ip=$(grep "\s${slave_name}\b" $HOSTS_FILE | grep -v '^\s*#' | awk '{print $1; exit}')
             if [[ $ip ]]; then
                 SLAVE_IPS[$slave]="$ip"
                 break
@@ -124,7 +124,7 @@ if [[ $HOSTS_FILE ]]; then
     done
 else
   for slave in $SLAVES; do
-	SLAVE_IPS[$slave]=$(getent hosts ${slave} | awk '{print $1}' | head -1)
+	SLAVE_IPS[$slave]=$(getent hosts ${slave} | awk '{print $1; exit}')
   done
 fi
 

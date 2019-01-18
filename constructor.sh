@@ -73,7 +73,7 @@ ES_LINKNAME=elasticsearch
 # How much memory to allocate to elastic. We default this to half the
 # machine's total memory or 31GB (whichever is smaller)
 # but the spawner can override below.
-total_mem_kb=$(grep MemTotal /proc/meminfo|awk '{print $2}')
+total_mem_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 half_mem_mb=$[total_mem_kb / 2048]
 if [[ $half_mem_mb -gt 31744 ]]; then
     ES_HEAP_SIZE=31744m
@@ -164,12 +164,12 @@ if [[ "$DISABLE_IPV6" == "true" ]]; then
 fi
 
 # Find a fallback listening ip for now; probably won't use it
-PRIMARY_INTERFACE=$(route -n | grep ^0.0.0.0 | head -1 | awk '{print $8}')
-PRIMARY_IP_CIDR=$(ip address list dev $PRIMARY_INTERFACE |grep "\binet\b"|awk '{print $2}')
+PRIMARY_INTERFACE=$(route -n | awk '/^0.0.0.0/ {print $8; exit}')
+PRIMARY_IP_CIDR=$(ip address list dev $PRIMARY_INTERFACE | awk '/\s*inet[^6]/ {print $2}')
 PRIMARY_IP=${PRIMARY_IP_CIDR%%/*}
 
 # Find the common member of (slave ip list, our ip list) to listen on
-MY_IPS=$(ip address list |grep inet|awk '{print $2}'|awk -F/ '{print $1}')
+MY_IPS=$(ip address list | awk '/\s*inet/ {print $2}' | awk -F/ '{print $1}')
 for ip in $SLAVE_IPS; do
     ip=$(bare_ip $ip)
     for my_ip in $MY_IPS; do
