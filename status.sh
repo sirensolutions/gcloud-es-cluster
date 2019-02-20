@@ -21,13 +21,13 @@ for cluster in $unique_clusters; do
 	slaves=$(echo $(gcloud compute instances list | awk "/^${cluster}-node/ { print \$1 }") )
 	echo "Found cluster: $cluster ($(echo $slaves|wc -w) nodes)"
 	if [[ $1 == "-v" ]]; then
-		first_slave=${slaves%% *}
+        first_slave=${slaves%% *}
 		ip=$(gcloud compute instances describe $first_slave | awk '/networkIP/ {print $2}')
 		curl -XGET http://$ip:$ES_PORT/_cluster/state?pretty
     elif [[ $1 == "-n" ]]; then
-		# Get the nodes information only.
-		first_slave=${slaves%% *}
-		ip=$(gcloud compute instances describe $first_slave | awk '/networkIP/ {print $2}')
-		curl -XGET http://$ip:$ES_PORT/_cluster/state/nodes
-	fi
+        # Get the nodes information only.
+        first_slave=${slaves%% *}
+        ip=$(gcloud compute instances describe $first_slave | awk '/networkIP/ {print $2}')
+        curl -XGET http://$ip:$ES_PORT/_cluster/state/nodes
+    fi
 done
