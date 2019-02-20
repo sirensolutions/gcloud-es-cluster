@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # QAD script to list all running clusters
-# Use -v to get elasticsearch status of each
+# Use -v to get the full elasticsearch status of the cluster.
+# Use -n to get elasticsearch cluster nodes state.
 
 ES_PORT=9200
 
