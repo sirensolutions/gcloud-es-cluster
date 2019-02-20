@@ -68,7 +68,7 @@ invoke it with the appropriate arguments. Most of the logic is then contained in
 There are also two other scripts for use on the controller:
 
 - `killer.sh` deletes all nodes in a given cluster. It assumes the node naming convention used in the spawner.
-- `status.sh` lists all running clusters. With the argument "-v" it also queries elasticsearch for the status of the cluster.
+- `status.sh` lists all running clusters. With the argument "-v" it also queries elasticsearch for the status of the cluster; with the option "-n" it queries the cluster nodes state.
 
 
 Proxy
