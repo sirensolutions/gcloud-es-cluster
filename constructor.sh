@@ -230,14 +230,21 @@ popd >/dev/null
 
 ##### DOWNLOAD SOFTWARE #####
 
-add-apt-repository ppa:webupd8team/java
-${ADMIN_TOOLS_DIR}/apt-repo add beats "https://artifacts.elastic.co/packages/6.x/apt stable main" https://artifacts.elastic.co/GPG-KEY-elasticsearch
-
 proxy_log "apt"
 export DEBIAN_FRONTEND=noninteractive
-apt-get update
 dpkg --configure -a
+
+if [[ ! -x $(which add-apt-repository) ]]; then
+    apt-get update
+    apt-get -f install
+    apt-get -y install software-properties-common # this provides add-apt-repository
+fi
+
+add-apt-repository ppa:webupd8team/java
+${ADMIN_TOOLS_DIR}/apt-repo add beats "https://artifacts.elastic.co/packages/6.x/apt stable main" https://artifacts.elastic.co/GPG-KEY-elasticsearch
+apt-get update # again
 apt-get -f install
+
 # preseed the debian installer with our Java license acceptance
 echo 'oracle-java8-installer shared/accepted-oracle-license-v1-1 boolean true' | debconf-set-selections
 # make sure the installer does not prompt; there's nobody listening
