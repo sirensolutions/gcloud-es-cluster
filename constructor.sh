@@ -115,7 +115,7 @@ else
     SYSTEMD=false
 fi
 
-DEPENDENCIES="unzip ufw java-common tar jq acl iperf metricbeat"
+DEPENDENCIES="unzip ufw openjdk-8-jre-headless tar jq acl iperf metricbeat"
 if [[ ! $SYSTEMD ]]; then
     DEPENDENCIES="$DEPENDENCIES supervisor"
 fi
