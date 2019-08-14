@@ -39,7 +39,8 @@ CONTROLLER_IP / --controller-ip [<primary ip of local machine>]
 CUSTOM_ES_JAVA_OPTS / --custom-es-java-opts []
 SCOPES / --scopes []
 
-Credentials are supplied in the form "<username>:<password>".
+Credentials are supplied in the form "<username>:<password>". If your github
+account has 2FA enabled, replace the password with a <personal access token>.
 Command line arguments will override the NUM_SLAVES and SLAVE_TYPE envars.
 
 ES_NODE_CONFIG contains config parameters that should be added to the default
