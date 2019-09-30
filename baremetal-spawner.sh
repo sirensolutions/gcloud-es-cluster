@@ -132,6 +132,7 @@ echo "Push cluster configuration and invoke the puller"
 conffile=$(tempfile)
 cat <<EOF >${conffile}
 SLAVE_IPS="${SLAVE_IPS[@]} ${FOREIGN_MEMBERS}"
+SLAVE_NAMES="${SLAVES} ${FOREIGN_MEMBERS}"
 NUM_MASTERS=$NUM_MASTERS
 DEBUG=${DEBUG}
 CLUSTER_NAME=${CLUSTER}

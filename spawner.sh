@@ -217,6 +217,7 @@ for slave in "${SLAVES[@]}"; do
     # NB there must be NO WHITESPACE in the metadata string!
 	gcloud compute instances add-metadata $slave --metadata \
 es_slave_ips="${SLAVE_IPS[*]}",\
+es_slave_names="${SLAVES[*]}",\
 es_num_masters="$NUM_MASTERS",\
 es_debug="$DEBUG",\
 es_cluster_name="$CLUSTER_NAME",\
