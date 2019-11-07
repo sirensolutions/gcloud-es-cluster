@@ -222,6 +222,7 @@ es_num_masters="$NUM_MASTERS",\
 es_debug="$DEBUG",\
 es_cluster_name="$CLUSTER_NAME",\
 es_controller_ip="${CONTROLLER_IP}",\
+es_spawner_ip="${PRIMARY_IP}",\
 es_version="${ES_VERSION}",\
 es_plugin_version="${PLUGIN_VERSION}",\
 es_logstash_version="${LOGSTASH_VERSION}",\
