@@ -251,7 +251,7 @@ check_error "apt install"
 # Always allow the ssh remote client and the controller ip
 SSH_REMOTE_HOST=${SSH_CLIENT%% *}
 
-for ip in $SSH_REMOTE_HOST $CONTROLLER_IP $SLAVE_IPS; do
+for ip in $SSH_REMOTE_HOST $SPAWNER_IP $CONTROLLER_IP $SLAVE_IPS; do
     ip=$(bare_ip $ip)
     for port in $SSH_PORT $ES_PORT $ES_TRANS_PORT; do
         proxy_log "ufw allow to any port $port from $ip"
@@ -314,6 +314,7 @@ ES_JAVA_OPTS=$ES_JAVA_OPTS
 CUSTOM_ES_JAVA_OPTS=$CUSTOM_ES_JAVA_OPTS
 ES_NODE_CONFIG=$ES_NODE_CONFIG
 CONTROLLER_IP=$CONTROLLER_IP
+SPAWNER_IP=$SPAWNER_IP
 PRIMARY_IP=$PRIMARY_IP
 SLAVE_IPS=$SLAVE_IPS
 SLAVE_NAMES=$SLAVE_NAMES
