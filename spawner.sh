@@ -26,6 +26,7 @@ DEBUG / --debug []
 IMAGE / --image [ubuntu-os-cloud/ubuntu-1604-lts]
 BOOT_DISK_TYPE / --boot-disk-type [pd-ssd]
 BOOT_DISK_SIZE / --boot-disk-size [16GB]
+LOCAL_SSD_TYPE / --local-ssd-type [] (nvme|scsi)
 CLUSTER_NAME / --cluster-name [es-<timestamp>]
 SITE_CONFIG / --site-config [gcloud.conf]
 ES_VERSION / --es-version [5.6.10]
@@ -61,7 +62,8 @@ if [[ -f /opt/git/admin-tools/parse-opt.sh ]]; then
 
     # All long arguments are lowercase versions of their corresponding envars
     declare -A PO_LONG_MAP
-    for envar in IMAGE BOOT_DISK_TYPE BOOT_DISK_SIZE CLUSTER_NAME SITE_CONFIG \
+    for envar in IMAGE BOOT_DISK_TYPE BOOT_DISK_SIZE \
+        LOCAL_SSD_TYPE CLUSTER_NAME SITE_CONFIG \
         ES_VERSION PLUGIN_VERSION LOGSTASH_VERSION GITHUB_CREDENTIALS \
         CPU_PLATFORM ES_NODE_CONFIG ES_DOWNLOAD_URL CONTROLLER_IP \
         CUSTOM_ES_JAVA_OPTS SCOPES DEBUG NUM_SLAVES SLAVE_TYPE; do
@@ -106,6 +108,14 @@ fi
 
 if [[ ! $BOOT_DISK_SIZE ]]; then
 	BOOT_DISK_SIZE="16GB"
+fi
+
+if [[ $LOCAL_SSD_TYPE == nvme ]]; then
+    DATA_DEVICE=nvme0
+    GCLOUD_PARAMS=("${GCLOUD_PARAMS[@]}" "--local-ssd=interface=nvme")
+elif [[ $LOCAL_SSD_TYPE == scsi ]]; then
+    DATA_DEVICE=local-ssd-0
+    GCLOUD_PARAMS=("${GCLOUD_PARAMS[@]}" "--local-ssd=interface=scsi,device-name=$DATA_DEVICE")
 fi
 
 if [[ ! $CLUSTER_NAME ]]; then
@@ -229,6 +239,7 @@ es_logstash_version="${LOGSTASH_VERSION}",\
 es_node_config="${ES_NODE_CONFIG}",\
 es_download_url="${ES_DOWNLOAD_URL}",\
 custom_es_java_opts="${CUSTOM_ES_JAVA_OPTS}",\
+es_data_device="${DATA_DEVICE}",\
 es_spinlock_1=released
 done
 

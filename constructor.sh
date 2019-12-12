@@ -142,6 +142,12 @@ EOF
 "
 fi
 
+if [[ $DATA_DEVICE ]]; then
+    BASE_PARENT=/data
+    mkdir -p $BASE_PARENT
+    mkfs.ext4 $DATA_DEVICE
+    mount $DATA_DEVICE $BASE_PARENT
+fi
 
 ### Shouldn't need to change any of these
 
