@@ -1,0 +1,20 @@
+# The headless service for master node discovery
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: es-discovery
+  namespace: siren
+  labels:
+    app: es
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+  - port: 9200
+    name: rest
+  - port: 9300
+    name: transport
+  selector:
+    app: es
+    role: master
