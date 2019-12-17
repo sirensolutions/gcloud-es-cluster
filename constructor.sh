@@ -87,7 +87,7 @@ ES_PORT=9200
 ES_TRANS_PORT=9300
 
 # Don't show progress bar, but do show errors
-CURL_ARGS="-sS -f -L"
+CURL_ARGS="-sSfL --retry 3"
 
 SCRIPT_DIR="$(dirname $(readlink -f $0))"
 
