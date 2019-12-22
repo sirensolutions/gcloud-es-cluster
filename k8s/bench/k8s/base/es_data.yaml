@@ -34,6 +34,40 @@ spec:
               topologyKey: kubernetes.io/hostname
       securityContext:
         fsGroup: 1000
+      initContainers:
+      - name: sysctl
+        image: busybox
+        command:
+        - sysctl
+        - -w
+        - vm.max_map_count=262144
+        resources:
+          requests:
+            memory: 50Mi
+            cpu: 50m
+          limits:
+            memory: 50Mi
+            cpu: 50m
+        securityContext:
+          privileged: true
+      - name: config
+        image: busybox
+        image: {{ .Env.ELASTICSEARCH_DOCKER_IMAGE }}
+        command:
+        - "sh"
+        - "-c"
+        - "elasticsearch-keystore create && elasticsearch-keystore add-file gcs.client.default.credentials_file /gcloud-secrets/account.json && cp config/elasticsearch.keystore /keystore/elasticsearch.keystore && chmod a+rwx /keystore/elasticsearch.keystore"
+        resources:
+          requests:
+            memory: 512Mi
+          limits:
+            memory: 512Mi
+        volumeMounts:
+        - name: es-keystore
+          mountPath: /keystore
+        - name: gcloud-secrets
+          mountPath: /gcloud-secrets
+          readOnly: true
       containers:
       - name: elasticsearch
         env:
@@ -48,6 +82,11 @@ spec:
         - name: "ES_JAVA_OPTS"
           value: {{ .Env.ELASTICSEARCH_DATA_JAVA_OPTIONS }}
         image: {{ .Env.ELASTICSEARCH_DOCKER_IMAGE }}
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: 40G
+            cpu: 7
         ports:
         - containerPort: 9300
           name: transport
@@ -57,35 +96,26 @@ spec:
             port: 9200
           timeoutSeconds: 10
         volumeMounts:
-        - mountPath: /usr/share/elasticsearch/data
-          name: data
-        - name: elasticsearch-config
+        - name: es-config
           mountPath: /usr/share/elasticsearch/config/elasticsearch.yml
           subPath: elasticsearch.yml
-      initContainers:
-      - command:
-        - sysctl
-        - -w
-        - vm.max_map_count=262144
-        image: busybox
-        name: sysctl
-        resources:
-          limits:
-            cpu: 50m
-            memory: 50Mi
-          requests:
-            cpu: 50m
-            memory: 50Mi
-        securityContext:
-          runAsUser: 0
-          privileged: true
+        - name: es-keystore
+          mountPath: /usr/share/elasticsearch/config/elasticsearch.keystore
+          subPath: elasticsearch.keystore
+        - name: es-data
+          mountPath: /usr/share/elasticsearch/data
       #serviceAccountName: es-operator
       volumes:
-      - name: data
-        emptyDir: {}
-      - name: elasticsearch-config
-        configMap:
-          name: es-config
-          items:
-          - key: elasticsearch.yml
-            path: elasticsearch.yml
+        - name: es-data
+          emptyDir: {}
+        - name: es-keystore
+          emptyDir: {}
+        - name: es-config
+          configMap:
+            name: es-master-config
+            items:
+              - key: elasticsearch.yml
+                path: elasticsearch.yml
+        - name: gcloud-secrets
+          secret:
+            secretName: gcloud
