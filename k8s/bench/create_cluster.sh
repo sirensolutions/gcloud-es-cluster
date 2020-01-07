@@ -10,7 +10,7 @@ fi
 source $ENVIRONMENT
 
 GCLOUD_OPTIONS="--project=$PROJECT_ID --zone=$ZONE"
-#CREATION_OPTIONS="--num-nodes=$NODES --enable-autoscaling --min-nodes=$NODES --max-nodes=$NODES --machine-type=$NODE_TYPE --local-ssd-count=$NODES"
+CREATION_OPTIONS="--num-nodes=$NODES --enable-autoscaling --min-nodes=$NODES --max-nodes=$NODES --machine-type=$NODE_TYPE --local-ssd-count=$NODES"
 
 ELASTICSEARCH_DOCKER_IMAGE="${REGISTRY}/${PROJECT_ID}/elasticsearch:${FEDERATE_VERSION}" 
 ELASTICSEARCH_DATA_JAVA_OPTIONS="-Xmx${ELASTICSEARCH_HEAP}g -Xms${ELASTICSEARCH_HEAP}g -Dsiren.io.netty.maxDirectMemory=$((SIREN_MEMORY_ROOT_LIMIT + 512))"
@@ -22,7 +22,6 @@ docker build --build-arg ELASTICSEARCH_VERSION="${ELASTICSEARCH_VERSION}" --buil
 docker push "${ELASTICSEARCH_DOCKER_IMAGE}"
 
 echo "\nCreating cluster..."
-echo "\nTo destroy the cluster run: gcloud container clusters delete $CLUSTER_NAME $GCLOUD_OPTIONS"
 
 gcloud container clusters create $CLUSTER_NAME $GCLOUD_OPTIONS \
   --num-nodes=$((NODES + 2)) \
