@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zalando-es-operator
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: operator
+  namespace: zalando-es-operator
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: es-operator
+  namespace: zalando-es-operator
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: es-operator
+  namespace: zalando-es-operator
+  labels:
+    application: es-operator
+    version: latest
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      application: es-operator
+  template:
+    metadata:
+      labels:
+        application: es-operator
+        version: latest
+    spec:
+      serviceAccountName: es-operator
+      containers:
+      - name: es-operator
+        image: registry.opensource.zalan.do/poirot/es-operator:latest
+        resources:
+          limits:
+            cpu: 20m
+            memory: 100Mi
+          requests:
+            cpu: 20m
+            memory: 100Mi
