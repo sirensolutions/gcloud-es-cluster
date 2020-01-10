@@ -8,16 +8,9 @@ data:
     cluster.name: siren
     network.host: "0.0.0.0"
     bootstrap.memory_lock: false
-    # TODO: make another configmap for 6
-    #discovery.zen.ping.unicast.hosts:
-    #- es-discovery
-    #discovery.zen.minimum_master_nodes: 3
-    discovery.seed_hosts:
+    discovery.zen.ping.unicast.hosts:
     - es-discovery
-    cluster.initial_master_nodes:
-    - es-master-0
-    - es-master-1
-    - es-master-2
+    discovery.zen.minimum_master_nodes: 3
     siren.memory.root.limit: {{ .Env.SIREN_MEMORY_ROOT_LIMIT }}
 ---
 apiVersion: v1
@@ -30,9 +23,6 @@ data:
     cluster.name: siren
     network.host: "0.0.0.0"
     bootstrap.memory_lock: false
-    discovery.seed_hosts:
+    discovery.zen.ping.unicast.hosts:
     - es-discovery
-    cluster.initial_master_nodes:
-    - es-master-0
-    - es-master-1
-    - es-master-2
+    discovery.zen.minimum_master_nodes: 3

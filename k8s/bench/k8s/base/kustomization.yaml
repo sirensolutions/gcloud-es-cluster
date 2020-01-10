@@ -5,4 +5,4 @@ resources:
 - es_discovery.yaml
 - es_master.yaml
 - es_data.yaml
-- es_config.yaml
+- "es_config_{{ .Env.ELASTICSEARCH_MAJOR_VERSION }}.yaml"

@@ -59,6 +59,7 @@ kubectl apply -f operator/operator.yaml
 echo "Creating overlay..."
 mkdir -p k8s/overlays/custom
 
+export ELASTICSEARCH_MAJOR_VERSION
 export ELASTICSEARCH_DOCKER_IMAGE
 export ELASTICSEARCH_DATA_JAVA_OPTIONS
 export NODES
@@ -78,7 +79,7 @@ echo "Starting cluster..."
 kubectl apply -k k8s/overlays/custom
 
 echo "Waiting for boostrap master to be ready..."
-kubectl -n siren wait --for=condition=ready pod/es-master-0 --timeout=240s
+kubectl -n siren wait --for=condition=ready pod/es-master-0 --timeout=300s
 
 if [ $? != 0 ]; then
   echo "\nMaster not ready within timeout, please check its status with kubectl -n siren logs es-master-0"
@@ -86,7 +87,7 @@ if [ $? != 0 ]; then
 fi
 
 echo "\nWaiting for cluster to be green..."
-kubectl -n siren exec es-master-0 -- curl -fs "http://localhost:9200/_cluster/health?wait_for_status=green&timeout=60s&pretty"
+kubectl -n siren exec es-master-0 -- curl -fs "http://localhost:9200/_cluster/health?wait_for_status=green&timeout=180s&pretty"
 
 if [ $? != 0 ]; then
   echo "\nCluster not green within timeout, please check logs with kubectl -n siren logs es-master-0"
@@ -94,7 +95,7 @@ if [ $? != 0 ]; then
 fi
 
 echo "\nWaiting for data nodes..."
-kubectl -n siren exec es-master-0 -- curl -fs "http://localhost:9200/_cluster/health?wait_for_nodes=$((NODES + 3))&timeout=120s&pretty"
+kubectl -n siren exec es-master-0 -- curl -fs "http://localhost:9200/_cluster/health?wait_for_nodes=$((NODES + 3))&timeout=180s&pretty"
 
 if [ $? != 0 ]; then
   echo "\nDid not find expected data nodes within timeout, please check namespace with kubectl -n siren get all"
