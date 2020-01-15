@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 BASEDIR=$(cd `dirname $0` && pwd)
 ENVIRONMENT="${1:-default.env}"
 
