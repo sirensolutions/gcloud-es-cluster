@@ -239,7 +239,7 @@ es_logstash_version="${LOGSTASH_VERSION}",\
 es_node_config="${ES_NODE_CONFIG}",\
 es_download_url="${ES_DOWNLOAD_URL}",\
 custom_es_java_opts="${CUSTOM_ES_JAVA_OPTS}",\
-es_data_device="${DATA_DEVICE}",\
+es_data_device="/dev/${DATA_DEVICE}",\
 es_spinlock_1=released
 done
 
