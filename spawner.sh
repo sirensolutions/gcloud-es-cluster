@@ -111,11 +111,11 @@ if [[ ! $BOOT_DISK_SIZE ]]; then
 fi
 
 if [[ $LOCAL_SSD_TYPE == nvme ]]; then
-    DATA_DEVICE=nvme0
     GCLOUD_PARAMS=("${GCLOUD_PARAMS[@]}" "--local-ssd=interface=nvme")
+    DATA_DEVICE=/dev/nvme0n1
 elif [[ $LOCAL_SSD_TYPE == scsi ]]; then
-    DATA_DEVICE=local-ssd-0
-    GCLOUD_PARAMS=("${GCLOUD_PARAMS[@]}" "--local-ssd=interface=scsi,device-name=$DATA_DEVICE")
+    GCLOUD_PARAMS=("${GCLOUD_PARAMS[@]}" "--local-ssd=interface=scsi,device-name=local-ssd-0")
+    DATA_DEVICE=/dev/local-ssd-0
 fi
 
 if [[ ! $CLUSTER_NAME ]]; then
@@ -239,7 +239,7 @@ es_logstash_version="${LOGSTASH_VERSION}",\
 es_node_config="${ES_NODE_CONFIG}",\
 es_download_url="${ES_DOWNLOAD_URL}",\
 custom_es_java_opts="${CUSTOM_ES_JAVA_OPTS}",\
-es_data_device="/dev/${DATA_DEVICE}",\
+es_data_device="${DATA_DEVICE}",\
 es_spinlock_1=released
 done
 
