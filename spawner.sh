@@ -7,6 +7,8 @@ GIT_BRANCH=$(cd ${SCRIPT_LOCATION}; git status | awk '{print $3; exit}')
 
 ES_PORT=9200
 
+. ${SCRIPT_LOCATION}/defaults
+
 if [[ $1 == "help" || $1 == "-h" || $1 == "--help" ]]; then
 cat <<EOF
 Usage: $0 [NUM_SLAVES [SLAVE_TYPE]]
@@ -29,9 +31,9 @@ BOOT_DISK_SIZE / --boot-disk-size [16GB]
 LOCAL_SSD_TYPE / --local-ssd-type [] (nvme|scsi)
 CLUSTER_NAME / --cluster-name [es-<timestamp>]
 SITE_CONFIG / --site-config [gcloud.conf]
-ES_VERSION / --es-version [5.6.10]
-PLUGIN_VERSION / --plugin-version [5.6.10-10.0.2]
-LOGSTASH_VERSION / --logstash-version [5.6.6]
+ES_VERSION / --es-version [${ES_DEFAULT}]
+PLUGIN_VERSION / --plugin-version [${PLUGIN_DEFAULT}]
+LOGSTASH_VERSION / --logstash-version [${LOGSTASH_DEFAULT}]
 GITHUB_CREDENTIALS / --github-credentials []
 CPU_PLATFORM / --cpu-platform []
 ES_NODE_CONFIG / --es-node-config []
@@ -127,15 +129,15 @@ if [[ ! $SITE_CONFIG ]]; then
 fi
 
 if [[ ! $ES_VERSION ]]; then
-	ES_VERSION=5.6.10
+	ES_VERSION=$ES_DEFAULT
 fi
 
 if [[ ! $PLUGIN_VERSION ]]; then
-	PLUGIN_VERSION=5.6.10-10.0.2
+	PLUGIN_VERSION=$PLUGIN_DEFAULT
 fi
 
 if [[ ! $LOGSTASH_VERSION ]]; then
-	LOGSTASH_VERSION=5.6.6
+	LOGSTASH_VERSION=LOGSTASH_DEFAULT
 fi
 
 if [[ $CPU_PLATFORM ]]; then

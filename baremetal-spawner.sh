@@ -7,6 +7,8 @@ GIT_BRANCH=$(cd ${SCRIPT_LOCATION}; git status | awk '{print $3; exit}')
 
 ES_PORT=9200
 
+. ${SCRIPT_LOCATION}/defaults
+
 if [[ ! $1 || $1 = "-h" || $1 = "--help" ]]; then
 cat <<EOF
 Usage: $0 CLUSTER_NAME
@@ -25,9 +27,9 @@ and the name of the file passed in the HOSTS_FILE envar.
 For advanced use, you can set the following envars / cmdline flags [defaults]:
 
 DEBUG / --debug []
-ES_VERSION / --es-version [5.6.10]
-PLUGIN_VERSION / --plugin-version [5.6.10-10.0.2]
-LOGSTASH_VERSION / --logstash-version [5.6.6]
+ES_VERSION / --es-version [${ES_DEFAULT]
+PLUGIN_VERSION / --plugin-version [${PLUGIN_DEFAULT}]
+LOGSTASH_VERSION / --logstash-version [${LOGSTASH_DEFAULT}]
 FOREIGN_MEMBERS / --foreign-members []
 GITHUB_CREDENTIALS / --github-credentials []
 ES_NODE_CONFIG / --es-node-config []
@@ -89,15 +91,15 @@ SLAVES=$(ansible $CLUSTER -c local -m command -a "echo {{ inventory_hostname }}"
 NUM_MASTERS=$[ $(echo $SLAVES $FOREIGN_MEMBERS | wc -w) / 2 + 1 ]
 
 if [[ ! $ES_VERSION ]]; then
-	ES_VERSION=5.6.10
+	ES_VERSION=$ES_DEFAULT
 fi
 
 if [[ ! $PLUGIN_VERSION ]]; then
-	PLUGIN_VERSION=5.6.10-10.0.2
+	PLUGIN_VERSION=$PLUGIN_DEFAULT
 fi
 
 if [[ ! $LOGSTASH_VERSION ]]; then
-	LOGSTASH_VERSION=5.6.6
+	LOGSTASH_VERSION=$LOGSTASH_DEFAULT
 fi
 
 
