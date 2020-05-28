@@ -27,7 +27,7 @@ and the name of the file passed in the HOSTS_FILE envar.
 For advanced use, you can set the following envars / cmdline flags [defaults]:
 
 DEBUG / --debug []
-ES_VERSION / --es-version [${ES_DEFAULT]
+ES_VERSION / --es-version [${ES_DEFAULT}]
 PLUGIN_VERSION / --plugin-version [${PLUGIN_DEFAULT}]
 LOGSTASH_VERSION / --logstash-version [${LOGSTASH_DEFAULT}]
 FOREIGN_MEMBERS / --foreign-members []
