@@ -51,7 +51,14 @@ proxy_log() {
     curl -s "http://$HOSTNAME/$1" | true
 }
 
+# Don't show progress bar, but do show errors
+CURL_ARGS="-sSfL --retry 3"
+
+SCRIPT_DIR="$(dirname $(readlink -f $0))"
+
 ##### SETTINGS #####
+
+. $SCRIPT_DIR/defaults
 
 # Sysctl max_map_count (>=262144)
 MAX_MAP_COUNT=262144
@@ -59,9 +66,9 @@ MAX_MAP_COUNT=262144
 ### Default values
 
 # Software versions
-ES_VERSION=2.4.4
-LOGSTASH_VERSION=2.4.1
-PLUGIN_VERSION=2.4.4
+ES_VERSION=$ES_DEFAULT
+LOGSTASH_VERSION=$LOGSTASH_DEFAULT
+PLUGIN_VERSION=$PLUGIN_DEFAULT
 
 # The parent directory under which we create our data subdirectory.
 BASE_PARENT=/opt
@@ -85,11 +92,6 @@ fi
 SSH_PORT=22
 ES_PORT=9200
 ES_TRANS_PORT=9300
-
-# Don't show progress bar, but do show errors
-CURL_ARGS="-sSfL --retry 3"
-
-SCRIPT_DIR="$(dirname $(readlink -f $0))"
 
 # We can optionally override the branches of our repo dependencies
 # But most of the time we probably just want "master"
