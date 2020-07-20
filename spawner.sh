@@ -196,7 +196,7 @@ FOO
 	git config --global credential.helper store
 fi
 
-if ! git -c http.proxy=\$http_proxy clone -b "${GIT_BRANCH}" https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
+if ! git -c http.proxy=\$http_proxy clone --recurse-submodules -b "${GIT_BRANCH}" https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
 	echo "Aborting; no git repository found" |& logger -t es-puller
 fi
 gcloud-es-cluster/constructor.sh "$SITE_CONFIG" |& logger -t es-constructor

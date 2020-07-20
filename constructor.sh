@@ -222,12 +222,12 @@ fi
 pushd ${TMP_DIR} >/dev/null
 
 proxy_log "git clone demos"
-git -c http.proxy=$http_proxy clone -b ${GIT_DEMOS_BRANCH} https://github.com/sirensolutions/demos
+git -c http.proxy=$http_proxy clone --recurse-submodules -b ${GIT_DEMOS_BRANCH} https://github.com/sirensolutions/demos
 check_error "git clone demos"
 DEMO_SCRIPT_DIR=$PWD/demos
 
 proxy_log "git clone admin-tools"
-git -c http.proxy=$http_proxy clone -b ${ADMIN_TOOLS_BRANCH} https://github.com/andrewgdotcom/admin-tools
+git -c http.proxy=$http_proxy clone --recurse-submodules -b ${ADMIN_TOOLS_BRANCH} https://github.com/andrewgdotcom/admin-tools
 check_error "git clone admin-tools"
 ADMIN_TOOLS_DIR=$PWD/admin-tools
 
