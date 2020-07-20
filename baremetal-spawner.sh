@@ -1,13 +1,22 @@
 #!/bin/bash
 
-set -e
+set -eo pipefail
+err_report() {
+    echo "errexit on line $(caller)" >&2
+}
+trap err_report ERR
 
-SCRIPT_LOCATION=$(dirname $(readlink -f $0))
-GIT_BRANCH=$(cd ${SCRIPT_LOCATION}; git status | awk '{print $3; exit}')
+die() {
+    echo $2 >&2
+    exit $1
+}
+
+SCRIPT_DIR=$(dirname $(readlink -f $0))
+GIT_BRANCH=$(cd ${SCRIPT_DIR}; git status | awk '{print $3; exit}')
 
 ES_PORT=9200
 
-. ${SCRIPT_LOCATION}/defaults
+. ${SCRIPT_DIR}/defaults
 
 if [[ ! $1 || $1 = "-h" || $1 = "--help" ]]; then
 cat <<EOF
@@ -59,25 +68,25 @@ the automatic configurator.
 EOF
 fi
 
-if [[ -f /opt/git/admin-tools/parse-opt.sh ]]; then
-    # No short arguments
-    declare -A PO_SHORT_MAP
+[[ -f ${SCRIPT_DIR}/poshlib/parse-opt.sh ]] || die 1 "Could not find poshlib"
 
-    # All long arguments are lowercase versions of their corresponding envars
-    declare -A PO_LONG_MAP
-    for envar in HOSTS_FILE FOREIGN_MEMBERS \
-        ES_VERSION PLUGIN_VERSION LOGSTASH_VERSION GITHUB_CREDENTIALS \
-        ES_NODE_CONFIG ES_DOWNLOAD_URL CONTROLLER_IP \
-        CUSTOM_ES_JAVA_OPTS DEBUG; do
-        PO_LONG_MAP["$(echo $envar | tr A-Z_ a-z-):"]="$envar"
-    done
-    for envar in SHOVE_BASE DISABLE_IPV6; do
-        PO_LONG_MAP["$(echo $envar | tr A-Z_ a-z-)"]="$envar"
-    done
+# No short arguments
+declare -A PO_SHORT_MAP
 
-    # parse command line options
-    . /opt/git/admin-tools/parse-opt.sh
-fi
+# All long arguments are lowercase versions of their corresponding envars
+declare -A PO_LONG_MAP
+for envar in HOSTS_FILE FOREIGN_MEMBERS \
+    ES_VERSION PLUGIN_VERSION LOGSTASH_VERSION GITHUB_CREDENTIALS \
+    ES_NODE_CONFIG ES_DOWNLOAD_URL CONTROLLER_IP \
+    CUSTOM_ES_JAVA_OPTS DEBUG; do
+    PO_LONG_MAP["$(echo $envar | tr A-Z_ a-z-):"]="$envar"
+done
+for envar in SHOVE_BASE DISABLE_IPV6; do
+    PO_LONG_MAP["$(echo $envar | tr A-Z_ a-z-)"]="$envar"
+done
+
+# parse command line options
+. /opt/git/admin-tools/parse-opt.sh
 
 
 if [[ ! $GITHUB_CREDENTIALS ]]; then
@@ -158,7 +167,7 @@ PULLER_ARGS="APT_INSTALL_GIT=true DISABLE_IPV6=${DISABLE_IPV6} GIT_BRANCH=${GIT_
 
 for slave in $SLAVES; do
 	scp ${conffile} root@$slave:/tmp/baremetal.conf
-	scp ${SCRIPT_LOCATION}/baremetal-puller.sh root@$slave:/tmp/puller.sh
+	scp ${SCRIPT_DIR}/baremetal-puller.sh root@$slave:/tmp/puller.sh
 	ssh root@$slave /tmp/puller.sh ${PULLER_ARGS} &
 done
 
@@ -168,4 +177,4 @@ rm ${conffile}
 
 export ES_VERSION
 export ES_PORT
-$SCRIPT_LOCATION/post-assembly.sh ${SLAVES[@]}
+$SCRIPT_DIR/post-assembly.sh ${SLAVES[@]}

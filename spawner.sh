@@ -1,13 +1,22 @@
 #!/bin/bash
 
-set -e
+set -eo pipefail
+err_report() {
+    echo "errexit on line $(caller)" >&2
+}
+trap err_report ERR
 
-SCRIPT_LOCATION=$(dirname $(readlink -f $0))
-GIT_BRANCH=$(cd ${SCRIPT_LOCATION}; git status | awk '{print $3; exit}')
+die() {
+    echo $2 >&2
+    exit $1
+}
+
+SCRIPT_DIR=$(dirname $(readlink -f $0))
+GIT_BRANCH=$(cd ${SCRIPT_DIR}; git status | awk '{print $3; exit}')
 
 ES_PORT=9200
 
-. ${SCRIPT_LOCATION}/defaults
+. ${SCRIPT_DIR}/defaults
 
 if [[ $1 == "help" || $1 == "-h" || $1 == "--help" ]]; then
 cat <<EOF
@@ -58,23 +67,22 @@ the automatic configurator.
 EOF
 fi
 
-if [[ -f /opt/git/admin-tools/parse-opt.sh ]]; then
-    # No short arguments
-    declare -A PO_SHORT_MAP
+[[ -f ${SCRIPT_DIR}/poshlib/parse-opt.sh ]] || die 1 "Could not find poshlib"
+# No short arguments
+declare -A PO_SHORT_MAP
 
-    # All long arguments are lowercase versions of their corresponding envars
-    declare -A PO_LONG_MAP
-    for envar in IMAGE BOOT_DISK_TYPE BOOT_DISK_SIZE \
-        LOCAL_SSD_TYPE CLUSTER_NAME SITE_CONFIG \
-        ES_VERSION PLUGIN_VERSION LOGSTASH_VERSION GITHUB_CREDENTIALS \
-        CPU_PLATFORM ES_NODE_CONFIG ES_DOWNLOAD_URL CONTROLLER_IP \
-        CUSTOM_ES_JAVA_OPTS SCOPES DEBUG NUM_SLAVES SLAVE_TYPE; do
-        PO_LONG_MAP["$(echo $envar | tr A-Z_ a-z-):"]="$envar"
-    done
+# All long arguments are lowercase versions of their corresponding envars
+declare -A PO_LONG_MAP
+for envar in IMAGE BOOT_DISK_TYPE BOOT_DISK_SIZE \
+    LOCAL_SSD_TYPE CLUSTER_NAME SITE_CONFIG \
+    ES_VERSION PLUGIN_VERSION LOGSTASH_VERSION GITHUB_CREDENTIALS \
+    CPU_PLATFORM ES_NODE_CONFIG ES_DOWNLOAD_URL CONTROLLER_IP \
+    CUSTOM_ES_JAVA_OPTS SCOPES DEBUG NUM_SLAVES SLAVE_TYPE; do
+    PO_LONG_MAP["$(echo $envar | tr A-Z_ a-z-):"]="$envar"
+done
 
-    # parse command line options
-    . /opt/git/admin-tools/parse-opt.sh
-fi
+# parse command line options
+. ${POSHLIB}/parse-opt.sh
 
 # https://unix.stackexchange.com/questions/333548/how-to-prevent-word-splitting-without-preventing-empty-string-removal
 GCLOUD_PARAMS=()
@@ -259,4 +267,4 @@ done
 
 export ES_VERSION
 export ES_PORT
-$SCRIPT_LOCATION/post-assembly.sh "${SLAVE_IPS[@]}"
+$SCRIPT_DIR/post-assembly.sh "${SLAVE_IPS[@]}"
