@@ -82,7 +82,7 @@ for envar in IMAGE BOOT_DISK_TYPE BOOT_DISK_SIZE \
 done
 
 # parse command line options
-. ${POSHLIB}/parse-opt.sh
+. ${SCRIPT_DIR}/poshlib/parse-opt.sh
 
 # https://unix.stackexchange.com/questions/333548/how-to-prevent-word-splitting-without-preventing-empty-string-removal
 GCLOUD_PARAMS=()

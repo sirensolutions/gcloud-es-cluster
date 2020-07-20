@@ -86,8 +86,7 @@ for envar in SHOVE_BASE DISABLE_IPV6; do
 done
 
 # parse command line options
-. /opt/git/admin-tools/parse-opt.sh
-
+. ${SCRIPT_DIR}/poshlib/parse-opt.sh
 
 if [[ ! $GITHUB_CREDENTIALS ]]; then
     echo "No github credentials found; this script will not work. Aborting"
