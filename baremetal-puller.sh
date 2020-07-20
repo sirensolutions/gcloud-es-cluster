@@ -32,7 +32,7 @@ EOF
 	git config --global credential.helper store
 fi
 
-if ! git ${GIT_OPTIONS} clone -b ${GIT_BRANCH} https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
+if ! git ${GIT_OPTIONS} clone --recurse-submodules -b ${GIT_BRANCH} https://github.com/sirensolutions/gcloud-es-cluster |& logger -t es-puller; then
 	echo "Aborting; no git repository found" |& logger -t es-puller
 fi
 
