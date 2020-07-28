@@ -10,7 +10,7 @@ ES_PORT=9200
 
 . ${SCRIPT_DIR}/defaults
 
-if [[ $1 == "help" || $1 == "-h" || $1 == "--help" ]]; then
+if [[ ${1:-} == "help" || ${1:-} == "-h" || ${1:-} == "--help" ]]; then
 cat <<EOF
 Usage: $0 [NUM_SLAVES [SLAVE_TYPE]]
 
@@ -32,9 +32,9 @@ BOOT_DISK_SIZE / --boot-disk-size [16GB]
 LOCAL_SSD_TYPE / --local-ssd-type [] (nvme|scsi)
 CLUSTER_NAME / --cluster-name [es-<timestamp>]
 SITE_CONFIG / --site-config [gcloud.conf]
-ES_VERSION / --es-version [${ES_DEFAULT}]
-PLUGIN_VERSION / --plugin-version [${PLUGIN_DEFAULT}]
-LOGSTASH_VERSION / --logstash-version [${LOGSTASH_DEFAULT}]
+ES_VERSION / --es-version [${ES_DEFAULT:-error, no default found}]
+PLUGIN_VERSION / --plugin-version [${PLUGIN_DEFAULT:-error, no default found}]
+LOGSTASH_VERSION / --logstash-version [${LOGSTASH_DEFAULT:-error, no default found}]
 GITHUB_CREDENTIALS / --github-credentials []
 CPU_PLATFORM / --cpu-platform []
 ES_NODE_CONFIG / --es-node-config []
@@ -69,24 +69,24 @@ eval $(parse-opt-simple)
 # https://unix.stackexchange.com/questions/333548/how-to-prevent-word-splitting-without-preventing-empty-string-removal
 GCLOUD_PARAMS=()
 
-if [[ ! $GITHUB_CREDENTIALS ]]; then
+if [[ ! ${GITHUB_CREDENTIALS:-} ]]; then
     echo "No github credentials found; this script will not work. Aborting"
     exit 666
 fi
 
-if [[ $1 ]]; then
+# Manage defaults
+
+if [[ ${1:-} ]]; then
 	NUM_SLAVES="$1"
-elif [[ ! $NUM_SLAVES ]]; then
-	NUM_SLAVES=1
 fi
+: ${NUM_SLAVES:=1}
 
-if [[ $2 ]]; then
+if [[ ${2:-} ]]; then
 	SLAVE_TYPE="$2"
-elif [[ ! $SLAVE_TYPE ]]; then
-	SLAVE_TYPE=g1-small
 fi
+: ${SLAVE_TYPE:=g1-small}
 
-if [[ $IMAGE ]]; then
+if [[ ${IMAGE:-} ]]; then
 	IMAGE_FAMILY="${IMAGE#*/}"
 	IMAGE_PROJECT="${IMAGE%/*}"
 else
@@ -94,47 +94,28 @@ else
 	IMAGE_PROJECT=ubuntu-os-cloud
 fi
 
-if [[ ! $BOOT_DISK_TYPE ]]; then
-	BOOT_DISK_TYPE="pd-ssd"
-fi
+: ${BOOT_DISK_TYPE:="pd-ssd"}
+: ${BOOT_DISK_SIZE:="16GB"}
 
-if [[ ! $BOOT_DISK_SIZE ]]; then
-	BOOT_DISK_SIZE="16GB"
-fi
-
-if [[ $LOCAL_SSD_TYPE == nvme ]]; then
+if [[ ${LOCAL_SSD_TYPE:-} == nvme ]]; then
     GCLOUD_PARAMS=("${GCLOUD_PARAMS[@]}" "--local-ssd=interface=nvme")
     DATA_DEVICE=/dev/nvme0n1
-elif [[ $LOCAL_SSD_TYPE == scsi ]]; then
+elif [[ ${LOCAL_SSD_TYPE:-} == scsi ]]; then
     GCLOUD_PARAMS=("${GCLOUD_PARAMS[@]}" "--local-ssd=interface=scsi,device-name=local-ssd-0")
     DATA_DEVICE=/dev/local-ssd-0
 fi
 
-if [[ ! $CLUSTER_NAME ]]; then
-	CLUSTER_NAME=es-$(date +%s)
-fi
+: ${CLUSTER_NAME:=es-$(date +%s)}
+: ${SITE_CONFIG:="gcloud.conf"}
+: ${ES_VERSION:=$ES_DEFAULT}
+: ${PLUGIN_VERSION:=$PLUGIN_DEFAULT}
+: ${LOGSTASH_VERSION:=$LOGSTASH_DEFAULT}
 
-if [[ ! $SITE_CONFIG ]]; then
-	SITE_CONFIG="gcloud.conf"
-fi
-
-if [[ ! $ES_VERSION ]]; then
-	ES_VERSION=$ES_DEFAULT
-fi
-
-if [[ ! $PLUGIN_VERSION ]]; then
-	PLUGIN_VERSION=$PLUGIN_DEFAULT
-fi
-
-if [[ ! $LOGSTASH_VERSION ]]; then
-	LOGSTASH_VERSION=LOGSTASH_DEFAULT
-fi
-
-if [[ $CPU_PLATFORM ]]; then
+if [[ ${CPU_PLATFORM:-} ]]; then
     GCLOUD_PARAMS=("${GCLOUD_PARAMS[@]}" "--min-cpu-platform=${CPU_PLATFORM}")
 fi
 
-if [[ $SCOPES ]]; then
+if [[ ${SCOPES:-} ]]; then
     GCLOUD_PARAMS=("${GCLOUD_PARAMS[@]}" "--scopes=${SCOPES}")
 fi
 
@@ -147,9 +128,7 @@ PRIMARY_IP="${PRIMARY_IP_CIDR%%/*}"
 SUBNET="${PRIMARY_IP%.*}.0/24"
 NUM_MASTERS=$((NUM_SLAVES/2+1))
 
-if [[ ! $CONTROLLER_IP ]]; then
-    CONTROLLER_IP="${PRIMARY_IP}"
-fi
+: ${CONTROLLER_IP:="${PRIMARY_IP}"}
 
 TIMEZONE=$(readlink /etc/localtime)
 TIMEZONE="${TIMEZONE#*zoneinfo/}"
@@ -178,9 +157,9 @@ export HOME=/root
 # Set the slave timezone to match ourselves
 timedatectl set-timezone $TIMEZONE
 
-if [[ -n "$GITHUB_CREDENTIALS" ]]; then
+if [[ -n "${GITHUB_CREDENTIALS:-}" ]]; then
 	cat <<FOO >~/.git-credentials
-https://${GITHUB_CREDENTIALS}@github.com
+https://${GITHUB_CREDENTIALS:-}@github.com
 FOO
 	chmod og= ~/.git-credentials
 	git config --global credential.helper store
@@ -197,7 +176,7 @@ gcloud compute instances create "${SLAVES[@]}" "${GCLOUD_PARAMS[@]}" \
     --no-address --image-family="$IMAGE_FAMILY" --image-project="$IMAGE_PROJECT" \
     --machine-type="$SLAVE_TYPE" --metadata-from-file startup-script="$PULLER" || exit $?
 
-if [[ ! $DEBUG ]]; then
+if [[ ! ${DEBUG:-} ]]; then
   rm "$PULLER"
 fi
 
@@ -221,17 +200,17 @@ for slave in "${SLAVES[@]}"; do
 es_slave_ips="${SLAVE_IPS[*]}",\
 es_slave_names="${SLAVES[*]}",\
 es_num_masters="$NUM_MASTERS",\
-es_debug="$DEBUG",\
+es_debug="${DEBUG:-}",\
 es_cluster_name="$CLUSTER_NAME",\
 es_controller_ip="${CONTROLLER_IP}",\
 es_spawner_ip="${PRIMARY_IP}",\
 es_version="${ES_VERSION}",\
 es_plugin_version="${PLUGIN_VERSION}",\
 es_logstash_version="${LOGSTASH_VERSION}",\
-es_node_config="${ES_NODE_CONFIG}",\
-es_download_url="${ES_DOWNLOAD_URL}",\
-custom_es_java_opts="${CUSTOM_ES_JAVA_OPTS}",\
-es_data_device="${DATA_DEVICE}",\
+es_node_config="${ES_NODE_CONFIG:-}",\
+es_download_url="${ES_DOWNLOAD_URL:-}",\
+custom_es_java_opts="${CUSTOM_ES_JAVA_OPTS:-}",\
+es_data_device="${DATA_DEVICE:-}",\
 es_spinlock_1=released
 done
 

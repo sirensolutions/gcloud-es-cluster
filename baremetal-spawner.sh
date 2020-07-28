@@ -77,17 +77,9 @@ PRIMARY_IP=$(hostname --ip-address)
 SLAVES=$(ansible $CLUSTER -c local -m command -a "echo {{ inventory_hostname }}" | grep -v ">>" | sort -n )
 NUM_MASTERS=$[ $(echo $SLAVES ${FOREIGN_MEMBERS:-} | wc -w) / 2 + 1 ]
 
-if [[ ! ${ES_VERSION:-} ]]; then
-	ES_VERSION=$ES_DEFAULT
-fi
-
-if [[ ! ${PLUGIN_VERSION:-} ]]; then
-	PLUGIN_VERSION=$PLUGIN_DEFAULT
-fi
-
-if [[ ! ${LOGSTASH_VERSION:-} ]]; then
-	LOGSTASH_VERSION=$LOGSTASH_DEFAULT
-fi
+: ${ES_VERSION=$ES_DEFAULT}
+: ${PLUGIN_VERSION=$PLUGIN_DEFAULT}
+: ${LOGSTASH_VERSION=$LOGSTASH_DEFAULT}
 
 
 # get our slave IPs from $HOSTS_FILE
