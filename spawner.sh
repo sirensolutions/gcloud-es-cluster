@@ -1,17 +1,9 @@
 #!/bin/bash
+SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
+. $SCRIPT_DIR/poshlib/poshlib.sh
+use swine
+use parse-opt
 
-set -eo pipefail
-err_report() {
-    echo "errexit on line $(caller)" >&2
-}
-trap err_report ERR
-
-die() {
-    echo $2 >&2
-    exit $1
-}
-
-SCRIPT_DIR=$(dirname $(readlink -f $0))
 GIT_BRANCH=$(cd ${SCRIPT_DIR}; git status | awk '{print $3; exit}')
 
 ES_PORT=9200
@@ -67,22 +59,12 @@ the automatic configurator.
 EOF
 fi
 
-[[ -f ${SCRIPT_DIR}/poshlib/parse-opt.sh ]] || die 1 "Could not find poshlib"
-# No short arguments
-declare -A PO_SHORT_MAP
-
-# All long arguments are lowercase versions of their corresponding envars
-declare -A PO_LONG_MAP
-for envar in IMAGE BOOT_DISK_TYPE BOOT_DISK_SIZE \
-    LOCAL_SSD_TYPE CLUSTER_NAME SITE_CONFIG \
-    ES_VERSION PLUGIN_VERSION LOGSTASH_VERSION GITHUB_CREDENTIALS \
-    CPU_PLATFORM ES_NODE_CONFIG ES_DOWNLOAD_URL CONTROLLER_IP \
-    CUSTOM_ES_JAVA_OPTS SCOPES DEBUG NUM_SLAVES SLAVE_TYPE; do
-    PO_LONG_MAP["$(echo $envar | tr A-Z_ a-z-):"]="$envar"
-done
-
-# parse command line options
-. ${SCRIPT_DIR}/poshlib/parse-opt.sh
+PO_SIMPLE_PARAMS='IMAGE BOOT_DISK_TYPE BOOT_DISK_SIZE
+    LOCAL_SSD_TYPE CLUSTER_NAME SITE_CONFIG
+    ES_VERSION PLUGIN_VERSION LOGSTASH_VERSION GITHUB_CREDENTIALS
+    CPU_PLATFORM ES_NODE_CONFIG ES_DOWNLOAD_URL CONTROLLER_IP
+    CUSTOM_ES_JAVA_OPTS SCOPES DEBUG NUM_SLAVES SLAVE_TYPE'
+eval $(parse-opt-simple)
 
 # https://unix.stackexchange.com/questions/333548/how-to-prevent-word-splitting-without-preventing-empty-string-removal
 GCLOUD_PARAMS=()
