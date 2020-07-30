@@ -32,6 +32,7 @@ BOOT_DISK_SIZE / --boot-disk-size [16GB]
 LOCAL_SSD_TYPE / --local-ssd-type [] (nvme|scsi)
 CLUSTER_NAME / --cluster-name [es-<timestamp>]
 SITE_CONFIG / --site-config [gcloud.conf]
+GIT_DEMOS_BRANCH / --git-demos-branch [master]
 ES_VERSION / --es-version [${ES_DEFAULT:-error, no default found}]
 PLUGIN_VERSION / --plugin-version [${PLUGIN_DEFAULT:-error, no default found}]
 LOGSTASH_VERSION / --logstash-version [${LOGSTASH_DEFAULT:-error, no default found}]
@@ -60,7 +61,7 @@ EOF
 fi
 
 PO_SIMPLE_PARAMS='IMAGE BOOT_DISK_TYPE BOOT_DISK_SIZE
-    LOCAL_SSD_TYPE CLUSTER_NAME SITE_CONFIG
+    LOCAL_SSD_TYPE CLUSTER_NAME SITE_CONFIG GIT_DEMOS_BRANCH
     ES_VERSION PLUGIN_VERSION LOGSTASH_VERSION GITHUB_CREDENTIALS
     CPU_PLATFORM ES_NODE_CONFIG ES_DOWNLOAD_URL CONTROLLER_IP
     CUSTOM_ES_JAVA_OPTS SCOPES DEBUG NUM_SLAVES SLAVE_TYPE'
@@ -107,6 +108,7 @@ fi
 
 : ${CLUSTER_NAME:=es-$(date +%s)}
 : ${SITE_CONFIG:="gcloud.conf"}
+: ${GIT_DEMOS_BRANCH:=master}
 : ${ES_VERSION:=$ES_DEFAULT}
 : ${PLUGIN_VERSION:=$PLUGIN_DEFAULT}
 : ${LOGSTASH_VERSION:=$LOGSTASH_DEFAULT}
@@ -211,6 +213,7 @@ es_node_config="${ES_NODE_CONFIG:-}",\
 es_download_url="${ES_DOWNLOAD_URL:-}",\
 custom_es_java_opts="${CUSTOM_ES_JAVA_OPTS:-}",\
 es_data_device="${DATA_DEVICE:-}",\
+git_demos_branch="${GIT_DEMOS_BRANCH:-}",\
 es_spinlock_1=released
 done
 
