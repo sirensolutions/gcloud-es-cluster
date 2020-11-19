@@ -40,6 +40,7 @@ ES_NODE_CONFIG / --es-node-config []
 ES_DOWNLOAD_URL / --es-download-url []
 CONTROLLER_IP / --controller-ip [<primary ip of local machine>]
 CUSTOM_ES_JAVA_OPTS / --custom-es-java-opts []
+USE_BUNDLED_JDK / --use-bundled-jdk []
 SCOPES / --scopes []
 
 Credentials are supplied in the form "<username>:<password>". If your github
@@ -242,6 +243,7 @@ es_node_config="${ES_NODE_CONFIG}",\
 es_download_url="${ES_DOWNLOAD_URL}",\
 custom_es_java_opts="${CUSTOM_ES_JAVA_OPTS}",\
 es_data_device="${DATA_DEVICE}",\
+use_bundled_jdk="${USE_BUNDLED_JDK}",\
 es_spinlock_1=released
 done
 

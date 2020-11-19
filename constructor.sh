@@ -299,6 +299,7 @@ BASE="$BASE" \
     SERVICE_NAME="elastic" \
     CLUSTER_NAME="$CLUSTER_NAME" \
     ES_LINKNAME="$ES_LINKNAME" \
+    USE_BUNDLED_JDK="$USE_BUNDLED_JDK" \
     ${DEMO_SCRIPT_DIR}/make-elastic.sh || exit 99
 
 
