@@ -107,6 +107,10 @@ pushd ${SCRIPT_DIR} >/dev/null
 . $1
 popd >/dev/null
 
+if [[ ! -z "$GIT_DEMOS_BRANCH_OPT" ]]; then
+  GIT_DEMOS_BRANCH=$GIT_DEMOS_BRANCH_OPT
+fi
+
 proxy_log "loaded site config $1"
 echo DEBUG=$DEBUG
 

@@ -244,6 +244,7 @@ es_download_url="${ES_DOWNLOAD_URL}",\
 custom_es_java_opts="${CUSTOM_ES_JAVA_OPTS}",\
 es_data_device="${DATA_DEVICE}",\
 use_bundled_jdk="${USE_BUNDLED_JDK}",\
+git_demos_branch_opt="${GIT_DEMOS_BRANCH_OPT}",\
 es_spinlock_1=released
 done
 
