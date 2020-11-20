@@ -40,6 +40,8 @@ ES_NODE_CONFIG / --es-node-config []
 ES_DOWNLOAD_URL / --es-download-url []
 CONTROLLER_IP / --controller-ip [<primary ip of local machine>]
 CUSTOM_ES_JAVA_OPTS / --custom-es-java-opts []
+USE_BUNDLED_JDK / --use-bundled-jdk []
+GIT_DEMOS_BRANCH / --git-demos-branch [master]
 SCOPES / --scopes []
 
 Credentials are supplied in the form "<username>:<password>". If your github
@@ -68,7 +70,7 @@ if [[ -f /opt/git/admin-tools/parse-opt.sh ]]; then
         LOCAL_SSD_TYPE CLUSTER_NAME SITE_CONFIG \
         ES_VERSION PLUGIN_VERSION LOGSTASH_VERSION GITHUB_CREDENTIALS \
         CPU_PLATFORM ES_NODE_CONFIG ES_DOWNLOAD_URL CONTROLLER_IP \
-        CUSTOM_ES_JAVA_OPTS SCOPES DEBUG NUM_SLAVES SLAVE_TYPE; do
+        CUSTOM_ES_JAVA_OPTS USE_BUNDLED_JDK GIT_DEMOS_BRANCH SCOPES DEBUG NUM_SLAVES SLAVE_TYPE; do
         PO_LONG_MAP["$(echo $envar | tr A-Z_ a-z-):"]="$envar"
     done
 
@@ -242,6 +244,8 @@ es_node_config="${ES_NODE_CONFIG}",\
 es_download_url="${ES_DOWNLOAD_URL}",\
 custom_es_java_opts="${CUSTOM_ES_JAVA_OPTS}",\
 es_data_device="${DATA_DEVICE}",\
+use_bundled_jdk="${USE_BUNDLED_JDK}",\
+git_demos_branch="${GIT_DEMOS_BRANCH}",\
 es_spinlock_1=released
 done
 
