@@ -42,6 +42,8 @@ ES_NODE_CONFIG / --es-node-config []
 ES_DOWNLOAD_URL / --es-download-url []
 CONTROLLER_IP / --controller-ip [<primary ip of local machine>]
 CUSTOM_ES_JAVA_OPTS / --custom-es-java-opts []
+USE_BUNDLED_JDK / --use-bundled-jdk []
+GIT_DEMOS_BRANCH / --git-demos-branch [master]
 SCOPES / --scopes []
 
 Credentials are supplied in the form "<username>:<password>". If your github
@@ -64,7 +66,8 @@ PO_SIMPLE_PARAMS='IMAGE BOOT_DISK_TYPE BOOT_DISK_SIZE
     LOCAL_SSD_TYPE CLUSTER_NAME SITE_CONFIG GIT_DEMOS_BRANCH
     ES_VERSION PLUGIN_VERSION LOGSTASH_VERSION GITHUB_CREDENTIALS
     CPU_PLATFORM ES_NODE_CONFIG ES_DOWNLOAD_URL CONTROLLER_IP
-    CUSTOM_ES_JAVA_OPTS SCOPES DEBUG NUM_SLAVES SLAVE_TYPE'
+    CUSTOM_ES_JAVA_OPTS SCOPES DEBUG NUM_SLAVES SLAVE_TYPE
+    USE_BUNDLED_JDK'
 eval $(parse-opt-simple)
 
 # https://unix.stackexchange.com/questions/333548/how-to-prevent-word-splitting-without-preventing-empty-string-removal
@@ -213,6 +216,7 @@ es_node_config="${ES_NODE_CONFIG:-}",\
 es_download_url="${ES_DOWNLOAD_URL:-}",\
 custom_es_java_opts="${CUSTOM_ES_JAVA_OPTS:-}",\
 es_data_device="${DATA_DEVICE:-}",\
+use_bundled_jdk="${USE_BUNDLED_JDK:-}",\
 git_demos_branch="${GIT_DEMOS_BRANCH:-}",\
 es_spinlock_1=released
 done

@@ -93,10 +93,6 @@ SSH_PORT=22
 ES_PORT=9200
 ES_TRANS_PORT=9300
 
-# We can optionally override the branches of our repo dependencies
-# But most of the time we probably just want "master"
-GIT_DEMOS_BRANCH=master
-
 ##### END DEFAULT SETTINGS #####
 
 echo Loading site config \"$1\"
@@ -108,6 +104,10 @@ popd >/dev/null
 
 proxy_log "loaded site config $1"
 echo DEBUG=$DEBUG
+
+# We can optionally override the branches of our repo dependencies
+# But most of the time we probably just want "master"
+: "${GIT_DEMOS_BRANCH:=master}" # if it is unset or empty therefore the initial ':'
 
 systemdstat=$(systemctl --version | head -1)
 if [[ $? && "$(echo $systemdstat | awk '{print $2}')" -gt 227 ]]; then
@@ -294,6 +294,7 @@ BASE="$BASE" \
     SERVICE_NAME="elastic" \
     CLUSTER_NAME="$CLUSTER_NAME" \
     ES_LINKNAME="$ES_LINKNAME" \
+    USE_BUNDLED_JDK="$USE_BUNDLED_JDK" \
     ${DEMO_SCRIPT_DIR}/make-elastic.sh || exit 99
 
 
