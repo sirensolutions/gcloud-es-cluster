@@ -114,44 +114,18 @@ cat <<'EOF' > ~/.m2/settings.xml
 EOF
 ```
 
-Now build the tests and run. You will need to define GCLOUD_ES_BRANCH and DEMOS_BRANCH.
+Now run the tests:
 
 ```
-tmpdir=$(mktemp -d)
-cd $tmpdir
 git clone --recurse-submodules git@github.com:sirensolutions/gcloud-es-cluster
-(cd gcloud-es-cluster && git checkout --recurse-submodules $GCLOUD_ES_BRANCH)
-git clone --recurse-submodules git@github.com:sirensolutions/siren-platform
-cd siren-platform
-gradleOpts=(-p benchmark -is \
-    -Pfederate.commit=8579c77702b13bc826e651db940b88d95bea76e5 \
-    -PartifactoryApiKey="$ARTIFACTORY_API_KEY" \
-    -PgithubCredentials="$GITHUB_CREDENTIALS" \
-    -Pgcs.service.account.file="$HOME/.gcs-service-account.json" \
-    -Duse.bundled.jdk \
-    -Dpath.gcloud.es.cluster.repo="../gcloud-es-cluster" \
-    -Dgit.demos.branch="$DEMOS_BRANCH")
-./gradlew clean
-./gradlew build --exclude-task test
-./gradlew buildBundle "${gradleOpts[@]}"
-./gradlew publishFederateBundle "${gradleOpts[@]}"
-DEBUG=1 ./gradlew gcloudParentChildScenario1Setup "${gradleOpts[@]}"
-nodeIp=$(gcloud compute instances list \
-    |awk "/^gcloud-cluster-pc1-$USER/ { print \$4; exit; }")
-curl -Ssf "http://$nodeIp:9200/_cluster/state/nodes" | jq .
-```
-
-To clean up, do:
-
-```
-clusterId=$(../gcloud-es-cluster/status.sh | grep $USER)
-../gcloud-es-cluster/killer.sh "$clusterId"
-cd
-rm -rf "$tmpdir"
-```
-
-Alternatively, check out the correct branch of gcloud-es-cluster and incant:
-
-```
+cd gcloud-es-cluster
+git checkout --recurse-submodules $GCLOUD_ES_BRANCH
 ./tests/test-gradle --demos-branch=$DEMOS_BRANCH
+```
+
+To clean up after a failure, do:
+
+```
+clusterId=$(./status.sh | grep $USER)
+./killer.sh "$clusterId"
 ```
