@@ -67,10 +67,7 @@ cat <<EOF >> "$tmpfile"
 EOF
 DEBUG=1 try ./gradlew gcloudParentChildScenario1Setup "${gradleOpts[@]}" >> "$tmpfile" 2>&1
 if catch e; then
-    say "TEST FAILURE: gradle error $e, logs in $tmpfile"
-else
-    say "TEST SUCCESS"
-    rm "$tmpfile"
+    die "$e" "TEST FAILURE: gradle error $e, logs in $tmpfile"
 fi
 
 nodeIp=$(gcloud compute instances list \
@@ -78,10 +75,11 @@ nodeIp=$(gcloud compute instances list \
 
 try curl -SsfL "http://$nodeIp:9200/_cluster/state/nodes" | jq .
 if catch e; then
-    say "TEST FAILURE: curl error $e"
-else
-    say "TEST SUCCESS"
+    die "$e" "TEST FAILURE: curl error $e, logs in $tmpfile"
 fi
+
+say "TEST SUCCESS"
+rm "$tmpfile"
 
 # clean up
 
