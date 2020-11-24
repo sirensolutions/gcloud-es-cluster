@@ -1,0 +1,56 @@
+#!/bin/bash
+SCRIPT_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+. "$SCRIPT_DIR/../poshlib/poshlib.sh" || exit 1
+use swine
+use parse-opt
+
+PO_SIMPLE_PARAMS=(DEMOS_BRANCH GCLOUD_ES_BRANCH)
+eval $(parse-opt-simple)
+
+tmpdir=$(mktemp -d)
+tmpfile=$(mktemp)
+
+cd "$tmpdir"
+git clone --recurse-submodules git@github.com:sirensolutions/gcloud-es-cluster
+(cd gcloud-es-cluster && git checkout --recurse-submodules "$GCLOUD_ES_BRANCH")
+git clone --recurse-submodules git@github.com:sirensolutions/siren-platform
+cd siren-platform
+
+gradleOpts=(-p benchmark -is \
+    -Pfederate.commit=8579c77702b13bc826e651db940b88d95bea76e5 \
+    -PartifactoryApiKey="$ARTIFACTORY_API_KEY" \
+    -PgithubCredentials="$GITHUB_CREDENTIALS" \
+    -Pgcs.service.account.file="$HOME/.gcs-service-account.json" \
+    -Duse.bundled.jdk \
+    -Dpath.gcloud.es.cluster.repo="../gcloud-es-cluster" \
+    -Dgit.demos.branch="$DEMOS_BRANCH")
+
+./gradlew clean
+./gradlew build --exclude-task test
+./gradlew buildBundle "${gradleOpts[@]}"
+./gradlew publishFederateBundle "${gradleOpts[@]}"
+
+DEBUG=1 try ./gradlew gcloudParentChildScenario1Setup "${gradleOpts[@]}" > "$tmpfile" 2>&1
+if catch e; then
+    say "TEST FAILURE: gradle error $e, logs in $tmpfile"
+else
+    say "TEST SUCCESS"
+    rm "$tmpfile"
+fi
+
+nodeIp=$(gcloud compute instances list \
+    |awk "/^gcloud-cluster-pc1-$USER/ { print \$4; exit; }")
+
+try curl -SsfL "http://$nodeIp:9200/_cluster/state/nodes" | jq .
+if catch e; then
+    say "TEST FAILURE: curl error $e"
+else
+    say "TEST SUCCESS"
+fi
+
+# clean up
+
+clusterId=$(../gcloud-es-cluster/status.sh | grep $USER)
+../gcloud-es-cluster/killer.sh "$clusterId"
+cd
+rm -rf "$tmpdir"
