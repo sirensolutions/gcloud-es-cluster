@@ -23,12 +23,47 @@ gradleOpts=(-p benchmark -is \
     -Dpath.gcloud.es.cluster.repo="$SCRIPT_DIR" \
     -Dgit.demos.branch="$DEMOS_BRANCH")
 
-./gradlew clean
-./gradlew build --exclude-task test
-./gradlew buildBundle "${gradleOpts[@]}"
-./gradlew publishFederateBundle "${gradleOpts[@]}"
+cat <<EOF >> "$tmpfile"
 
-DEBUG=1 try ./gradlew gcloudParentChildScenario1Setup "${gradleOpts[@]}" > "$tmpfile" 2>&1
+#####################
+# STAGE CLEAN       #
+#####################
+
+EOF
+./gradlew clean >> "$tmpfile" 2>&1
+cat <<EOF >> "$tmpfile"
+
+#####################
+# STAGE BUILD       #
+#####################
+
+EOF
+./gradlew build --exclude-task test >> "$tmpfile" 2>&1
+cat <<EOF >> "$tmpfile"
+
+#####################
+# STAGE BUILDBUNDLE #
+#####################
+
+EOF
+./gradlew buildBundle "${gradleOpts[@]}" >> "$tmpfile" 2>&1
+cat <<EOF >> "$tmpfile"
+
+#####################
+# STAGE PUBLISH     #
+#####################
+
+EOF
+./gradlew publishFederateBundle "${gradleOpts[@]}" >> "$tmpfile" 2>&1
+
+cat <<EOF >> "$tmpfile"
+
+#####################
+# STAGE SPAWN       #
+#####################
+
+EOF
+DEBUG=1 try ./gradlew gcloudParentChildScenario1Setup "${gradleOpts[@]}" >> "$tmpfile" 2>&1
 if catch e; then
     say "TEST FAILURE: gradle error $e, logs in $tmpfile"
 else
