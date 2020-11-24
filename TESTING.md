@@ -126,6 +126,6 @@ git checkout --recurse-submodules $GCLOUD_ES_BRANCH
 To clean up after a failure, do:
 
 ```
-clusterId=$(./status.sh | grep $USER)
+clusterId=$(./status.sh | awk "/gcloud-cluster-pc1-$USER/ { print \$3; exit ;}")
 ./killer.sh "$clusterId"
 ```
