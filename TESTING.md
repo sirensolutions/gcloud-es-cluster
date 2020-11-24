@@ -136,21 +136,22 @@ gradleOpts=(-p benchmark -is \
 ./gradlew buildBundle "${gradleOpts[@]}"
 ./gradlew publishFederateBundle "${gradleOpts[@]}"
 DEBUG=1 ./gradlew gcloudParentChildScenario1Setup "${gradleOpts[@]}"
-watch gcloud compute instances list
-```
-
-Once the slaves come up, take a note of an elasticsearch node INTERNAL_IP. Now kill `watch` and try to connect to that IP on port 9200:
-
-```
-curl -Ssf http://INTERNAL_IP:9200/_cluster/state/nodes | jq .
+nodeIp=$(gcloud compute instances list \
+    |awk "/^gcloud-cluster-pc1-$USER/ { print \$4; exit; }")
+curl -Ssf "http://$nodeIp:9200/_cluster/state/nodes" | jq .
 ```
 
 To clean up, do:
 
 ```
-clusterId=$(curl -Ssf http://INTERNAL_IP:9200/_cluster/state/nodes \
-    |jq -r .cluster_name)
+clusterId=$(../gcloud-es-cluster/status.sh | grep $USER)
 ../gcloud-es-cluster/killer.sh "$clusterId"
 cd
 rm -rf "$tmpdir"
+```
+
+Alternatively, check out the correct branch of gcloud-es-cluster and incant:
+
+```
+./tests/test-gradle --demos-branch=$DEMOS_BRANCH
 ```

@@ -11,8 +11,6 @@ tmpdir=$(mktemp -d)
 tmpfile=$(mktemp)
 
 cd "$tmpdir"
-git clone --recurse-submodules git@github.com:sirensolutions/gcloud-es-cluster
-(cd gcloud-es-cluster && git checkout --recurse-submodules "$GCLOUD_ES_BRANCH")
 git clone --recurse-submodules git@github.com:sirensolutions/siren-platform
 cd siren-platform
 
@@ -22,7 +20,7 @@ gradleOpts=(-p benchmark -is \
     -PgithubCredentials="$GITHUB_CREDENTIALS" \
     -Pgcs.service.account.file="$HOME/.gcs-service-account.json" \
     -Duse.bundled.jdk \
-    -Dpath.gcloud.es.cluster.repo="../gcloud-es-cluster" \
+    -Dpath.gcloud.es.cluster.repo="$SCRIPT_DIR" \
     -Dgit.demos.branch="$DEMOS_BRANCH")
 
 ./gradlew clean
