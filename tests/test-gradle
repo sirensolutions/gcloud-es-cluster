@@ -85,7 +85,7 @@ fi
 
 # clean up
 
-clusterId=$(../gcloud-es-cluster/status.sh | grep $USER)
-../gcloud-es-cluster/killer.sh "$clusterId"
+clusterId=$("$SCRIPT_DIR/../status.sh" | awk "/gcloud-cluster-pc1-$USER/ { print \$3; exit ;}")
+"$SCRIPT_DIR/../killer.sh" "$clusterId"
 cd
 rm -rf "$tmpdir"
