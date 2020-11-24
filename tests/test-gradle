@@ -1,0 +1,89 @@
+#!/bin/bash
+SCRIPT_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+. "$SCRIPT_DIR/../poshlib/poshlib.sh" || exit 1
+use swine
+use parse-opt
+
+PO_SIMPLE_PARAMS=(DEMOS_BRANCH FEDERATE_COMMIT)
+eval $(parse-opt-simple)
+
+: "${DEMOS_BRANCH:=master}"
+: "${FEDERATE_COMMIT:=8579c77702b13bc826e651db940b88d95bea76e5}"
+
+tmpdir=$(mktemp -d)
+tmpfile=$(mktemp)
+
+cd "$tmpdir"
+git clone --recurse-submodules git@github.com:sirensolutions/siren-platform
+cd siren-platform
+
+gradleOpts=(-p benchmark -is \
+    -Pfederate.commit="$FEDERATE_COMMIT" \
+    -PartifactoryApiKey="$ARTIFACTORY_API_KEY" \
+    -Pgcs.service.account.file="$HOME/.gcs-service-account.json" \
+    -Duse.bundled.jdk \
+    -Dpath.gcloud.es.cluster.repo="$SCRIPT_DIR/.." \
+    -Dgit.demos.branch="$DEMOS_BRANCH")
+
+cat <<EOF >> "$tmpfile"
+
+#####################
+# STAGE CLEAN       #
+#####################
+
+EOF
+./gradlew clean >> "$tmpfile" 2>&1
+cat <<EOF >> "$tmpfile"
+
+#####################
+# STAGE BUILD       #
+#####################
+
+EOF
+./gradlew build --exclude-task test >> "$tmpfile" 2>&1
+cat <<EOF >> "$tmpfile"
+
+#####################
+# STAGE BUILDBUNDLE #
+#####################
+
+EOF
+./gradlew buildBundle "${gradleOpts[@]}" >> "$tmpfile" 2>&1
+cat <<EOF >> "$tmpfile"
+
+#####################
+# STAGE PUBLISH     #
+#####################
+
+EOF
+./gradlew publishFederateBundle "${gradleOpts[@]}" >> "$tmpfile" 2>&1
+
+cat <<EOF >> "$tmpfile"
+
+#####################
+# STAGE SPAWN       #
+#####################
+
+EOF
+DEBUG=1 try ./gradlew gcloudParentChildScenario1Setup "${gradleOpts[@]}" >> "$tmpfile" 2>&1
+if catch e; then
+    die "$e" "TEST FAILURE: gradle error $e, logs in $tmpfile"
+fi
+
+nodeIp=$(gcloud compute instances list \
+    |awk "/^gcloud-cluster-pc1-$USER/ { print \$4; exit; }")
+
+try curl -SsfL "http://$nodeIp:9200/_cluster/state/nodes" | jq .
+if catch e; then
+    die "$e" "TEST FAILURE: curl error $e, logs in $tmpfile"
+fi
+
+say "TEST SUCCESS"
+rm "$tmpfile"
+
+# clean up
+
+clusterId=$("$SCRIPT_DIR/../status.sh" | awk "/gcloud-cluster-pc1-$USER/ { print \$3; exit ;}")
+"$SCRIPT_DIR/../killer.sh" "$clusterId"
+cd
+rm -rf "$tmpdir"

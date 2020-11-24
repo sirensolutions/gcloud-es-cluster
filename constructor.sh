@@ -108,7 +108,6 @@ echo DEBUG=$DEBUG
 # We can optionally override the branches of our repo dependencies
 # But most of the time we probably just want "master"
 : "${GIT_DEMOS_BRANCH:=master}" # if it is unset or empty therefore the initial ':'
-: "${ADMIN_TOOLS_BRANCH:=master}"
 
 systemdstat=$(systemctl --version | head -1)
 if [[ $? && "$(echo $systemdstat | awk '{print $2}')" -gt 227 ]]; then
@@ -225,11 +224,7 @@ proxy_log "git clone demos"
 git -c http.proxy=$http_proxy clone --recurse-submodules -b ${GIT_DEMOS_BRANCH} https://github.com/sirensolutions/demos
 check_error "git clone demos"
 DEMO_SCRIPT_DIR=$PWD/demos
-
-proxy_log "git clone admin-tools"
-git -c http.proxy=$http_proxy clone --recurse-submodules -b ${ADMIN_TOOLS_BRANCH} https://github.com/andrewgdotcom/admin-tools
-check_error "git clone admin-tools"
-ADMIN_TOOLS_DIR=$PWD/admin-tools
+ADMIN_TOOLS_DIR=$PWD/demos/admin-tools
 
 popd >/dev/null
 
