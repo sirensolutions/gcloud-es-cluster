@@ -19,7 +19,6 @@ cd siren-platform
 gradleOpts=(-p benchmark -is \
     -Pfederate.commit=8579c77702b13bc826e651db940b88d95bea76e5 \
     -PartifactoryApiKey="$ARTIFACTORY_API_KEY" \
-    -PgithubCredentials="$GITHUB_CREDENTIALS" \
     -Pgcs.service.account.file="$HOME/.gcs-service-account.json" \
     -Duse.bundled.jdk \
     -Dpath.gcloud.es.cluster.repo="$SCRIPT_DIR/.." \
