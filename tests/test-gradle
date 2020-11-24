@@ -22,7 +22,7 @@ gradleOpts=(-p benchmark -is \
     -PgithubCredentials="$GITHUB_CREDENTIALS" \
     -Pgcs.service.account.file="$HOME/.gcs-service-account.json" \
     -Duse.bundled.jdk \
-    -Dpath.gcloud.es.cluster.repo="$SCRIPT_DIR" \
+    -Dpath.gcloud.es.cluster.repo="$SCRIPT_DIR/.." \
     -Dgit.demos.branch="$DEMOS_BRANCH")
 
 cat <<EOF >> "$tmpfile"
