@@ -4,10 +4,11 @@ SCRIPT_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
 use swine
 use parse-opt
 
-PO_SIMPLE_PARAMS=(DEMOS_BRANCH)
+PO_SIMPLE_PARAMS=(DEMOS_BRANCH FEDERATE_COMMIT)
 eval $(parse-opt-simple)
 
 : "${DEMOS_BRANCH:=master}"
+: "${FEDERATE_COMMIT:=8579c77702b13bc826e651db940b88d95bea76e5}"
 
 tmpdir=$(mktemp -d)
 tmpfile=$(mktemp)
@@ -17,7 +18,7 @@ git clone --recurse-submodules git@github.com:sirensolutions/siren-platform
 cd siren-platform
 
 gradleOpts=(-p benchmark -is \
-    -Pfederate.commit=8579c77702b13bc826e651db940b88d95bea76e5 \
+    -Pfederate.commit="$FEDERATE_COMMIT" \
     -PartifactoryApiKey="$ARTIFACTORY_API_KEY" \
     -PgithubCredentials="$GITHUB_CREDENTIALS" \
     -Pgcs.service.account.file="$HOME/.gcs-service-account.json" \
