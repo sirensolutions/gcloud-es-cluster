@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 BASEDIR=$(cd `dirname $0` && pwd)
 ENVIRONMENT="${1:-default.env}"
 
@@ -60,6 +60,8 @@ echo "Creating overlay..."
 mkdir -p k8s/overlays/custom
 
 export ELASTICSEARCH_MAJOR_VERSION
+export ELASTICSEARCH_DATA_CORES_REQUEST
+export ELASTICSEARCH_DATA_MEMORY_REQUEST
 export ELASTICSEARCH_DOCKER_IMAGE
 export ELASTICSEARCH_DATA_JAVA_OPTIONS
 export NODES

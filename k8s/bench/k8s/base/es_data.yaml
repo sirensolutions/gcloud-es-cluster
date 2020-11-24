@@ -85,8 +85,8 @@ spec:
         imagePullPolicy: Always
         resources:
           requests:
-            memory: 40G
-            cpu: 7
+            memory: {{ .Env.ELASTICSEARCH_DATA_MEMORY_REQUEST }}G
+            cpu: {{ .Env.ELASTICSEARCH_DATA_CORES_REQUEST }}
         ports:
         - containerPort: 9300
           name: transport
