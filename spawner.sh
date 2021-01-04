@@ -201,23 +201,25 @@ echo "Pushing metadata..."
 for slave in "${SLAVES[@]}"; do
 	# The constructors should spin on es_spinlock_1 to avoid race conditions
     # NB there must be NO WHITESPACE in the metadata string!
-	gcloud compute instances add-metadata $slave --metadata \
-es_slave_ips="${SLAVE_IPS[*]}",\
-es_slave_names="${SLAVES[*]}",\
-es_num_masters="$NUM_MASTERS",\
-es_debug="${DEBUG:-}",\
-es_cluster_name="$CLUSTER_NAME",\
-es_controller_ip="${CONTROLLER_IP}",\
-es_spawner_ip="${PRIMARY_IP}",\
-es_version="${ES_VERSION}",\
-es_plugin_version="${PLUGIN_VERSION}",\
-es_logstash_version="${LOGSTASH_VERSION}",\
-es_node_config="${ES_NODE_CONFIG:-}",\
-es_download_url="${ES_DOWNLOAD_URL:-}",\
-custom_es_java_opts="${CUSTOM_ES_JAVA_OPTS:-}",\
-es_data_device="${DATA_DEVICE:-}",\
-use_bundled_jdk="${USE_BUNDLED_JDK:-}",\
-git_demos_branch="${GIT_DEMOS_BRANCH:-}",\
+    # Some values may be comma-separated lists, so use ,,, as our separator.
+    # See https://cloud.google.com/sdk/gcloud/reference/topic/escaping
+    gcloud compute instances add-metadata $slave --metadata ^,,,^\
+es_slave_ips="${SLAVE_IPS[*]}",,,\
+es_slave_names="${SLAVES[*]}",,,\
+es_num_masters="$NUM_MASTERS",,,\
+es_debug="${DEBUG:-}",,,\
+es_cluster_name="$CLUSTER_NAME",,,\
+es_controller_ip="${CONTROLLER_IP}",,,\
+es_spawner_ip="${PRIMARY_IP}",,,\
+es_version="${ES_VERSION}",,,\
+es_plugin_version="${PLUGIN_VERSION}",,,\
+es_logstash_version="${LOGSTASH_VERSION}",,,\
+es_node_config="${ES_NODE_CONFIG:-}",,,\
+es_download_url="${ES_DOWNLOAD_URL:-}",,,\
+custom_es_java_opts="${CUSTOM_ES_JAVA_OPTS:-}",,,\
+es_data_device="${DATA_DEVICE:-}",,,\
+use_bundled_jdk="${USE_BUNDLED_JDK:-}",,,\
+git_demos_branch="${GIT_DEMOS_BRANCH:-}",,,\
 es_spinlock_1=released
 done
 
