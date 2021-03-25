@@ -42,7 +42,7 @@ ES_NODE_CONFIG / --es-node-config []
 ES_DOWNLOAD_URL / --es-download-url []
 CONTROLLER_IP / --controller-ip [<primary ip of local machine>]
 CUSTOM_ES_JAVA_OPTS / --custom-es-java-opts []
-USE_BUNDLED_JDK / --use-bundled-jdk []
+USE_OTHER_JDK / --use-other-jdk []
 GIT_DEMOS_BRANCH / --git-demos-branch [master]
 SCOPES / --scopes []
 
@@ -67,7 +67,7 @@ PO_SIMPLE_PARAMS='IMAGE BOOT_DISK_TYPE BOOT_DISK_SIZE
     ES_VERSION PLUGIN_VERSION LOGSTASH_VERSION GITHUB_CREDENTIALS
     CPU_PLATFORM ES_NODE_CONFIG ES_DOWNLOAD_URL CONTROLLER_IP
     CUSTOM_ES_JAVA_OPTS SCOPES DEBUG NUM_SLAVES SLAVE_TYPE
-    USE_BUNDLED_JDK'
+    USE_OTHER_JDK'
 eval $(parse-opt-simple)
 
 # https://unix.stackexchange.com/questions/333548/how-to-prevent-word-splitting-without-preventing-empty-string-removal
@@ -218,7 +218,7 @@ es_node_config="${ES_NODE_CONFIG:-}",,,\
 es_download_url="${ES_DOWNLOAD_URL:-}",,,\
 custom_es_java_opts="${CUSTOM_ES_JAVA_OPTS:-}",,,\
 es_data_device="${DATA_DEVICE:-}",,,\
-use_bundled_jdk="${USE_BUNDLED_JDK:-}",,,\
+use_other_jdk="${USE_OTHER_JDK:-}",,,\
 git_demos_branch="${GIT_DEMOS_BRANCH:-}",,,\
 es_spinlock_1=released
 done

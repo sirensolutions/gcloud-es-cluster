@@ -21,7 +21,7 @@ gradleOpts=(-p benchmark -is \
     -Pfederate.commit="$FEDERATE_COMMIT" \
     -PartifactoryApiKey="$ARTIFACTORY_API_KEY" \
     -Pgcs.service.account.file="$HOME/.gcs-service-account.json" \
-    -Duse.bundled.jdk \
+    -Duse.other.jdk \
     -Dpath.gcloud.es.cluster.repo="$SCRIPT_DIR/.." \
     -Dgit.demos.branch="$DEMOS_BRANCH")
 
