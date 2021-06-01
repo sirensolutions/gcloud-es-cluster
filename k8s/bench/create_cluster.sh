@@ -67,6 +67,11 @@ kubectl apply -f operator/crd.yaml
 kubectl apply -f operator/operator.yaml
 
 echo "Creating overlay..."
+
+if [[ -d k8s/overlays/custom ]]; then
+  rm -rf k8s/overlays
+fi
+
 mkdir -p k8s/overlays/custom
 
 export ELASTICSEARCH_MAJOR_VERSION

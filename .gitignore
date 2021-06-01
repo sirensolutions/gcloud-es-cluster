@@ -2,3 +2,4 @@
 build
 target
 *.tmp
+k8s/overlays/custom
