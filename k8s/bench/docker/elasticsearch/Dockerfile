@@ -12,7 +12,7 @@ RUN mvn --settings settings.xml org.apache.maven.plugins:maven-dependency-plugin
 
 ARG ELASTICSEARCH_VERSION
 
-FROM docker.elastic.co/elasticsearch/elasticsearch-oss:${ELASTICSEARCH_VERSION}
+FROM docker.elastic.co/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION}
 
 COPY --from=federate-base /tmp/federate.zip /tmp/federate.zip
 

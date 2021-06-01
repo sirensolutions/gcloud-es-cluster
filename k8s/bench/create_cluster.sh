@@ -15,10 +15,20 @@ CREATION_OPTIONS="--num-nodes=$NODES --enable-autoscaling --min-nodes=$NODES --m
 ELASTICSEARCH_DOCKER_IMAGE="${REGISTRY}/${PROJECT_ID}/elasticsearch:${FEDERATE_VERSION}" 
 ELASTICSEARCH_DATA_JAVA_OPTIONS="-Xmx${ELASTICSEARCH_HEAP}g -Xms${ELASTICSEARCH_HEAP}g -Dsiren.io.netty.maxDirectMemory=$((SIREN_MEMORY_ROOT_LIMIT + 512))"
 
-echo "To destroy the cluster run: gcloud container clusters delete $CLUSTER_NAME $GCLOUD_OPTIONS"
-echo Building image... "${ELASTICSEARCH_DOCKER_IMAGE}"
+cat << EOT
+
+##### IMPORTANT
+#
+# To destroy the cluster run:
+# gcloud container clusters delete $CLUSTER_NAME $GCLOUD_OPTIONS
+#
+##
+
+Building image... "${ELASTICSEARCH_DOCKER_IMAGE}"
+EOT
 
 docker build --build-arg ELASTICSEARCH_VERSION="${ELASTICSEARCH_VERSION}" --build-arg FEDERATE_VERSION="${FEDERATE_VERSION}" -t "${ELASTICSEARCH_DOCKER_IMAGE}" docker/elasticsearch
+echo "docker push '${ELASTICSEARCH_DOCKER_IMAGE}' ..."
 docker push "${ELASTICSEARCH_DOCKER_IMAGE}"
 
 echo "\nCreating cluster..."
@@ -27,7 +37,7 @@ gcloud container clusters create $CLUSTER_NAME $GCLOUD_OPTIONS \
   --num-nodes=$((NODES + 2)) \
   --machine-type=$NODE_TYPE \
   --disk-type=pd-ssd \
-  --min-cpu-platform="Intel Skylake"
+  --min-cpu-platform="$CPU_PLATFORM"
 
 if [ $? != 0 ]; then
   echo "\nCould not create cluster, check the gcloud output for more information."
@@ -46,7 +56,7 @@ echo "Creating default storage classes..."
 
 kubectl apply -f storage/pd.yml
 
-echo "Creating namespace..."
+echo "Creating namespace called siren ..."
 
 kubectl create namespace siren
 
