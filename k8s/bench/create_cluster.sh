@@ -68,7 +68,7 @@ kubectl apply -f operator/operator.yaml
 
 echo "Creating overlay..."
 
-if [[ -d k8s/overlays/custom ]]; then
+if [[ -d k8s/overlays ]]; then
   rm -rf k8s/overlays
 fi
 
