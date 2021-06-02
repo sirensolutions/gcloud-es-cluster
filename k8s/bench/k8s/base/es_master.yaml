@@ -36,7 +36,7 @@ spec:
         securityContext:
           privileged: true
       - name: config
-        image: busybox
+        image: {{ .Env.ELASTICSEARCH_DOCKER_IMAGE }}
         command:
         - "sh"
         - "-c"
