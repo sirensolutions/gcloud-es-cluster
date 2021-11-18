@@ -26,7 +26,7 @@ For advanced use, you can set the following envars / cmdline flags [defaults]:
 NUM_SLAVES / --num-slaves [1]
 SLAVE_TYPE / --slave-type [g1-small]
 DEBUG / --debug []
-IMAGE / --image [ubuntu-os-cloud/ubuntu-1604-lts]
+IMAGE / --image [ubuntu-os-cloud/ubuntu-2004-lts]
 BOOT_DISK_TYPE / --boot-disk-type [pd-ssd]
 BOOT_DISK_SIZE / --boot-disk-size [16GB]
 LOCAL_SSD_TYPE / --local-ssd-type [] (nvme|scsi)
@@ -94,7 +94,7 @@ if [[ ${IMAGE:-} ]]; then
 	IMAGE_FAMILY="${IMAGE#*/}"
 	IMAGE_PROJECT="${IMAGE%/*}"
 else
-	IMAGE_FAMILY=ubuntu-1604-lts
+	IMAGE_FAMILY=ubuntu-2004-lts
 	IMAGE_PROJECT=ubuntu-os-cloud
 fi
 

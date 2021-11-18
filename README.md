@@ -12,7 +12,7 @@ Then go to the metadata section and add some project-level ssh keys. These:
 
 The email address is parsed to automatically populate user accounts matching the private keys. Changes are live-propagated to all instances, even running ones.
 
-Create a new f1-micro instance of ubuntu-1604-lts, called es-controller. This will be a persistent machine that enables us to perform further tasks programmatically. The advantage of doing it this way is that key-based access to the API is relatively painless, and also network proximity to the slaves. Using the micro instance ensures that we can leave it running at minimal cost. This server should not therefore be used for any heavy lifting - spin up a slave instance for that.
+Create a new f1-micro instance of ubuntu-2004-lts, called es-controller. This will be a persistent machine that enables us to perform further tasks programmatically. The advantage of doing it this way is that key-based access to the API is relatively painless, and also network proximity to the slaves. Using the micro instance ensures that we can leave it running at minimal cost. This server should not therefore be used for any heavy lifting - spin up a slave instance for that.
 Make sure that the disk is set to *not* be deleted on instance deletion. While we never intend to delete this instance, we can't rule out accidents.
 
 In order for the API keys to be available inside the VM, we need to add it to the "allow full access" cloud API access scope. This must be done while the VM is shut down.
@@ -39,7 +39,7 @@ export CLOUDSDK_COMPUTE_ZONE=europe-west1-c
 To create a machine, invoke e.g. the following:
 
 ```
-gcloud compute instances create es-node1 --image-family=ubuntu-1604-lts --image-project=ubuntu-os-cloud --machine-type=n1-highmem-2
+gcloud compute instances create es-node1 --image-family=ubuntu-2004-lts --image-project=ubuntu-os-cloud --machine-type=n1-highmem-2
 ```
 
 Note that you must specify both --image-family *and* --image-project. This will produce output of the form:
