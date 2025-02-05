@@ -1,7 +1,8 @@
 #!/bin/bash
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 . $SCRIPT_DIR/poshlib/poshlib.sh
-use swine
+use strict
+use utils
 use parse-opt
 
 GIT_BRANCH=$(cd ${SCRIPT_DIR}; git status | awk '{print $3; exit}')

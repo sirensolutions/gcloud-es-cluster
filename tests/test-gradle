@@ -1,7 +1,8 @@
 #!/bin/bash
 SCRIPT_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
 . "$SCRIPT_DIR/../poshlib/poshlib.sh" || exit 1
-use swine
+use strict
+use utils
 use parse-opt
 
 PO_SIMPLE_PARAMS=(DEMOS_BRANCH FEDERATE_COMMIT)
